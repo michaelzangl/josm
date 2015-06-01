@@ -885,11 +885,23 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         return layers.contains(layer);
     }
 
+    /**
+     * Adds a new temporary layer.
+     * <p>
+     * A temporary layer is a layer that is painted above all normal layers. Layers are painted in the order they are added.
+     *
+     * @param mvp The layer to paint.
+     * @return <code>true</code> if the layer was added.
+     */
     public boolean addTemporaryLayer(MapViewPaintable mvp) {
-        if (temporaryLayers.contains(mvp)) return false;
         return temporaryLayers.add(mvp);
     }
 
+    /**
+     * Removes a layer previously added as temporary layer.
+     * @param mvp The layer to remove.
+     * @return <code>true</code> if that layer was removed.
+     */
     public boolean removeTemporaryLayer(MapViewPaintable mvp) {
         return temporaryLayers.remove(mvp);
     }
@@ -913,6 +925,10 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         }
     }
 
+    /**
+     * Sets the title of the JOSM main window, adding a star if there are dirty layers.
+     * @see Main#parent
+     */
     protected void refreshTitle() {
         if (Main.parent != null) {
             boolean dirty = editLayer != null &&
@@ -929,6 +945,9 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         }
     }
 
+    /**
+     * A selection listener that fires a repaint as soon as the selection changes.
+     */
     private transient SelectionChangedListener repaintSelectionChangedListener = new SelectionChangedListener(){
         @Override
         public void selectionChanged(Collection<? extends OsmPrimitive> newSelection) {
@@ -960,6 +979,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
     /**
      * Get a string representation of all layers suitable for the {@code source} changeset tag.
+     * @return A String of sources separated by ';'
      */
     public String getLayerInformationForSourceTag() {
         final Collection<String> layerInfo = new ArrayList<>();
