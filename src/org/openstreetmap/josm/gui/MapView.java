@@ -246,6 +246,11 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
     private final transient Set<MapViewPaintable> temporaryLayers = new LinkedHashSet<>();
 
+    /**
+     * This is a mutex that locks changes to {@link #temporaryLayers}
+     */
+    private final transient Object temporaryLayersMutex = new Object();
+
     private transient BufferedImage nonChangedLayersBuffer;
     private transient BufferedImage offscreenBuffer;
     // Layers that wasn't changed since last paint
@@ -677,8 +682,10 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
             paintLayer(visibleLayers.get(i),tempG, box);
         }
 
-        for (MapViewPaintable mvp : temporaryLayers) {
-            mvp.paint(tempG, this, box);
+        synchronized (temporaryLayersMutex) {
+            for (MapViewPaintable mvp : temporaryLayers) {
+                mvp.paint(tempG, this, box);
+            }
         }
 
         // draw world borders
@@ -955,7 +962,9 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      * @return <code>true</code> if the layer was added.
      */
     public boolean addTemporaryLayer(MapViewPaintable mvp) {
-        return temporaryLayers.add(mvp);
+        synchronized (temporaryLayersMutex) {
+            return temporaryLayers.add(mvp);
+        }
     }
 
     /**
@@ -964,7 +973,23 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      * @return <code>true</code> if that layer was removed.
      */
     public boolean removeTemporaryLayer(MapViewPaintable mvp) {
-        return temporaryLayers.remove(mvp);
+        synchronized (temporaryLayersMutex) {
+            return temporaryLayers.remove(mvp);
+        }
+    }
+
+    /**
+     * Gets a list of temporary layers.
+     * @return The layers in the order they are added.
+     */
+    public List<MapViewPaintable> getTemporaryLayers() {
+        synchronized (temporaryLayersMutex) {
+            List<MapViewPaintable> foundLayers = new ArrayList<>();
+            for (MapViewPaintable l : temporaryLayers) {
+                foundLayers.add(l);
+            }
+            return Collections.unmodifiableList(foundLayers);
+        }
     }
 
     @Override
@@ -1032,7 +1057,9 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
             layers.clear();
         }
         nonChangedLayers.clear();
-        temporaryLayers.clear();
+        synchronized (temporaryLayersMutex) {
+            temporaryLayers.clear();
+        }
     }
 
     @Override
