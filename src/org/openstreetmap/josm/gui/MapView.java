@@ -33,6 +33,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -49,6 +50,7 @@ import org.openstreetmap.josm.data.imagery.ImageryInfo;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.visitor.paint.PaintColors;
+import org.openstreetmap.josm.data.osm.visitor.paint.Rendering;
 import org.openstreetmap.josm.data.osm.visitor.paint.relations.MultipolygonCache;
 import org.openstreetmap.josm.gui.layer.GpxLayer;
 import org.openstreetmap.josm.gui.layer.ImageryLayer;
@@ -234,7 +236,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     private int lastViewID;
     private boolean paintPreferencesChanged = true;
     private Rectangle lastClipBounds = new Rectangle();
-    private transient MapMover mapMover;
+    public transient MapMover mapMover;
 
     /**
      * Constructs a new {@code MapView}.
@@ -246,20 +248,12 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     public MapView(final JPanel contentPane, final ViewportData viewportData) {
         initialViewport = viewportData;
         Main.pref.addPreferenceChangeListener(this);
-        final boolean unregisterTab = Shortcut.findShortcut(KeyEvent.VK_TAB, 0)!=null;
 
         addComponentListener(new ComponentAdapter(){
             @Override public void componentResized(ComponentEvent e) {
                 removeComponentListener(this);
 
-                MapSlider zoomSlider = new MapSlider(MapView.this);
-                add(zoomSlider);
-                zoomSlider.setBounds(3, 0, 114, 30);
-                zoomSlider.setFocusTraversalKeysEnabled(!unregisterTab);
-
-                MapScaler scaler = new MapScaler(MapView.this);
-                add(scaler);
-                scaler.setLocation(10,30);
+                addMapNavigationComponents(MapView.this, MapView.this);
 
                 mapMover = new MapMover(MapView.this, contentPane);
             }
@@ -288,6 +282,17 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         if (Shortcut.findShortcut(KeyEvent.VK_TAB, 0)!=null) {
             setFocusTraversalKeysEnabled(false);
         }
+    }
+
+    public static void addMapNavigationComponents(JComponent addTo, MapView forMapView) {
+        MapSlider zoomSlider = new MapSlider(forMapView);
+        addTo.add(zoomSlider);
+        zoomSlider.setBounds(3, 0, 114, 30);
+        zoomSlider.setFocusTraversalKeysEnabled(Shortcut.findShortcut(KeyEvent.VK_TAB, 0) == null);
+
+        MapScaler scaler = new MapScaler(forMapView);
+        addTo.add(scaler);
+        scaler.setLocation(10,30);
     }
 
     // remebered geometry of the component
@@ -453,12 +458,24 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
     private boolean virtualNodesEnabled = false;
 
+    /**
+     * Sets the global virtual nodes enabled flag that is used by the {@link OsmDataLayer} renderer.
+     * A redraw is triggered when this property is changed.
+     * @param enabled If the virtual nodes should be enabled.
+     * @see Rendering#render(DataSet, boolean, Bounds)
+     */
     public void setVirtualNodesEnabled(boolean enabled) {
         if(virtualNodesEnabled != enabled) {
             virtualNodesEnabled = enabled;
             repaint();
         }
     }
+
+    /**
+     * Checks if virtual nodes should be drawn. Default is <code>false</code>
+     * @return The virtual nodes property.
+     * @see Rendering#render(DataSet, boolean, Bounds)
+     */
     public boolean isVirtualNodesEnabled() {
         return virtualNodesEnabled;
     }
@@ -487,6 +504,12 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         repaint();
     }
 
+    /**
+     * Gets the index of the layer in the layer list.
+     * @param layer The layer to search for.
+     * @return The index in the list.
+     * @throws IllegalArgumentException if that layer does not belong to this view.
+     */
     public int getLayerPos(Layer layer) {
         int curLayerPos = layers.indexOf(layer);
         if (curLayerPos == -1)
@@ -501,7 +524,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      * @return a list of the visible in Z-Order, the layer with the lowest Z-Order
      * first, layer with the highest Z-Order last.
      */
-    protected List<Layer> getVisibleLayersInZOrder() {
+    public List<Layer> getVisibleLayersInZOrder() {
         List<Layer> ret = new ArrayList<>();
         for (Layer l: layers) {
             if (l.isVisible()) {
@@ -541,25 +564,8 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      */
     @Override
     public void paint(Graphics g) {
-        if (initialViewport != null) {
-            zoomTo(initialViewport);
-            initialViewport = null;
-        }
-        if (BugReportExceptionHandler.exceptionHandlingInProgress())
+        if (!prepareToDraw()) {
             return;
-
-        if (center == null)
-            return; // no data loaded yet.
-
-        // if the position was remembered, we need to adjust center once before repainting
-        if (oldLoc != null && oldSize != null) {
-            Point l1  = getLocationOnScreen();
-            final EastNorth newCenter = new EastNorth(
-                    center.getX()+ (l1.x-oldLoc.x - (oldSize.width-getWidth())/2.0)*getScale(),
-                    center.getY()+ (oldLoc.y-l1.y + (oldSize.height-getHeight())/2.0)*getScale()
-                    );
-            oldLoc = null; oldSize = null;
-            zoomTo(newCenter);
         }
 
         List<Layer> visibleLayers = getVisibleLayersInZOrder();
@@ -692,6 +698,35 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
         g.drawImage(offscreenBuffer, 0, 0, null);
         super.paint(g);
+    }
+
+    /**
+     * Sets up the viewport to prepare for drawing the view.
+     * @return <code>true</code> if the view can be drawn, <code>false</code> otherwise.
+     */
+    public boolean prepareToDraw() {
+        if (initialViewport != null) {
+            zoomTo(initialViewport);
+            initialViewport = null;
+        }
+        if (BugReportExceptionHandler.exceptionHandlingInProgress())
+            return false;
+
+        if (center == null)
+            return false; // no data loaded yet.
+
+        // if the position was remembered, we need to adjust center once before repainting
+        if (oldLoc != null && oldSize != null) {
+            Point l1  = getLocationOnScreen();
+            final EastNorth newCenter = new EastNorth(
+                    center.getX()+ (l1.x-oldLoc.x - (oldSize.width-getWidth())/2.0)*getScale(),
+                    center.getY()+ (oldLoc.y-l1.y + (oldSize.height-getHeight())/2.0)*getScale()
+                    );
+            oldLoc = null; oldSize = null;
+            zoomTo(newCenter);
+        }
+
+        return true;
     }
 
     /**
