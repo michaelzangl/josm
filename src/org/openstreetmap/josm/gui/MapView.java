@@ -235,7 +235,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     private transient Layer activeLayer;
 
     /**
-     *
+     * The edit layer is the current active data layer. Locked by {@link #layersMutex}.
      */
     private transient OsmDataLayer editLayer;
 
@@ -403,16 +403,18 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
     @Override
     protected DataSet getCurrentDataSet() {
-        if (editLayer != null)
-            return editLayer.data;
-        else
-            return null;
+        synchronized (layersMutex) {
+            if (editLayer != null)
+                return editLayer.data;
+            else
+                return null;
+        }
     }
 
     /**
-     * Replies true if the active layer is drawable.
+     * Replies true if the active data layer (edit layer) is drawable.
      *
-     * @return true if the active layer is drawable, false otherwise
+     * @return true if the active data layer (edit layer) is drawable, false otherwise
      */
     public boolean isActiveLayerDrawable() {
         synchronized (layersMutex) {
@@ -421,9 +423,9 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     }
 
     /**
-     * Replies true if the active layer is visible.
+     * Replies true if the active data layer (edit layer) is visible.
      *
-     * @return true if the active layer is visible, false otherwise
+     * @return true if the active data layer (edit layer) is visible, false otherwise
      */
     public boolean isActiveLayerVisible() {
         synchronized (layersMutex) {
