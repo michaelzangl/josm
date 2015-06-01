@@ -210,7 +210,7 @@ public class HistoryDataSet implements LayerChangeListener{
     @Override
     public void layerRemoved(Layer oldLayer) {
         if (!Main.isDisplayingMapView()) return;
-        if (Main.map.mapView.getNumLayers() == 0) {
+        if (!Main.map.mapView.hasLayers()) {
             data.clear();
             fireCacheCleared();
         }

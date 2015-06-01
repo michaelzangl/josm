@@ -758,9 +758,9 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     }
 
     /**
-     * Replies the number of layers managed by this mav view
+     * Replies the number of layers managed by this map view
      *
-     * @return the number of layers managed by this mav view
+     * @return the number of layers managed by this map view
      */
     public int getNumLayers() {
         return layers.size();
