@@ -190,27 +190,46 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         }
     }
 
-    protected static void fireActiveLayerChanged(Layer oldLayer, Layer newLayer) {
+    /**
+     * Calls the {@link LayerChangeListener#activeLayerChange(Layer, Layer)} method of all listeners.
+     *
+     * @param oldLayer The old layer
+     * @param newLayer The new active layer.
+     */
+    protected void fireActiveLayerChanged(Layer oldLayer, Layer newLayer) {
+        checkLayerLockNotHeld();
         for (LayerChangeListener l : layerChangeListeners) {
             l.activeLayerChange(oldLayer, newLayer);
         }
     }
 
-    protected static void fireLayerAdded(Layer newLayer) {
+    protected void fireLayerAdded(Layer newLayer) {
+        checkLayerLockNotHeld();
         for (MapView.LayerChangeListener l : MapView.layerChangeListeners) {
             l.layerAdded(newLayer);
         }
     }
 
-    protected static void fireLayerRemoved(Layer layer) {
+    protected void fireLayerRemoved(Layer layer) {
+        checkLayerLockNotHeld();
         for (MapView.LayerChangeListener l : MapView.layerChangeListeners) {
             l.layerRemoved(layer);
         }
     }
 
-    protected static void fireEditLayerChanged(OsmDataLayer oldLayer, OsmDataLayer newLayer) {
+    protected void fireEditLayerChanged(OsmDataLayer oldLayer, OsmDataLayer newLayer) {
+        checkLayerLockNotHeld();
         for (EditLayerChangeListener l : editLayerChangeListeners) {
             l.editLayerChanged(oldLayer, newLayer);
+        }
+    }
+
+    private void checkLayerLockNotHeld() {
+        if (Thread.holdsLock(layersMutex)) {
+            Main.warn("layersMutex is held while a listener was called.");
+        }
+        if (!Thread.holdsLock(layersChangingMutex)) {
+            Main.warn("layersChangingMutex is not held while a listener was called.");
         }
     }
 
@@ -220,9 +239,16 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     private final transient List<Layer> layers = new ArrayList<>();
 
     /**
-     * This is a mutex that locks changes to {@link #layers}, {@link #editLayer} and {@link #activeLayer}
+     * This is a mutex that locks changes to {@link #layers}, {@link #editLayer} and {@link #activeLayer}.
+     * <p>
+     * This mutex should never be held when calling "out" (to other classes, listeners, ...)
      */
     private final transient Object layersMutex = new Object();
+
+    /**
+     * This is a mutex that only locks all methods that change the layers. It is locked in a way that there may be no more changes to layers in other threads while the listeners of the current change are called. Reads are possible in all threads during this phase. This is necessary because many listeners use {@link GuiHelper#runInEDTAndWait(Runnable)}
+     */
+    private final transient Object layersChangingMutex = new Object();
 
     /**
      * The play head marker: there is only one of these so it isn't in any specific layer
@@ -332,6 +358,8 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
     /**
      * Adds a GPX layer. A GPX layer is added below the lowest data layer.
+     * <p>
+     * Does not call {@link #fireLayerAdded(Layer)}.
      *
      * @param layer the GPX layer
      */
@@ -362,25 +390,27 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      */
     public void addLayer(Layer layer) {
         boolean callSetActiveLayer;
-        synchronized (layersMutex) {
-            if (layer instanceof MarkerLayer && playHeadMarker == null) {
-                playHeadMarker = PlayHeadMarker.create();
-            }
-
-            if (layer instanceof GpxLayer) {
-                addGpxLayer((GpxLayer)layer);
-            } else if (layers.isEmpty()) {
-                layers.add(layer);
-            } else if (layer.isBackgroundLayer()) {
-                int i = 0;
-                for (; i < layers.size(); i++) {
-                    if (layers.get(i).isBackgroundLayer()) {
-                        break;
-                    }
+        synchronized (layersChangingMutex) {
+            synchronized (layersMutex) {
+                if (layer instanceof MarkerLayer && playHeadMarker == null) {
+                    playHeadMarker = PlayHeadMarker.create();
                 }
-                layers.add(i, layer);
-            } else {
-                layers.add(0, layer);
+
+                if (layer instanceof GpxLayer) {
+                    addGpxLayer((GpxLayer)layer);
+                } else if (layers.isEmpty()) {
+                    layers.add(layer);
+                } else if (layer.isBackgroundLayer()) {
+                    int i = 0;
+                    for (; i < layers.size(); i++) {
+                        if (layers.get(i).isBackgroundLayer()) {
+                            break;
+                        }
+                    }
+                    layers.add(i, layer);
+                } else {
+                    layers.add(0, layer);
+                }
             }
             fireLayerAdded(layer);
             boolean isOsmDataLayer = layer instanceof OsmDataLayer;
@@ -466,30 +496,39 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      * @param layer The layer to remove
      */
     public void removeLayer(Layer layer) {
-        synchronized (layersMutex) {
-            List<Layer> layersList = new ArrayList<>(layers);
+        synchronized (layersChangingMutex) {
+            Runnable fireEditLayerChanged;
+            Runnable fireSetActiveLayer;
+            synchronized (layersMutex) {
+                List<Layer> layersList = new ArrayList<>(layers);
 
-            if (!layersList.remove(layer))
-                return;
+                if (!layersList.remove(layer))
+                    return;
 
-            setEditLayer(layersList);
+                fireEditLayerChanged = setEditLayer(layersList);
 
-            if (layer == activeLayer) {
-                setActiveLayer(determineNextActiveLayer(layersList), false);
+                if (layer == activeLayer) {
+                    fireSetActiveLayer = setActiveLayer(determineNextActiveLayer(layersList), false);
+                } else {
+                    fireSetActiveLayer = getNullRunnable();
+                }
+
+                if (layer instanceof OsmDataLayer) {
+                    ((OsmDataLayer)layer).removeLayerPropertyChangeListener(this);
+                }
+
+                layers.remove(layer);
+                Main.removeProjectionChangeListener(layer);
+
             }
-
-            if (layer instanceof OsmDataLayer) {
-                ((OsmDataLayer)layer).removeLayerPropertyChangeListener(this);
-            }
-
-            layers.remove(layer);
-            Main.removeProjectionChangeListener(layer);
+            fireEditLayerChanged.run();
+            fireSetActiveLayer.run();
             fireLayerRemoved(layer);
             layer.removePropertyChangeListener(this);
             layer.destroy();
             AudioPlayer.reset();
-            repaint();
         }
+        repaint();
     }
 
     private boolean virtualNodesEnabled = false;
@@ -524,19 +563,23 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      * @param pos       The new position of the layer
      */
     public void moveLayer(Layer layer, int pos) {
-        synchronized (layersMutex) {
-            int curLayerPos = layers.indexOf(layer);
-            if (curLayerPos == -1)
-                throw new IllegalArgumentException(tr("Layer not in list."));
-            if (pos == curLayerPos)
-                return; // already in place.
-            layers.remove(curLayerPos);
-            if (pos >= layers.size()) {
-                layers.add(layer);
-            } else {
-                layers.add(pos, layer);
+        synchronized (layersChangingMutex) {
+            Runnable fireEditLayerChanged;
+            synchronized (layersMutex) {
+                int curLayerPos = layers.indexOf(layer);
+                if (curLayerPos == -1)
+                    throw new IllegalArgumentException(tr("Layer not in list."));
+                if (pos == curLayerPos)
+                    return; // already in place.
+                layers.remove(curLayerPos);
+                if (pos >= layers.size()) {
+                    layers.add(layer);
+                } else {
+                    layers.add(pos, layer);
+                }
+                fireEditLayerChanged = setEditLayer(layers);
             }
-            setEditLayer(layers);
+            fireEditLayerChanged.run();
             AudioPlayer.reset();
         }
         repaint();
@@ -831,12 +874,36 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      * <p>
      * You must own {@link #layersMutex} when calling this method.
      * @param layersList A list to select that layer from.
+     * @return A runnable that fires the change listeners.
      */
-    private void setEditLayer(List<Layer> layersList) {
-        OsmDataLayer newEditLayer = layersList.contains(editLayer)?editLayer:null;
-        OsmDataLayer oldEditLayer = editLayer;
+    private Runnable setEditLayer(List<Layer> layersList) {
+        final OsmDataLayer oldEditLayer = editLayer;
+        final OsmDataLayer newEditLayer = findNewEditLayer(layersList);
 
-        // Find new edit layer
+        // Set new edit layer
+        if (newEditLayer != editLayer) {
+            if (newEditLayer == null) {
+                // Note: Unsafe to call while layersMutex is held.
+                getCurrentDataSet().setSelected();
+            }
+
+            editLayer = newEditLayer;
+            return new Runnable() {
+                @Override
+                public void run() {
+                    fireEditLayerChanged(oldEditLayer, newEditLayer);
+                    refreshTitle();
+                }
+            };
+        } else {
+            return getNullRunnable();
+        }
+
+    }
+
+    private OsmDataLayer findNewEditLayer(List<Layer> layersList) {
+        OsmDataLayer newEditLayer = layersList.contains(editLayer)?editLayer:null;
+
         if (activeLayer != editLayer || !layersList.contains(editLayer)) {
             if (activeLayer instanceof OsmDataLayer && layersList.contains(activeLayer)) {
                 newEditLayer = (OsmDataLayer) activeLayer;
@@ -849,18 +916,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
                 }
             }
         }
-
-        // Set new edit layer
-        if (newEditLayer != editLayer) {
-            if (newEditLayer == null) {
-                getCurrentDataSet().setSelected();
-            }
-
-            editLayer = newEditLayer;
-            fireEditLayerChanged(oldEditLayer, newEditLayer);
-            refreshTitle();
-        }
-
+        return newEditLayer;
     }
 
     /**
@@ -871,54 +927,66 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      * @throws IllegalArgumentException if layer is not in the lis of layers
      */
     public void setActiveLayer(Layer layer) {
-        synchronized (layersMutex) {
-            setActiveLayer(layer, true);
+        synchronized (layersChangingMutex) {
+            Runnable fireSetActiveLayer;
+            synchronized (layersMutex) {
+                fireSetActiveLayer = setActiveLayer(layer, true);
+            }
+            fireSetActiveLayer.run();
         }
+        repaint();
     }
 
     /**
      * Sets the active layer. Propagates this change to all map buttons.
      * @param layer The layer to be active.
      * @param setEditLayer if this is <code>true</code>, the edit layer is also set.
+     * @return
      */
-    private void setActiveLayer(Layer layer, boolean setEditLayer) {
+    private Runnable setActiveLayer(final Layer layer, boolean setEditLayer) {
         if (layer != null && !layers.contains(layer))
             throw new IllegalArgumentException(tr("Layer ''{0}'' must be in list of layers", layer.toString()));
 
         if (layer == activeLayer)
-            return;
+            return getNullRunnable();
 
-        Layer old = activeLayer;
+        final Layer old = activeLayer;
         activeLayer = layer;
         if (setEditLayer) {
             setEditLayer(layers);
         }
-        fireActiveLayerChanged(old, layer);
 
-        /* This only makes the buttons look disabled. Disabling the actions as well requires
-         * the user to re-select the tool after i.e. moving a layer. While testing I found
-         * that I switch layers and actions at the same time and it was annoying to mind the
-         * order. This way it works as visual clue for new users */
-        for (final AbstractButton b: Main.map.allMapModeButtons) {
-            MapMode mode = (MapMode)b.getAction();
-            if (mode.layerIsSupported(layer)) {
-                Main.registerActionShortcut(mode, mode.getShortcut()); //fix #6876
-                GuiHelper.runInEDTAndWait(new Runnable() {
-                    @Override public void run() {
-                        b.setEnabled(true);
+        return new Runnable() {
+            @Override
+            public void run() {
+                fireActiveLayerChanged(old, layer);
+
+                /* This only makes the buttons look disabled. Disabling the actions as well requires
+                 * the user to re-select the tool after i.e. moving a layer. While testing I found
+                 * that I switch layers and actions at the same time and it was annoying to mind the
+                 * order. This way it works as visual clue for new users */
+                for (final AbstractButton b: Main.map.allMapModeButtons) {
+                    MapMode mode = (MapMode)b.getAction();
+                    if (mode.layerIsSupported(layer)) {
+                        Main.registerActionShortcut(mode, mode.getShortcut()); //fix #6876
+                        GuiHelper.runInEDTAndWait(new Runnable() {
+                            @Override public void run() {
+                                b.setEnabled(true);
+                            }
+                        });
+                    } else {
+                        Main.unregisterShortcut(mode.getShortcut());
+                        GuiHelper.runInEDTAndWait(new Runnable() {
+                            @Override public void run() {
+                                b.setEnabled(false);
+                            }
+                        });
                     }
-                });
-            } else {
-                Main.unregisterShortcut(mode.getShortcut());
-                GuiHelper.runInEDTAndWait(new Runnable() {
-                    @Override public void run() {
-                        b.setEnabled(false);
-                    }
-                });
+                }
+                AudioPlayer.reset();
+                repaint();
             }
-        }
-        AudioPlayer.reset();
-        repaint();
+        };
     }
 
     /**
@@ -1052,11 +1120,13 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         if (mapMover != null) {
             mapMover.destroy();
         }
-        synchronized (layersMutex) {
-            activeLayer = null;
-            changedLayer = null;
-            editLayer = null;
-            layers.clear();
+        synchronized (layersChangingMutex) {
+            synchronized (layersMutex) {
+                activeLayer = null;
+                changedLayer = null;
+                editLayer = null;
+                layers.clear();
+            }
         }
         nonChangedLayers.clear();
         synchronized (temporaryLayersMutex) {
@@ -1088,5 +1158,13 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
             layerInfo.add(ImageryInfo.ImageryType.BING.equals(i.getInfo().getImageryType()) ? "Bing" : i.getName());
         }
         return Utils.join("; ", layerInfo);
+    }
+
+    private Runnable getNullRunnable() {
+        return new Runnable() {
+            @Override
+            public void run() {
+            }
+        };
     }
 }

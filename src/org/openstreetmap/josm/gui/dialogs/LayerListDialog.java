@@ -692,21 +692,25 @@ public class LayerListDialog extends ToggleDialog {
 
         @Override
         public void updateEnabledState() {
+            final boolean shouldBeEnabled = computeEnabledState();
+
             GuiHelper.runInEDTAndWait(new Runnable() {
                 @Override
                 public void run() {
-                    if (layer == null) {
-                        if (getModel().getSelectedLayers().size() != 1) {
-                            setEnabled(false);
-                            return;
-                        }
-                        Layer selectedLayer = getModel().getSelectedLayers().get(0);
-                        setEnabled(!isActiveLayer(selectedLayer));
-                    } else {
-                        setEnabled(!isActiveLayer(layer));
-                    }
+                    setEnabled(shouldBeEnabled);
                 }
             });
+        }
+
+        private boolean computeEnabledState() {
+            if (layer != null) {
+                return !isActiveLayer(layer);
+            } else if (getModel().getSelectedLayers().size() != 1) {
+                return false;
+            } else {
+                Layer selectedLayer = getModel().getSelectedLayers().get(0);
+                return !isActiveLayer(selectedLayer);
+            }
         }
 
         @Override
