@@ -268,6 +268,10 @@ public class NavigatableComponent extends JComponent implements Helpful {
         return center;
     }
 
+    /**
+     * Get the current scale factor. This is [delta in eastnorth]/[pixels].
+     * @return The scale.
+     */
     public double getScale() {
         return scale;
     }
@@ -285,13 +289,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
     }
 
     public ProjectionBounds getProjectionBounds() {
-        return new ProjectionBounds(
-                new EastNorth(
-                        center.east() - getWidth()/2.0*scale,
-                        center.north() - getHeight()/2.0*scale),
-                        new EastNorth(
-                                center.east() + getWidth()/2.0*scale,
-                                center.north() + getHeight()/2.0*scale));
+        return new ProjectionBounds(getEastNorth(0, getHeight()), getEastNorth(getWidth(), 0));
     }
 
     /* FIXME: replace with better method - used by MapSlider */
@@ -304,12 +302,8 @@ public class NavigatableComponent extends JComponent implements Helpful {
     /* FIXME: replace with better method - used by Main to reset Bounds when projection changes, don't use otherwise */
     public Bounds getRealBounds() {
         return new Bounds(
-                getProjection().eastNorth2latlon(new EastNorth(
-                        center.east() - getWidth()/2.0*scale,
-                        center.north() - getHeight()/2.0*scale)),
-                        getProjection().eastNorth2latlon(new EastNorth(
-                                center.east() + getWidth()/2.0*scale,
-                                center.north() + getHeight()/2.0*scale)));
+                getProjection().eastNorth2latlon(getEastNorth(0, getHeight())),
+                        getProjection().eastNorth2latlon(getEastNorth(getWidth(), 0)));
     }
 
     /**
@@ -355,6 +349,10 @@ public class NavigatableComponent extends JComponent implements Helpful {
         return result;
     }
 
+    /**
+     * Gets the affine transform that converts the east/north coordinates to pixel coordinates.
+     * @return The current affine transform.
+     */
     public AffineTransform getAffineTransform() {
         return new AffineTransform(
                 1.0/scale, 0.0, 0.0, -1.0/scale, getWidth()/2.0 - center.east()/scale, getHeight()/2.0 + center.north()/scale);
@@ -369,9 +367,8 @@ public class NavigatableComponent extends JComponent implements Helpful {
     public Point2D getPoint2D(EastNorth p) {
         if (null == p)
             return new Point();
-        double x = (p.east()-center.east())/scale + getWidth()/2d;
-        double y = (center.north()-p.north())/scale + getHeight()/2d;
-        return new Point2D.Double(x, y);
+        Point2D p2d = new Point2D.Double(p.east(), p.north());
+        return getAffineTransform().transform(p2d, null);
     }
 
     public Point2D getPoint2D(LatLon latlon) {
