@@ -278,12 +278,12 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     private final transient Object temporaryLayersMutex = new Object();
 
     private transient BufferedImage nonChangedLayersBuffer;
-    private transient BufferedImage offscreenBuffer;
+    public transient BufferedImage offscreenBuffer;
     // Layers that wasn't changed since last paint
     private final transient List<Layer> nonChangedLayers = new ArrayList<>();
     private transient Layer changedLayer;
     private int lastViewID;
-    private boolean paintPreferencesChanged = true;
+    public boolean paintPreferencesChanged = true;
     private Rectangle lastClipBounds = new Rectangle();
     public transient MapMover mapMover;
 
