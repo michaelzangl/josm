@@ -328,6 +328,10 @@ public class NavigationModel {
         return currentZoom.getScale();
     }
 
+    public void zoomTo(EastNorth newCenter, ScrollMode mode) {
+        zoomTo(newCenter, getScale(), mode);
+    }
+
     /**
      * Zoom to the given coordinate and scale.
      *
@@ -452,10 +456,20 @@ public class NavigationModel {
      *
      * @return Geographic coordinates from a specific pixel coordination on the screen.
      */
-    public EastNorth getEastNorth(int x, int y) {
+    public EastNorth getEastNorth(double x, double y) {
         return new EastNorth(
                 getCenter().east() + (x - viewDimension.width / 2.0) * getScale(),
                 getCenter().north() - (y - viewDimension.height / 2.0) * getScale());
+    }
+
+    /**
+     * Gets an EastNorth position using relative screen coordinates.
+     * @param relativeX The x-positon, where the interval [0,1] is the screen width
+     * @param relativeY The x-positon, where the interval [0,1] is the screen height
+     * @return The geographic coordinates for that pixel.
+     */
+    public EastNorth getEastNorthRelative(double relativeX, double relativeY) {
+        return getEastNorth(relativeX * viewDimension.width, relativeY * viewDimension.height);
     }
 
     /**

@@ -49,6 +49,7 @@ import org.openstreetmap.josm.gui.help.Helpful;
 import org.openstreetmap.josm.gui.mappaint.MapPaintStyles;
 import org.openstreetmap.josm.gui.mappaint.mapcss.MapCSSStyleSource;
 import org.openstreetmap.josm.gui.navigate.GlobalSoM;
+import org.openstreetmap.josm.gui.navigate.NavigationCursorManager;
 import org.openstreetmap.josm.gui.navigate.NavigationModel;
 import org.openstreetmap.josm.gui.navigate.NavigationModel.ScrollMode;
 import org.openstreetmap.josm.gui.navigate.NavigationModel.WeakZoomChangeListener;
@@ -214,6 +215,8 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
 
     private transient final NavigationModel.ZoomChangeListener weakZoomListener = new WeakZoomChangeListener(this);
 
+    protected transient final NavigationCursorManager cursorManager = new NavigationCursorManager(this);
+
     /**
      * Constructs a new {@code NavigatableComponent} using the static default {@link NavigationModel} and zooming to the current bounds,
      */
@@ -234,6 +237,10 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
         setLayout(null);
         navigationModel.addZoomChangeListener(weakZoomListener);
         navigationModel.trackComponentSize(this);
+    }
+
+    public NavigationModel getNavigationModel() {
+        return navigationModel;
     }
 
     protected DataSet getCurrentDataSet() {
@@ -1346,29 +1353,11 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
         return (int)id.getValue();
     }
 
-    private static class CursorInfo {
-        private final Cursor cursor;
-        private final Object object;
-        public CursorInfo(Cursor c, Object o) {
-            cursor = c;
-            object = o;
-        }
-    }
-
-    private LinkedList<CursorInfo> cursors = new LinkedList<>();
-
     /**
      * Set new cursor.
      */
     public void setNewCursor(Cursor cursor, Object reference) {
-        if (!cursors.isEmpty()) {
-            CursorInfo l = cursors.getLast();
-            if(l != null && l.cursor == cursor && l.object == reference)
-                return;
-            stripCursors(reference);
-        }
-        cursors.add(new CursorInfo(cursor, reference));
-        setCursor(cursor);
+        cursorManager.setNewCursor(cursor, reference);
     }
 
     public void setNewCursor(int cursor, Object reference) {
@@ -1379,29 +1368,7 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
      * Remove the new cursor and reset to previous
      */
     public void resetCursor(Object reference) {
-        if (cursors.isEmpty()) {
-            setCursor(null);
-            return;
-        }
-        CursorInfo l = cursors.getLast();
-        stripCursors(reference);
-        if (l != null && l.object == reference) {
-            if (cursors.isEmpty()) {
-                setCursor(null);
-            } else {
-                setCursor(cursors.getLast().cursor);
-            }
-        }
-    }
-
-    private void stripCursors(Object reference) {
-        LinkedList<CursorInfo> c = new LinkedList<>();
-        for(CursorInfo i : cursors) {
-            if(i.object != reference) {
-                c.add(i);
-            }
-        }
-        cursors = c;
+        cursorManager.resetCursor(reference);
     }
 
     @Override

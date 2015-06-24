@@ -3,8 +3,8 @@ package org.openstreetmap.josm.gui;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
+import java.awt.Component;
 import java.awt.Cursor;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -23,6 +23,9 @@ import javax.swing.KeyStroke;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.SelectAction;
 import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.gui.navigate.NavigationCursorManager;
+import org.openstreetmap.josm.gui.navigate.NavigationModel;
+import org.openstreetmap.josm.gui.navigate.NavigationModel.ScrollMode;
 import org.openstreetmap.josm.tools.Destroyable;
 import org.openstreetmap.josm.tools.Shortcut;
 
@@ -42,29 +45,32 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         @Override
         public void actionPerformed(ActionEvent e) {
             if (".".equals(action) || ",".equals(action)) {
-                Point mouse = nc.getMousePosition();
-                if (mouse == null)
-                    mouse = new Point((int)nc.getBounds().getCenterX(), (int)nc.getBounds().getCenterY());
-                MouseWheelEvent we = new MouseWheelEvent(nc, e.getID(), e.getWhen(), e.getModifiers(), mouse.x, mouse.y, 0, false,
-                        MouseWheelEvent.WHEEL_UNIT_SCROLL, 1, ",".equals(action) ? -1 : 1);
-                mouseWheelMoved(we);
+                // TODO: ...
+//                Point mouse = nm.getMousePosition();
+//                if (mouse == null)
+//                    mouse = new Point((int)nm.getBounds().getCenterX(), (int)nm.getBounds().getCenterY());
+//                MouseWheelEvent we = new MouseWheelEvent((Component) e.getSource(), e.getID(), e.getWhen(), e.getModifiers(), mouse.x, mouse.y, 0, false,
+//                        MouseWheelEvent.WHEEL_UNIT_SCROLL, 1, ",".equals(action) ? -1 : 1);
+//                mouseWheelMoved(we);
             } else {
-                EastNorth center = nc.getCenter();
-                EastNorth newcenter = nc.getEastNorth(nc.getWidth()/2+nc.getWidth()/5, nc.getHeight()/2+nc.getHeight()/5);
+                double relativeX = .5;
+                double relativeY = .5;
                 switch(action) {
                 case "left":
-                    nc.zoomTo(new EastNorth(2*center.east()-newcenter.east(), center.north()));
+                    relativeX -= .2;
                     break;
                 case "right":
-                    nc.zoomTo(new EastNorth(newcenter.east(), center.north()));
+                    relativeX += .2;
                     break;
                 case "up":
-                    nc.zoomTo(new EastNorth(center.east(), 2*center.north()-newcenter.north()));
+                    relativeY -= .2;
                     break;
                 case "down":
-                    nc.zoomTo(new EastNorth(center.east(), newcenter.north()));
+                    relativeY += .2;
                     break;
                 }
+                EastNorth newcenter = nm.getEastNorthRelative(relativeX, relativeY);
+                nm.zoomTo(newcenter, ScrollMode.IMMEDIATE);
             }
         }
     }
@@ -77,22 +83,22 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
     /**
      * The map to move around.
      */
-    private final NavigatableComponent nc;
+    private final NavigationModel nm;
     private final JPanel contentPane;
 
     private boolean movementInPlace = false;
+    private final NavigationCursorManager cursorManager;
 
     /**
      * Constructs a new {@code MapMover}.
-     * @param navComp the navigatable component
+     * @param navigationModel the navigatable component
+     * @param cursorManager A cursor manager to which we should send cursor changes.
      * @param contentPane the content pane
      */
-    public MapMover(NavigatableComponent navComp, JPanel contentPane) {
-        this.nc = navComp;
+    public MapMover(NavigationModel navigationModel, NavigationCursorManager cursorManager, JPanel contentPane) {
+        this.nm = navigationModel;
+        this.cursorManager = cursorManager;
         this.contentPane = contentPane;
-        nc.addMouseListener(this);
-        nc.addMouseMotionListener(this);
-        nc.addMouseWheelListener(this);
 
         if (contentPane != null) {
             contentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
@@ -130,6 +136,12 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         }
     }
 
+    public void registerMouseEvents(Component c) {
+        c.addMouseListener(this);
+        c.addMouseMotionListener(this);
+        c.addMouseWheelListener(this);
+    }
+
     /**
      * If the right (and only the right) mouse button is pressed, move the map.
      */
@@ -144,11 +156,11 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         if (stdMovement || (macMovement && allowedMode)) {
             if (mousePosMove == null)
                 startMovement(e);
-            EastNorth center = nc.getCenter();
-            EastNorth mouseCenter = nc.getEastNorth(e.getX(), e.getY());
-            nc.zoomTo(new EastNorth(
+            EastNorth center = nm.getCenter();
+            EastNorth mouseCenter = nm.getEastNorth(e.getX(), e.getY());
+            nm.zoomTo(new EastNorth(
                     mousePosMove.east() + center.east() - mouseCenter.east(),
-                    mousePosMove.north() + center.north() - mouseCenter.north()));
+                    mousePosMove.north() + center.north() - mouseCenter.north()), ScrollMode.IMMEDIATE);
         } else {
             endMovement();
         }
@@ -186,8 +198,8 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         if (movementInPlace)
             return;
         movementInPlace = true;
-        mousePosMove = nc.getEastNorth(e.getX(), e.getY());
-        nc.setNewCursor(Cursor.MOVE_CURSOR, this);
+        mousePosMove = nm.getEastNorth(e.getX(), e.getY());
+        cursorManager.setNewCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR), this);
     }
 
     /**
@@ -197,7 +209,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         if (!movementInPlace)
             return;
         movementInPlace = false;
-        nc.resetCursor(this);
+        cursorManager.resetCursor(this);
         mousePosMove = null;
     }
 
@@ -207,7 +219,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
      */
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        nc.zoomToFactor(e.getX(), e.getY(), Math.pow(Math.sqrt(2), e.getWheelRotation()));
+        nm.zoomToFactorAround(e.getPoint(), Math.pow(Math.sqrt(2), e.getWheelRotation()));
     }
 
     /**
@@ -224,10 +236,10 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
                 if (mousePosMove == null) {
                     startMovement(e);
                 }
-                EastNorth center = nc.getCenter();
-                EastNorth mouseCenter = nc.getEastNorth(e.getX(), e.getY());
-                nc.zoomTo(new EastNorth(mousePosMove.east() + center.east() - mouseCenter.east(), mousePosMove.north()
-                        + center.north() - mouseCenter.north()));
+                EastNorth center = nm.getCenter();
+                EastNorth mouseCenter = nm.getEastNorth(e.getX(), e.getY());
+                nm.zoomTo(new EastNorth(mousePosMove.east() + center.east() - mouseCenter.east(), mousePosMove.north()
+                        + center.north() - mouseCenter.north()), ScrollMode.IMMEDIATE);
             } else {
                 endMovement();
             }

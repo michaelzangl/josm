@@ -304,7 +304,8 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
                 addMapNavigationComponents(MapView.this, MapView.this);
 
-                mapMover = new MapMover(MapView.this, contentPane);
+                mapMover = new MapMover(getNavigationModel(), cursorManager, contentPane);
+                mapMover.registerMouseEvents(MapView.this);
             }
         });
 
@@ -1166,5 +1167,11 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
             public void run() {
             }
         };
+    }
+
+    @Override
+    public synchronized void addMouseMotionListener(MouseMotionListener l) {
+        Thread.dumpStack();
+        super.addMouseMotionListener(l);
     }
 }
