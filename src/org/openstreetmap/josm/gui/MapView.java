@@ -224,6 +224,9 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         }
     }
 
+    /**
+     * This is a simple invariant check that tests if the {@link #layersChangingMutex} is held and the {@link #layersMutex} not. This should be the case whenever a layer listener is invoked.
+     */
     private void checkLayerLockNotHeld() {
         if (Thread.holdsLock(layersMutex)) {
             Main.warn("layersMutex is held while a listener was called.");
@@ -1169,9 +1172,52 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         };
     }
 
-    @Override
-    public synchronized void addMouseMotionListener(MouseMotionListener l) {
-        Thread.dumpStack();
-        super.addMouseMotionListener(l);
+    /**
+     * This is a listener that gets informed whenever repaint is called for this MapView.
+     * <p>
+     * This is the only safe method to find changes to the map view, since many components call MapView.repaint() directly.
+     * @author Michael Zangl
+     */
+    public interface RepaintListener {
+        /**
+         * Called when any repaint method is called (using default arguments if required).
+         * @param tm see {@link JComponent#repaint(long, int, int, int, int)}
+         * @param x see {@link JComponent#repaint(long, int, int, int, int)}
+         * @param y see {@link JComponent#repaint(long, int, int, int, int)}
+         * @param width see {@link JComponent#repaint(long, int, int, int, int)}
+         * @param height see {@link JComponent#repaint(long, int, int, int, int)}
+         */
+        void repaint(long tm, int x, int y, int width, int height);
     }
+
+    private final CopyOnWriteArrayList<RepaintListener> repaintListeners = new CopyOnWriteArrayList<>();
+
+    /**
+     * Adds a listener that gets informed whenever repaint() is called for this class.
+     * @param l The listener.
+     */
+    public void addRepaintListener(RepaintListener l) {
+        repaintListeners.add(l);
+    }
+
+    /**
+     * Removes a registered repaint listener.
+     * @param l The listener.
+     */
+    public void removeRepaintListener(RepaintListener l) {
+        repaintListeners.remove(l);
+    }
+
+    @Override
+    public void repaint(long tm, int x, int y, int width, int height) {
+        // This is the main repaint method, all other methods are convenience methods and simply call this method. This is just an observation, not a must, but seems to be true for all implementations I found so far.
+        if (repaintListeners != null) {
+            // Might get called early in super constructor
+            for (RepaintListener l : repaintListeners) {
+                l.repaint(tm, x, y, width, height);
+            }
+        }
+        super.repaint(tm, x, y, width, height);
+    }
+
 }
