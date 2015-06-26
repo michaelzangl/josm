@@ -583,6 +583,10 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
         mouseReleaseTime = System.currentTimeMillis();
 
         if (mode == Mode.SELECT) {
+            if (e.getButton() != MouseEvent.BUTTON1) {
+                return;
+            }
+            selectionManager.endSelecting(e);
             selectionManager.unregister(mv);
 
             // Select Draw Tool if no selection has been made

@@ -18,6 +18,7 @@ import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.ProjectionBounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.gui.util.GuiHelper;
 
 /**
  * Some tests for the {@link NavigatableComponent} class.
@@ -45,6 +46,12 @@ public class NavigatableComponentTest {
     public void setup() {
         component = new NavigatableComponent();
         component.setBounds(new Rectangle(WIDTH, HEIGHT));
+        // wait for the event to be propagated.
+        GuiHelper.runInEDTAndWait(new Runnable() {
+            @Override
+            public void run() {
+            }
+        });
     }
 
     /**

@@ -13,16 +13,13 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.Stack;
 import java.util.TreeMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.zip.CRC32;
 
 import javax.swing.JComponent;
@@ -51,7 +48,12 @@ import org.openstreetmap.josm.gui.download.DownloadDialog;
 import org.openstreetmap.josm.gui.help.Helpful;
 import org.openstreetmap.josm.gui.mappaint.MapPaintStyles;
 import org.openstreetmap.josm.gui.mappaint.mapcss.MapCSSStyleSource;
-import org.openstreetmap.josm.gui.preferences.projection.ProjectionPreference;
+import org.openstreetmap.josm.gui.navigate.GlobalSoM;
+import org.openstreetmap.josm.gui.navigate.NavigationCursorManager;
+import org.openstreetmap.josm.gui.navigate.NavigationModel;
+import org.openstreetmap.josm.gui.navigate.NavigationModel.ScrollMode;
+import org.openstreetmap.josm.gui.navigate.NavigationModel.WeakZoomChangeListener;
+import org.openstreetmap.josm.gui.navigate.NavigationModel.ZoomData;
 import org.openstreetmap.josm.tools.Predicate;
 import org.openstreetmap.josm.tools.Utils;
 
@@ -62,7 +64,7 @@ import org.openstreetmap.josm.tools.Utils;
  * @author imi
  * @since 41
  */
-public class NavigatableComponent extends JComponent implements Helpful {
+public class NavigatableComponent extends JComponent implements Helpful, NavigationModel.ZoomChangeListener {
 
     /**
      * Interface to notify listeners of the change of the zoom area.
@@ -74,19 +76,53 @@ public class NavigatableComponent extends JComponent implements Helpful {
         void zoomChanged();
     }
 
+    private static final class ZoomChangeAdapter implements NavigationModel.ZoomChangeListener {
+
+        private ZoomChangeListener listener;
+
+        public  ZoomChangeAdapter(ZoomChangeListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public void zoomChanged(NavigationModel navigationModel, ZoomData oldZoom, ZoomData newZoom) {
+            listener.zoomChanged();
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((listener == null) ? 0 : listener.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            ZoomChangeAdapter other = (ZoomChangeAdapter) obj;
+            if (listener == null) {
+                if (other.listener != null)
+                    return false;
+            } else if (!listener.equals(other.listener))
+                return false;
+            return true;
+        }
+    }
+
     /**
      * Interface to notify listeners of the change of the system of measurement.
      * @since 6056
      */
-    public interface SoMChangeListener {
-        /**
-         * The current SoM has changed.
-         * @param oldSoM The old system of measurement
-         * @param newSoM The new (current) system of measurement
-         */
-        void systemOfMeasurementChanged(String oldSoM, String newSoM);
+    public interface SoMChangeListener extends GlobalSoM.SoMChangeListener {
     }
 
+    // XXX: Why is this here?
     public transient Predicate<OsmPrimitive> isSelectablePredicate = new Predicate<OsmPrimitive>() {
         @Override
         public boolean evaluate(OsmPrimitive prim) {
@@ -107,9 +143,10 @@ public class NavigatableComponent extends JComponent implements Helpful {
     public static final String PROPNAME_SCALE  = "scale";
 
     /**
-     * the zoom listeners
+     * This is the navigation model for the one single map view.
+     * Due to backwards compatibility (zoom change listeners, ...), we use a static field here.
      */
-    private static final CopyOnWriteArrayList<ZoomChangeListener> zoomChangeListeners = new CopyOnWriteArrayList<>();
+    private static final NavigationModel defaultNavigationModel = new NavigationModel();
 
     /**
      * Removes a zoom change listener
@@ -117,7 +154,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @param listener the listener. Ignored if null or already absent
      */
     public static void removeZoomChangeListener(NavigatableComponent.ZoomChangeListener listener) {
-        zoomChangeListeners.remove(listener);
+        defaultNavigationModel.removeZoomChangeListener(new ZoomChangeAdapter(listener));
     }
 
     /**
@@ -126,18 +163,8 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @param listener the listener. Ignored if null or already registered.
      */
     public static void addZoomChangeListener(NavigatableComponent.ZoomChangeListener listener) {
-        if (listener != null) {
-            zoomChangeListeners.addIfAbsent(listener);
-        }
+        defaultNavigationModel.addZoomChangeListener(new ZoomChangeAdapter(listener));
     }
-
-    protected static void fireZoomChanged() {
-        for (ZoomChangeListener l : zoomChangeListeners) {
-            l.zoomChanged();
-        }
-    }
-
-    private static final CopyOnWriteArrayList<SoMChangeListener> somChangeListeners = new CopyOnWriteArrayList<>();
 
     /**
      * Removes a SoM change listener
@@ -146,7 +173,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @since 6056
      */
     public static void removeSoMChangeListener(NavigatableComponent.SoMChangeListener listener) {
-        somChangeListeners.remove(listener);
+        GlobalSoM.removeSoMChangeListener(listener);
     }
 
     /**
@@ -156,28 +183,27 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @since 6056
      */
     public static void addSoMChangeListener(NavigatableComponent.SoMChangeListener listener) {
-        if (listener != null) {
-            somChangeListeners.addIfAbsent(listener);
-        }
-    }
-
-    protected static void fireSoMChanged(String oldSoM, String newSoM) {
-        for (SoMChangeListener l : somChangeListeners) {
-            l.systemOfMeasurementChanged(oldSoM, newSoM);
-        }
+        GlobalSoM.addSoMChangeListener(listener);
     }
 
     /**
-     * The scale factor in x or y-units per pixel. This means, if scale = 10,
-     * every physical pixel on screen are 10 x or 10 y units in the
-     * northing/easting space of the projection.
+     * Returns the current system of measurement.
+     * @return The current system of measurement (metric system by default).
+     * @since 3490
      */
-    private double scale = Main.getProjection().getDefaultZoomInPPD();
+    public static SystemOfMeasurement getSystemOfMeasurement() {
+        return GlobalSoM.getSystemOfMeasurement();
+    }
 
     /**
-     * Center n/e coordinate of the desired screen center.
+     * Sets the current system of measurement.
+     * @param somKey The system of measurement key. Must be defined in {@link SystemOfMeasurement#ALL_SYSTEMS}.
+     * @throws IllegalArgumentException if {@code somKey} is not known
+     * @since 6056
      */
-    protected EastNorth center = calculateDefaultCenter();
+    public static void setSystemOfMeasurement(String somKey) {
+        GlobalSoM.setSystemOfMeasurement(somKey);
+    }
 
     private final transient Object paintRequestLock = new Object();
     private Rectangle paintRect = null;
@@ -185,11 +211,36 @@ public class NavigatableComponent extends JComponent implements Helpful {
 
     protected transient ViewportData initialViewport;
 
+    private final NavigationModel navigationModel;
+
+    private transient final NavigationModel.ZoomChangeListener weakZoomListener = new WeakZoomChangeListener(this);
+
+    protected transient final NavigationCursorManager cursorManager = new NavigationCursorManager(this);
+
     /**
-     * Constructs a new {@code NavigatableComponent}.
+     * Constructs a new {@code NavigatableComponent} using the static default {@link NavigationModel} and zooming to the current bounds,
      */
     public NavigatableComponent() {
+        this(defaultNavigationModel);
+        defaultNavigationModel.zoomTo(
+                calculateDefaultCenter(),
+                Main.getProjection().getDefaultZoomInPPD()
+                );
+    }
+
+    /**
+     * Constructs a new {@code NavigatableComponent}
+     * @param navigationModel The navigation model to use.
+     */
+    public NavigatableComponent(NavigationModel navigationModel) {
+        this.navigationModel = navigationModel;
         setLayout(null);
+        navigationModel.addZoomChangeListener(weakZoomListener);
+        navigationModel.trackComponentSize(this);
+    }
+
+    public NavigationModel getNavigationModel() {
+        return navigationModel;
     }
 
     protected DataSet getCurrentDataSet() {
@@ -265,7 +316,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      *      change the center by accessing the return value. Use zoomTo instead.
      */
     public EastNorth getCenter() {
-        return center;
+        return navigationModel.getCenter();
     }
 
     /**
@@ -273,7 +324,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @return The scale.
      */
     public double getScale() {
-        return scale;
+        return navigationModel.getScale();
     }
 
     /**
@@ -283,9 +334,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @return Geographic coordinates from a specific pixel coordination on the screen.
      */
     public EastNorth getEastNorth(int x, int y) {
-        return new EastNorth(
-                center.east() + (x - getWidth()/2.0)*scale,
-                center.north() - (y - getHeight()/2.0)*scale);
+        return navigationModel.getEastNorth(x, y);
     }
 
     public ProjectionBounds getProjectionBounds() {
@@ -354,8 +403,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @return The current affine transform.
      */
     public AffineTransform getAffineTransform() {
-        return new AffineTransform(
-                1.0/scale, 0.0, 0.0, -1.0/scale, getWidth()/2.0 - center.east()/scale, getHeight()/2.0 + center.north()/scale);
+        return navigationModel.getAffineTransform();
     }
 
     /**
@@ -423,89 +471,11 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @param initial true if this call initializes the viewport.
      */
     public void zoomTo(EastNorth newCenter, double newScale, boolean initial) {
-        Bounds b = getProjection().getWorldBoundsLatLon();
-        LatLon cl = Projections.inverseProject(newCenter);
-        boolean changed = false;
-        double lat = cl.lat();
-        double lon = cl.lon();
-        if (lat < b.getMinLat()) {
-            changed = true;
-            lat = b.getMinLat();
-        } else if (lat > b.getMaxLat()) {
-            changed = true;
-            lat = b.getMaxLat();
-        }
-        if (lon < b.getMinLon()) {
-            changed = true;
-            lon = b.getMinLon();
-        } else if (lon > b.getMaxLon()) {
-            changed = true;
-            lon = b.getMaxLon();
-        }
-        if (changed) {
-            newCenter = Projections.project(new LatLon(lat,lon));
-        }
-        int width = getWidth()/2;
-        int height = getHeight()/2;
-        LatLon l1 = new LatLon(b.getMinLat(), lon);
-        LatLon l2 = new LatLon(b.getMaxLat(), lon);
-        EastNorth e1 = getProjection().latlon2eastNorth(l1);
-        EastNorth e2 = getProjection().latlon2eastNorth(l2);
-        double d = e2.north() - e1.north();
-        if (height > 0 && d < height*newScale) {
-            double newScaleH = d/height;
-            e1 = getProjection().latlon2eastNorth(new LatLon(lat, b.getMinLon()));
-            e2 = getProjection().latlon2eastNorth(new LatLon(lat, b.getMaxLon()));
-            d = e2.east() - e1.east();
-            if (width > 0 && d < width*newScale) {
-                newScale = Math.max(newScaleH, d/width);
-            }
-        } else if (height > 0) {
-            d = d/(l1.greatCircleDistance(l2)*height*10);
-            if (newScale < d) {
-                newScale = d;
-            }
-        }
-
-        if (!newCenter.equals(center) || !Utils.equalsEpsilon(scale, newScale)) {
-            if (!initial) {
-                pushZoomUndo(center, scale);
-            }
-            zoomNoUndoTo(newCenter, newScale, initial);
-        }
-    }
-
-    /**
-     * Zoom to the given coordinate without adding to the zoom undo buffer.
-     *
-     * @param newCenter The center x-value (easting) to zoom to.
-     * @param newScale The scale to use.
-     * @param initial true if this call initializes the viewport.
-     */
-    private void zoomNoUndoTo(EastNorth newCenter, double newScale, boolean initial) {
-        if (!newCenter.equals(center)) {
-            EastNorth oldCenter = center;
-            center = newCenter;
-            if (!initial) {
-                firePropertyChange(PROPNAME_CENTER, oldCenter, newCenter);
-            }
-        }
-        if (!Utils.equalsEpsilon(scale, newScale)) {
-            double oldScale = scale;
-            scale = newScale;
-            if (!initial) {
-                firePropertyChange(PROPNAME_SCALE, oldScale, newScale);
-            }
-        }
-
-        if (!initial) {
-            repaint();
-            fireZoomChanged();
-        }
+        navigationModel.zoomTo(newCenter, newScale, initial ? ScrollMode.INITIAL : ScrollMode.DEFAULT);
     }
 
     public void zoomTo(EastNorth newCenter) {
-        zoomTo(newCenter, scale);
+        zoomTo(newCenter, navigationModel.getScale());
     }
 
     public void zoomTo(LatLon newCenter) {
@@ -522,48 +492,42 @@ public class NavigatableComponent extends JComponent implements Helpful {
      */
     public void smoothScrollTo(EastNorth newCenter) {
         // FIXME make these configurable.
-        final int fps = 20;     // animation frames per second
-        final int speed = 1500; // milliseconds for full-screen-width pan
-        if (!newCenter.equals(center)) {
-            final EastNorth oldCenter = center;
-            final double distance = newCenter.distance(oldCenter) / scale;
-            final double milliseconds = distance / getWidth() * speed;
-            final double frames = milliseconds * fps / 1000;
-            final EastNorth finalNewCenter = newCenter;
-
-            new Thread(){
-                @Override
-                public void run() {
-                    for (int i=0; i<frames; i++) {
-                        // FIXME - not use zoom history here
-                        zoomTo(oldCenter.interpolate(finalNewCenter, (i+1) / frames));
-                        try {
-                            Thread.sleep(1000 / fps);
-                        } catch (InterruptedException ex) {
-                            Main.warn("InterruptedException in "+NavigatableComponent.class.getSimpleName()+" during smooth scrolling");
-                        }
-                    }
-                }
-            }.start();
-        }
+//        final int fps = 20;     // animation frames per second
+//        final int speed = 1500; // milliseconds for full-screen-width pan
+//        if (!newCenter.equals(center)) {
+//            final EastNorth oldCenter = center;
+//            final double distance = newCenter.distance(oldCenter) / scale;
+//            final double milliseconds = distance / getWidth() * speed;
+//            final double frames = milliseconds * fps / 1000;
+//            final EastNorth finalNewCenter = newCenter;
+//
+//            new Thread(){
+//                @Override
+//                public void run() {
+//                    for (int i=0; i<frames; i++) {
+//                        // FIXME - not use zoom history here
+//                        zoomTo(oldCenter.interpolate(finalNewCenter, (i+1) / frames));
+//                        try {
+//                            Thread.sleep(1000 / fps);
+//                        } catch (InterruptedException ex) {
+//                            Main.warn("InterruptedException in "+NavigatableComponent.class.getSimpleName()+" during smooth scrolling");
+//                        }
+//                    }
+//                }
+//            }.start();
+//        }
     }
 
     public void zoomToFactor(double x, double y, double factor) {
-        double newScale = scale*factor;
-        // New center position so that point under the mouse pointer stays the same place as it was before zooming
-        // You will get the formula by simplifying this expression: newCenter = oldCenter + mouseCoordinatesInNewZoom - mouseCoordinatesInOldZoom
-        zoomTo(new EastNorth(
-                center.east() - (x - getWidth()/2.0) * (newScale - scale),
-                center.north() + (y - getHeight()/2.0) * (newScale - scale)),
-                newScale);
+        navigationModel.zoomToFactorAround(new Point2D.Double(x, y), factor);
     }
 
     public void zoomToFactor(EastNorth newCenter, double factor) {
-        zoomTo(newCenter, scale*factor);
+        zoomTo(newCenter, getScale()*factor);
     }
 
     public void zoomToFactor(double factor) {
-        zoomTo(center, scale*factor);
+        zoomTo(getCenter(), getScale()*factor);
     }
 
     public void zoomTo(ProjectionBounds box) {
@@ -617,62 +581,20 @@ public class NavigatableComponent extends JComponent implements Helpful {
         zoomTo(box.getBounds());
     }
 
-    private class ZoomData {
-        private final LatLon center;
-        private final double scale;
-
-        public ZoomData(EastNorth center, double scale) {
-            this.center = Projections.inverseProject(center);
-            this.scale = scale;
-        }
-
-        public EastNorth getCenterEastNorth() {
-            return getProjection().latlon2eastNorth(center);
-        }
-
-        public double getScale() {
-            return scale;
-        }
-    }
-
-    private Stack<ZoomData> zoomUndoBuffer = new Stack<>();
-    private Stack<ZoomData> zoomRedoBuffer = new Stack<>();
-    private Date zoomTimestamp = new Date();
-
-    private void pushZoomUndo(EastNorth center, double scale) {
-        Date now = new Date();
-        if ((now.getTime() - zoomTimestamp.getTime()) > (Main.pref.getDouble("zoom.undo.delay", 1.0) * 1000)) {
-            zoomUndoBuffer.push(new ZoomData(center, scale));
-            if (zoomUndoBuffer.size() > Main.pref.getInteger("zoom.undo.max", 50)) {
-                zoomUndoBuffer.remove(0);
-            }
-            zoomRedoBuffer.clear();
-        }
-        zoomTimestamp = now;
-    }
-
     public void zoomPrevious() {
-        if (!zoomUndoBuffer.isEmpty()) {
-            ZoomData zoom = zoomUndoBuffer.pop();
-            zoomRedoBuffer.push(new ZoomData(center, scale));
-            zoomNoUndoTo(zoom.getCenterEastNorth(), zoom.getScale(), false);
-        }
+        navigationModel.zoomPrevious();
     }
 
     public void zoomNext() {
-        if (!zoomRedoBuffer.isEmpty()) {
-            ZoomData zoom = zoomRedoBuffer.pop();
-            zoomUndoBuffer.push(new ZoomData(center, scale));
-            zoomNoUndoTo(zoom.getCenterEastNorth(), zoom.getScale(), false);
-        }
+        navigationModel.zoomNext();
     }
 
     public boolean hasZoomUndoEntries() {
-        return !zoomUndoBuffer.isEmpty();
+        return navigationModel.hasZoomUndoEntries();
     }
 
     public boolean hasZoomRedoEntries() {
-        return !zoomRedoBuffer.isEmpty();
+        return navigationModel.hasZoomRedoEntries();
     }
 
     private BBox getBBox(Point p, int snapDistance) {
@@ -1424,7 +1346,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @return A unique ID, as long as viewport dimensions are the same
      */
     public int getViewID() {
-        String x = center.east() + "_" + center.north() + "_" + scale + "_" +
+        String x = getCenter().east() + "_" + getCenter().north() + "_" + getScale() + "_" +
                 getWidth() + "_" + getHeight() + "_" + getProjection().toString();
         CRC32 id = new CRC32();
         id.update(x.getBytes(StandardCharsets.UTF_8));
@@ -1432,56 +1354,10 @@ public class NavigatableComponent extends JComponent implements Helpful {
     }
 
     /**
-     * Returns the current system of measurement.
-     * @return The current system of measurement (metric system by default).
-     * @since 3490
-     */
-    public static SystemOfMeasurement getSystemOfMeasurement() {
-        SystemOfMeasurement som = SystemOfMeasurement.ALL_SYSTEMS.get(ProjectionPreference.PROP_SYSTEM_OF_MEASUREMENT.get());
-        if (som == null)
-            return SystemOfMeasurement.METRIC;
-        return som;
-    }
-
-    /**
-     * Sets the current system of measurement.
-     * @param somKey The system of measurement key. Must be defined in {@link SystemOfMeasurement#ALL_SYSTEMS}.
-     * @throws IllegalArgumentException if {@code somKey} is not known
-     * @since 6056
-     */
-    public static void setSystemOfMeasurement(String somKey) {
-        if (!SystemOfMeasurement.ALL_SYSTEMS.containsKey(somKey)) {
-            throw new IllegalArgumentException("Invalid system of measurement: "+somKey);
-        }
-        String oldKey = ProjectionPreference.PROP_SYSTEM_OF_MEASUREMENT.get();
-        if (ProjectionPreference.PROP_SYSTEM_OF_MEASUREMENT.put(somKey)) {
-            fireSoMChanged(oldKey, somKey);
-        }
-    }
-
-    private static class CursorInfo {
-        private final Cursor cursor;
-        private final Object object;
-        public CursorInfo(Cursor c, Object o) {
-            cursor = c;
-            object = o;
-        }
-    }
-
-    private LinkedList<CursorInfo> cursors = new LinkedList<>();
-
-    /**
      * Set new cursor.
      */
     public void setNewCursor(Cursor cursor, Object reference) {
-        if (!cursors.isEmpty()) {
-            CursorInfo l = cursors.getLast();
-            if(l != null && l.cursor == cursor && l.object == reference)
-                return;
-            stripCursors(reference);
-        }
-        cursors.add(new CursorInfo(cursor, reference));
-        setCursor(cursor);
+        cursorManager.setNewCursor(cursor, reference);
     }
 
     public void setNewCursor(int cursor, Object reference) {
@@ -1492,29 +1368,25 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * Remove the new cursor and reset to previous
      */
     public void resetCursor(Object reference) {
-        if (cursors.isEmpty()) {
-            setCursor(null);
-            return;
-        }
-        CursorInfo l = cursors.getLast();
-        stripCursors(reference);
-        if (l != null && l.object == reference) {
-            if (cursors.isEmpty()) {
-                setCursor(null);
-            } else {
-                setCursor(cursors.getLast().cursor);
-            }
-        }
+        cursorManager.resetCursor(reference);
     }
 
-    private void stripCursors(Object reference) {
-        LinkedList<CursorInfo> c = new LinkedList<>();
-        for(CursorInfo i : cursors) {
-            if(i.object != reference) {
-                c.add(i);
-            }
+    @Override
+    public void zoomChanged(NavigationModel navigationModel, ZoomData oldZoom, ZoomData newZoom) {
+        if (oldZoom == null) {
+            // initial.
         }
-        cursors = c;
+        EastNorth oldCenter = oldZoom.getCenterEastNorth(getProjection());
+        EastNorth newCenter = newZoom.getCenterEastNorth(getProjection());
+        if (!newCenter.equals(oldCenter)) {
+            firePropertyChange(PROPNAME_CENTER, oldCenter, newCenter);
+        }
+        double oldScale = oldZoom.getScale();
+        double newScale = newZoom.getScale();
+        if (!Utils.equalsEpsilon(oldScale, newScale)) {
+            firePropertyChange(PROPNAME_SCALE, oldScale, newScale);
+        }
+        repaint();
     }
 
     @Override
