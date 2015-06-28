@@ -8,9 +8,9 @@ import org.openstreetmap.josm.gui.NavigatableComponent;
 import org.openstreetmap.josm.gui.preferences.projection.ProjectionPreference;
 
 /**
- * Josm uses one globally set system of meassurement.
+ * Josm uses one globally set system of measurement.
  *
- * @author michael
+ * @author Michael Zangl
  *
  */
 public class GlobalSoM {
