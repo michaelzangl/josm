@@ -67,7 +67,7 @@ public class AddNoteAction extends MapMode implements KeyPressReleaseListener {
             return;
         }
         Main.map.selectMapMode(Main.map.mapModeSelect);
-        LatLon latlon = Main.map.mapView.getLatLon(e.getPoint().x, e.getPoint().y);
+        LatLon latlon = Main.map.mapView.getNavigationModel().getLatLon(e.getPoint());
 
         NoteInputDialog dialog = new NoteInputDialog(Main.parent, tr("Create new note"), tr("Create note"));
         dialog.showNoteDialog(tr("Enter a detailed comment to create a note"), NotesDialog.ICON_NEW);

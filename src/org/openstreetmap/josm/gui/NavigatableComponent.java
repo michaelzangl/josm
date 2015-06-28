@@ -304,11 +304,7 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
     }
 
     public double getDist100Pixel() {
-        int w = getWidth()/2;
-        int h = getHeight()/2;
-        LatLon ll1 = getLatLon(w-50,h);
-        LatLon ll2 = getLatLon(w+50,h);
-        return ll1.greatCircleDistance(ll2);
+        return navigationModel.getPixelDistance(100);
     }
 
     /**
@@ -363,11 +359,11 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
      *      on the screen.
      */
     public LatLon getLatLon(int x, int y) {
-        return getProjection().eastNorth2latlon(getEastNorth(x, y));
+        return navigationModel.getLatLon(new Point2D.Double(x, y));
     }
 
     public LatLon getLatLon(double x, double y) {
-        return getLatLon((int)x, (int)y);
+        return navigationModel.getLatLon(new Point2D.Double(x, y));
     }
 
     /**
@@ -389,10 +385,10 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
         double deltaNorth = (northMax - northMin) / 10;
 
         for (int i=0; i < 10; i++) {
-            result.extend(Main.getProjection().eastNorth2latlon(new EastNorth(eastMin + i * deltaEast, northMin)));
-            result.extend(Main.getProjection().eastNorth2latlon(new EastNorth(eastMin + i * deltaEast, northMax)));
-            result.extend(Main.getProjection().eastNorth2latlon(new EastNorth(eastMin, northMin  + i * deltaNorth)));
-            result.extend(Main.getProjection().eastNorth2latlon(new EastNorth(eastMax, northMin  + i * deltaNorth)));
+            result.extend(getProjection().eastNorth2latlon(new EastNorth(eastMin + i * deltaEast, northMin)));
+            result.extend(getProjection().eastNorth2latlon(new EastNorth(eastMin + i * deltaEast, northMax)));
+            result.extend(getProjection().eastNorth2latlon(new EastNorth(eastMin, northMin  + i * deltaNorth)));
+            result.extend(getProjection().eastNorth2latlon(new EastNorth(eastMax, northMin  + i * deltaNorth)));
         }
 
         return result;
@@ -1375,6 +1371,7 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
     public void zoomChanged(NavigationModel navigationModel, ZoomData oldZoom, ZoomData newZoom) {
         if (oldZoom == null) {
             // initial.
+            return;
         }
         EastNorth oldCenter = oldZoom.getCenterEastNorth(getProjection());
         EastNorth newCenter = newZoom.getCenterEastNorth(getProjection());

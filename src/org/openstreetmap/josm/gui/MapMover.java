@@ -157,7 +157,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
             if (mousePosMove == null)
                 startMovement(e);
             EastNorth center = nm.getCenter();
-            EastNorth mouseCenter = nm.getEastNorth(e.getX(), e.getY());
+            EastNorth mouseCenter = nm.getEastNorth(e.getPoint());
             nm.zoomTo(new EastNorth(
                     mousePosMove.east() + center.east() - mouseCenter.east(),
                     mousePosMove.north() + center.north() - mouseCenter.north()), ScrollMode.IMMEDIATE);
