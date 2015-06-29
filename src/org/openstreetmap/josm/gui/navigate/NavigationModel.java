@@ -3,6 +3,7 @@ package org.openstreetmap.josm.gui.navigate;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.geom.AffineTransform;
@@ -16,6 +17,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.Bounds;
+import org.openstreetmap.josm.data.coor.CachedLatLon;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.projection.Projection;
@@ -89,9 +91,13 @@ public class NavigationModel {
          */
         IMMEDIATE,
         /**
-         * Animate a move to the position.
+         * Animate a smooth, slow move to the position.
          */
-        ANIMATE;
+        ANIMATE,
+        /**
+         * Animate a relatively fast change (200ms).
+         */
+        ANIMATE_FAST;
 
         // Replace this with better methods?
         private boolean resetHistory() {
@@ -101,8 +107,8 @@ public class NavigationModel {
         private int animationTime() {
             if (this == ANIMATE) {
                 return 1500;
-            } else if (this == DEFAULT) {
-                return 300;
+            } else if (this == ANIMATE_FAST) {
+                return 200;
             } else {
                 return 0;
             }
@@ -119,12 +125,14 @@ public class NavigationModel {
          * Center n/e coordinate of the desired screen center using the projection when this object was created.
          */
         private final EastNorth center;
+
         /**
          * The scale factor in x or y-units per pixel. This means, if scale = 10,
          * every physical pixel on screen are 10 x or 10 y units in the
          * northing/easting space of the projection.
          */
         private final double scale;
+
         /**
          * The projection used to compute this center.
          */
@@ -140,9 +148,9 @@ public class NavigationModel {
         /**
          * Interpolates between two zoom data instances.
          * @param otherZoom The other zoom
-         * @param proportion How much the other zoom object influences the result (0..1)
+         * @param proportion How much the other zoom object influences the result so that the values (0..1) form a straight line between the two centers.
          * @param projection The projection to used. Currently, we interpolate in EastNorth coordinates, but this could change (180° problem, ...).
-         * @return
+         * @return A new, interpolated ZoomData.
          */
         public ZoomData interpolate(ZoomData otherZoom, double proportion, Projection projection) {
             EastNorth from = getCenterEastNorth(projection);
@@ -196,6 +204,11 @@ public class NavigationModel {
             return scale;
         }
 
+        /**
+         * Checks if this ZoomData instance is almost the same as an other instance.
+         * @param otherData THe other instance.
+         * @return <code>true</code> if the centers are the same and the scale only differers a small amount.
+         */
         public boolean isWithinTolerance(ZoomData otherData) {
             return otherData.center.equals(this.center) && Utils.equalsEpsilon(otherData.scale, scale)
                     && otherData.usedProjection == usedProjection;
@@ -345,6 +358,10 @@ public class NavigationModel {
         public void componentResized(ComponentEvent e) {
             setViewportSize(e.getComponent().getSize());
         }
+        @Override
+        public void componentShown(ComponentEvent e) {
+            componentResized(e);
+        }
     };
 
     private Timer zoomToTimer;
@@ -353,65 +370,6 @@ public class NavigationModel {
      * The zoomTo animation that is currently running.
      */
     private TimerTask currentZoomToAnimation;
-
-    /**
-     * Removes a zoom change listener
-     *
-     * @param listener the listener. Ignored if null or already absent
-     */
-    public void removeZoomChangeListener(ZoomChangeListener listener) {
-        zoomChangeListeners.remove(listener);
-    }
-
-    /**
-     * Adds a zoom change listener
-     *
-     * @param listener the listener. Ignored if null or already registered.
-     */
-    public void addZoomChangeListener(ZoomChangeListener listener) {
-        if (listener != null) {
-            zoomChangeListeners.addIfAbsent(listener);
-        }
-    }
-
-    protected void fireZoomChanged(ZoomData oldZoom, ZoomData currentZoom) {
-        for (ZoomChangeListener l : zoomChangeListeners) {
-            l.zoomChanged(this, oldZoom, currentZoom);
-        }
-    }
-
-    private void pushZoomUndo(ZoomData zoomData) {
-        Date now = new Date();
-        if ((now.getTime() - zoomTimestamp.getTime()) > (Main.pref.getDouble("zoom.undo.delay", 1.0) * 1000)) {
-            zoomUndoBuffer.push(zoomData);
-            zoomRedoBuffer.clear();
-        }
-        zoomTimestamp = now;
-    }
-
-    public void zoomPrevious() {
-        zoomInBuffer(zoomUndoBuffer, zoomRedoBuffer);
-    }
-
-    public void zoomNext() {
-        zoomInBuffer(zoomRedoBuffer, zoomUndoBuffer);
-    }
-
-    private void zoomInBuffer(ZoomHistoryStack takeFrom, ZoomHistoryStack pushTo) {
-        if (!takeFrom.isEmpty()) {
-            ZoomData zoom = takeFrom.pop();
-            pushTo.push(currentZoom);
-            realZoomToNoUndo(zoom.usingProjection(getProjection()), ScrollMode.DEFAULT);
-        }
-    }
-
-    public boolean hasZoomUndoEntries() {
-        return !zoomUndoBuffer.isEmpty();
-    }
-
-    public boolean hasZoomRedoEntries() {
-        return !zoomRedoBuffer.isEmpty();
-    }
 
     /**
      * @return Returns the center point. A copy is returned, so users cannot
@@ -427,6 +385,24 @@ public class NavigationModel {
      */
     public double getScale() {
         return currentZoom.getScale();
+    }
+
+    /**
+     * Starts to listen to size change events for that component and adjusts our reference size whenever that component size changed.
+     * @param component The component to track.
+     */
+    public void trackComponentSize(Component component) {
+        Component trackedComponent = this.trackedComponent.get();
+        if (trackedComponent != null) {
+            trackedComponent.removeComponentListener(resizeAdapter);
+        }
+        component.addComponentListener(resizeAdapter);
+        this.trackedComponent = new WeakReference<Component>(component);
+        setViewportSize(component.getSize());
+    }
+
+    protected void setViewportSize(Dimension size) {
+        this.viewDimension = size;
     }
 
     /**
@@ -457,6 +433,9 @@ public class NavigationModel {
      * @param mode The animation mode to use for zooming.
      */
     public void zoomTo(EastNorth newCenter, double newScale, ScrollMode mode) {
+        if (newScale <= 0) {
+            throw new IllegalArgumentException("Scale (" + newScale + ") may not be negative.");
+        }
         Bounds b = getProjection().getWorldBoundsLatLon();
         LatLon cl = Projections.inverseProject(newCenter);
         boolean changed = false;
@@ -508,6 +487,22 @@ public class NavigationModel {
     }
 
     /**
+     * Zooms around a given point on the screen by a given factor.
+     * <p>
+     * The EastNorth position below that point on the screen will stay the same.
+     * @param screenPosition The position on the screen to zoom around.
+     * @param factor The factor to zoom by.
+     */
+    public void zoomToFactorAround(Point2D screenPosition, double factor) {
+        double newScale = getScale() * factor;
+        // New center position so that point under the mouse pointer stays the same place as it was before zooming
+        // You will get the formula by simplifying this expression: newCenter = oldCenter + mouseCoordinatesInNewZoom - mouseCoordinatesInOldZoom
+        zoomTo(new EastNorth(getCenter().east() - (screenPosition.getX() - viewDimension.width / 2.0)
+                * (newScale - getScale()), getCenter().north() + (screenPosition.getY() - viewDimension.height / 2.0)
+                * (newScale - getScale())), newScale);
+    }
+
+    /**
      * Zoom to a position without checking it.
      * @param newZoom The new zoom.
      * @param mode The zoom mode
@@ -547,23 +542,58 @@ public class NavigationModel {
         }
     }
 
-    /**
-     * Starts to listen to size change events for that component and adjusts our reference size whenever that component size changed.
-     * @param component The component to track.
-     */
-    public void trackComponentSize(Component component) {
-        Component trackedComponent = this.trackedComponent.get();
-        if (trackedComponent != null) {
-            trackedComponent.removeComponentListener(resizeAdapter);
+    // ================ Zoom undo and redo ================
+
+    private void pushZoomUndo(ZoomData zoomData) {
+        Date now = new Date();
+        if ((now.getTime() - zoomTimestamp.getTime()) > (Main.pref.getDouble("zoom.undo.delay", 1.0) * 1000)) {
+            zoomUndoBuffer.push(zoomData);
+            zoomRedoBuffer.clear();
         }
-        component.addComponentListener(resizeAdapter);
-        this.trackedComponent = new WeakReference<Component>(component);
-        setViewportSize(component.getSize());
+        zoomTimestamp = now;
     }
 
-    protected void setViewportSize(Dimension size) {
-        this.viewDimension = size;
+    /**
+     * Zoom to the previous zoom position. This call is ignored if there is no previous position.
+     */
+    public void zoomPrevious() {
+        zoomInBuffer(zoomUndoBuffer, zoomRedoBuffer);
     }
+
+    /**
+     * Zoom to the next zoom position. This call is ignored if there is no next position.
+     */
+    public void zoomNext() {
+        zoomInBuffer(zoomRedoBuffer, zoomUndoBuffer);
+    }
+
+    private void zoomInBuffer(ZoomHistoryStack takeFrom, ZoomHistoryStack pushTo) {
+        if (!takeFrom.isEmpty()) {
+            ZoomData zoom = takeFrom.pop();
+            pushTo.push(currentZoom);
+            realZoomToNoUndo(zoom.usingProjection(getProjection()), ScrollMode.DEFAULT);
+        }
+    }
+
+    /**
+     * Check if there are previous zoom entries.
+     * @return <code>true</code> if there are previous zoom entries and {@link #zoomPrevious()} can be used to zoom to them.
+     */
+    public boolean hasPreviousZoomEntries() {
+        return !zoomUndoBuffer.isEmpty();
+    }
+
+    /**
+     * Check if there are next zoom entries.
+     * @return <code>true</code> if there are next zoom entries and {@link #zoomNext()} can be used to zoom to them.
+     */
+    public boolean hasNextZoomEntries() {
+        return !zoomRedoBuffer.isEmpty();
+    }
+
+
+
+    // ================ Screen/EastNorth/LatLon conversion ================
 
     /**
      * Get the NorthEast coordinate for a given screen position.
@@ -608,6 +638,35 @@ public class NavigationModel {
     }
 
     /**
+     * Converts an east/north coordinate to a screen position.
+     * @param eastNorth The point to convert.
+     * @return An arbitrary point if p is <code>null</code>, the screen position (may be outside the screen) otherwise.
+     */
+    public Point2D getScreenPosition(EastNorth eastNorth) {
+        if (null == eastNorth) {
+            return new Point();
+        } else {
+            Point2D p2d = new Point2D.Double(eastNorth.east(), eastNorth.north());
+            return getAffineTransform().transform(p2d, null);
+        }
+    }
+
+    /**
+     * Converts a latlon coordinate to a screen position.
+     * @param latlon The point to convert.
+     * @return An arbitrary point if p is <code>null</code>, the screen position (may be outside the screen) otherwise.
+     */
+    public Point2D getScreenPosition(LatLon latlon) {
+        if (latlon == null) {
+            return new Point();
+        } else if (latlon instanceof CachedLatLon) {
+            return getScreenPosition(((CachedLatLon)latlon).getEastNorth());
+        } else {
+            return getScreenPosition(getProjection().latlon2eastNorth(latlon));
+        }
+    }
+
+    /**
      * Gets the affine transform that converts the east/north coordinates to pixel coordinates.
      * @return The current affine transform. Do not modify it.
      */
@@ -616,54 +675,6 @@ public class NavigationModel {
                 viewDimension.height / 2);
         transform.concatenate(currentZoom.getAffineTransform());
         return transform;
-    }
-
-    //    /**
-    //     * Create a thread that moves the viewport to the given center in an
-    //     * animated fashion.
-    //     */
-    //    public void smoothScrollTo(EastNorth newCenter) {
-    //        // FIXME make these configurable.
-    //        final int fps = 20;     // animation frames per second
-    //        final int speed = 1500; // milliseconds for full-screen-width pan
-    //        if (!newCenter.equals(center)) {
-    //            final EastNorth oldCenter = center;
-    //            final double distance = newCenter.distance(oldCenter) / scale;
-    //            final double milliseconds = distance / getWidth() * speed;
-    //            final double frames = milliseconds * fps / 1000;
-    //            final EastNorth finalNewCenter = newCenter;
-    //
-    //            new Thread(){
-    //                @Override
-    //                public void run() {
-    //                    for (int i=0; i<frames; i++) {
-    //                        // FIXME - not use zoom history here
-    //                        zoomTo(oldCenter.interpolate(finalNewCenter, (i+1) / frames));
-    //                        try {
-    //                            Thread.sleep(1000 / fps);
-    //                        } catch (InterruptedException ex) {
-    //                            Main.warn("InterruptedException in "+NavigatableComponent.class.getSimpleName()+" during smooth scrolling");
-    //                        }
-    //                    }
-    //                }
-    //            }.start();
-    //        }
-    //    }
-
-    public void zoomToFactorAround(Point2D screenPosition, double factor) {
-        double newScale = getScale() * factor;
-        // New center position so that point under the mouse pointer stays the same place as it was before zooming
-        // You will get the formula by simplifying this expression: newCenter = oldCenter + mouseCoordinatesInNewZoom - mouseCoordinatesInOldZoom
-        zoomTo(new EastNorth(getCenter().east() - (screenPosition.getX() - viewDimension.width / 2.0)
-                * (newScale - getScale()), getCenter().north() + (screenPosition.getY() - viewDimension.height / 2.0)
-                * (newScale - getScale())), newScale);
-    }
-
-    /**
-     * @return The projection to be used in calculating stuff.
-     */
-    private Projection getProjection() {
-        return Main.getProjection();
     }
 
     /**
@@ -677,5 +688,40 @@ public class NavigationModel {
         LatLon ll1 = getLatLon(new Point2D.Double(centerX - pixel / 2.0, centerY));
         LatLon ll2 = getLatLon(new Point2D.Double(centerX + pixel / 2.0, centerY));
         return ll1.greatCircleDistance(ll2);
+    }
+
+    // ================ Zoom change listeners ================
+
+    /**
+     * @return The projection to be used in calculating stuff.
+     */
+    private Projection getProjection() {
+        return Main.getProjection();
+    }
+
+    /**
+     * Adds a zoom change listener
+     *
+     * @param listener the listener. Ignored if null or already registered.
+     */
+    public void addZoomChangeListener(ZoomChangeListener listener) {
+        if (listener != null) {
+            zoomChangeListeners.addIfAbsent(listener);
+        }
+    }
+
+    /**
+     * Removes a zoom change listener
+     *
+     * @param listener the listener. Ignored if null or already absent
+     */
+    public void removeZoomChangeListener(ZoomChangeListener listener) {
+        zoomChangeListeners.remove(listener);
+    }
+
+    protected void fireZoomChanged(ZoomData oldZoom, ZoomData currentZoom) {
+        for (ZoomChangeListener l : zoomChangeListeners) {
+            l.zoomChanged(this, oldZoom, currentZoom);
+        }
     }
 }

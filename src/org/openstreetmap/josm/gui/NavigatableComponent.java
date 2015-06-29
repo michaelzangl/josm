@@ -6,7 +6,6 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
@@ -29,7 +28,6 @@ import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.ProjectionBounds;
 import org.openstreetmap.josm.data.SystemOfMeasurement;
 import org.openstreetmap.josm.data.ViewportData;
-import org.openstreetmap.josm.data.coor.CachedLatLon;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
@@ -239,6 +237,10 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
         navigationModel.trackComponentSize(this);
     }
 
+    /**
+     * Gets the navigation model that is used to convert between screen and world coordinates and handles zooming.
+     * @return The navigation model this component was constructed with.
+     */
     public NavigationModel getNavigationModel() {
         return navigationModel;
     }
@@ -395,33 +397,17 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
     }
 
     /**
-     * Gets the affine transform that converts the east/north coordinates to pixel coordinates.
-     * @return The current affine transform.
-     */
-    public AffineTransform getAffineTransform() {
-        return navigationModel.getAffineTransform();
-    }
-
-    /**
      * Return the point on the screen where this Coordinate would be.
      * @param p The point, where this geopoint would be drawn.
      * @return The point on screen where "point" would be drawn, relative
      *      to the own top/left.
      */
     public Point2D getPoint2D(EastNorth p) {
-        if (null == p)
-            return new Point();
-        Point2D p2d = new Point2D.Double(p.east(), p.north());
-        return getAffineTransform().transform(p2d, null);
+        return navigationModel.getScreenPosition(p);
     }
 
     public Point2D getPoint2D(LatLon latlon) {
-        if (latlon == null)
-            return new Point();
-        else if (latlon instanceof CachedLatLon)
-            return getPoint2D(((CachedLatLon)latlon).getEastNorth());
-        else
-            return getPoint2D(getProjection().latlon2eastNorth(latlon));
+        return navigationModel.getScreenPosition(latlon);
     }
 
     public Point2D getPoint2D(Node n) {
@@ -488,30 +474,7 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
      */
     public void smoothScrollTo(EastNorth newCenter) {
         // FIXME make these configurable.
-//        final int fps = 20;     // animation frames per second
-//        final int speed = 1500; // milliseconds for full-screen-width pan
-//        if (!newCenter.equals(center)) {
-//            final EastNorth oldCenter = center;
-//            final double distance = newCenter.distance(oldCenter) / scale;
-//            final double milliseconds = distance / getWidth() * speed;
-//            final double frames = milliseconds * fps / 1000;
-//            final EastNorth finalNewCenter = newCenter;
-//
-//            new Thread(){
-//                @Override
-//                public void run() {
-//                    for (int i=0; i<frames; i++) {
-//                        // FIXME - not use zoom history here
-//                        zoomTo(oldCenter.interpolate(finalNewCenter, (i+1) / frames));
-//                        try {
-//                            Thread.sleep(1000 / fps);
-//                        } catch (InterruptedException ex) {
-//                            Main.warn("InterruptedException in "+NavigatableComponent.class.getSimpleName()+" during smooth scrolling");
-//                        }
-//                    }
-//                }
-//            }.start();
-//        }
+        navigationModel.zoomTo(newCenter, ScrollMode.ANIMATE);
     }
 
     public void zoomToFactor(double x, double y, double factor) {
@@ -586,11 +549,11 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
     }
 
     public boolean hasZoomUndoEntries() {
-        return navigationModel.hasZoomUndoEntries();
+        return navigationModel.hasPreviousZoomEntries();
     }
 
     public boolean hasZoomRedoEntries() {
-        return navigationModel.hasZoomRedoEntries();
+        return navigationModel.hasNextZoomEntries();
     }
 
     private BBox getBBox(Point p, int snapDistance) {
