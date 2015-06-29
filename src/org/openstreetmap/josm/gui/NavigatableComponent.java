@@ -1330,6 +1330,14 @@ public class NavigatableComponent extends JComponent implements Helpful, Navigat
         cursorManager.resetCursor(reference);
     }
 
+    /**
+     * Gets the cursor manager that is used for this NavigatableComponent.
+     * @return The cursor manager.
+     */
+    public NavigationCursorManager getCursorManager() {
+        return cursorManager;
+    }
+
     @Override
     public void zoomChanged(NavigationModel navigationModel, ZoomData oldZoom, ZoomData newZoom) {
         if (oldZoom == null) {
