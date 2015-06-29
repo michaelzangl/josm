@@ -435,7 +435,7 @@ public class StyledMapRenderer extends AbstractMapRenderer {
 
     protected void drawArea(OsmPrimitive osm, Path2D.Double path, Color color, MapImage fillImage, boolean disabled, TextElement text) {
 
-        Shape area = path.createTransformedShape(nc.getAffineTransform());
+        Shape area = path.createTransformedShape(nc.getNavigationModel().getAffineTransform());
 
         if (!isOutlineOnly) {
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
