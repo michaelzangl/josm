@@ -95,8 +95,8 @@ public class Diff {
       an edit script, if desired.
      */
     public Diff(Object[] a, Object[] b) {
-        Map<Object,Integer> h = new HashMap<>(a.length + b.length);
-        filevec = new FileData[] { new FileData(a,h),new FileData(b,h) };
+        Map<Object, Integer> h = new HashMap<>(a.length + b.length);
+        filevec = new FileData[] {new FileData(a, h), new FileData(b, h)};
     }
 
     /** 1 more than the maximum equivalence value used for this or its
@@ -266,12 +266,13 @@ public class Diff {
                                now insist that it end with a significant snake.  */
                             int k;
 
-                            for (k = 1; xvec[x - k] == yvec[y - k]; k++)
+                            for (k = 1; xvec[x - k] == yvec[y - k]; k++) {
                                 if (k == SNAKE_LIMIT) {
                                     best = v;
                                     bestpos = d;
                                     break;
                                 }
+                            }
                         }
                     }
                 }
@@ -294,12 +295,13 @@ public class Diff {
                                now insist that it end with a significant snake.  */
                             int k;
 
-                            for (k = 0; xvec[x + k] == yvec[y + k]; k++)
+                            for (k = 0; xvec[x + k] == yvec[y + k]; k++) {
                                 if (k == SNAKE_LIMIT) {
                                     best = v;
                                     bestpos = d;
                                     break;
                                 }
+                            }
                         }
                     }
                 }
@@ -394,9 +396,9 @@ public class Diff {
             @param len1 number of lines in 2nd file
             @return a linked list of changes - or null
          */
-        public Change build_script(
-                boolean[] changed0,int len0,
-                boolean[] changed1,int len1
+        Change build_script(
+                boolean[] changed0, int len0,
+                boolean[] changed1, int len1
         );
     }
 
@@ -406,8 +408,8 @@ public class Diff {
     static class ReverseScript implements ScriptBuilder {
         @Override
         public  Change build_script(
-                final boolean[] changed0,int len0,
-                final boolean[] changed1,int len1) {
+                final boolean[] changed0, int len0,
+                final boolean[] changed1, int len1) {
             Change script = null;
             int i0 = 0, i1 = 0;
             while (i0 < len0 || i1 < len1) {
@@ -439,8 +441,8 @@ public class Diff {
             producing an edit script in forward order.  */
         @Override
         public Change build_script(
-                final boolean[] changed0,int len0,
-                final boolean[] changed1,int len1) {
+                final boolean[] changed0, int len0,
+                final boolean[] changed1, int len1) {
             Change script = null;
             int i0 = len0, i1 = len1;
 
@@ -569,14 +571,13 @@ public class Diff {
 
         @Override
         public String toString() {
-            String s = String.format("%d -%d +%d %d",line0,deleted,inserted,line1);
+            String s = String.format("%d -%d +%d %d", line0, deleted, inserted, line1);
             return (link != null) ? s = s + '\n' + link : s;
         }
     }
 
     /** Data on one input file being compared.
      */
-
     class FileData {
 
         /** Allocate changed array for the results of comparison.  */
@@ -723,7 +724,7 @@ public class Diff {
 
                         /* Cancel any subrun of MINIMUM or more provisionals
                            within the larger run.  */
-                        for (j = 0, consec = 0; j < length; j++)
+                        for (j = 0, consec = 0; j < length; j++) {
                             if (discards[i + j] != 2) {
                                 consec = 0;
                             } else if (minimum == ++consec) {
@@ -732,6 +733,7 @@ public class Diff {
                             } else if (minimum < consec) {
                                 discards[i + j] = 0;
                             }
+                        }
 
                         /* Scan from beginning of run
                            until we find 3 or more nonprovisionals in a row
@@ -783,13 +785,14 @@ public class Diff {
         private void discard(final byte[] discards) {
             final int end = bufferedLines;
             int j = 0;
-            for (int i = 0; i < end; ++i)
+            for (int i = 0; i < end; ++i) {
                 if (noDiscards || discards[i] == 0) {
                     undiscarded[j] = equivs[i];
                     realindexes[j++] = i;
                 } else {
                     changedFlag[1+i] = true;
                 }
+            }
             nondiscardedLines = j;
         }
 
@@ -800,13 +803,13 @@ public class Diff {
             realindexes = new int[bufferedLines];
         }
 
-        FileData(Object[] data, Map<Object,Integer> h) {
+        FileData(Object[] data, Map<Object, Integer> h) {
             this(data.length);
             // FIXME: diff 2.7 removes common prefix and common suffix
             for (int i = 0; i < data.length; ++i) {
                 Integer ir = h.get(data[i]);
                 if (ir == null) {
-                    h.put(data[i],equivs[i] = equivMax++);
+                    h.put(data[i], equivs[i] = equivMax++);
                 } else {
                     equivs[i] = ir.intValue();
                 }

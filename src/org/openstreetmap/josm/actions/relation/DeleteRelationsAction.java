@@ -20,7 +20,7 @@ public class DeleteRelationsAction extends AbstractRelationAction {
      * Constructs a new <code>DeleteRelationsAction</code>.
      */
     public DeleteRelationsAction() {
-        putValue(SHORT_DESCRIPTION,tr("Delete the selected relation"));
+        putValue(SHORT_DESCRIPTION, tr("Delete the selected relation"));
         putValue(NAME, tr("Delete"));
         putValue(SMALL_ICON, ImageProvider.get("dialogs", "delete"));
     }
@@ -29,9 +29,9 @@ public class DeleteRelationsAction extends AbstractRelationAction {
         if (toDelete == null)
             return;
         org.openstreetmap.josm.actions.mapmode.DeleteAction
-                .deleteRelation( Main.main.getEditLayer(), toDelete );
+                .deleteRelation(Main.main.getEditLayer(), toDelete);
         // clear selection after deletion
-        if (Main.map.relationListDialog!=null)
+        if (Main.map.relationListDialog != null)
                 Main.map.relationListDialog.selectRelations(null);
     }
 

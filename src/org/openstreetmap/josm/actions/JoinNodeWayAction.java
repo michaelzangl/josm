@@ -139,7 +139,11 @@ public class JoinNodeWayAction extends JosmAction {
                         EastNorth newPosition = Geometry.closestPointToSegment(w.getNode(segmentIndex).getEastNorth(),
                                                                             w.getNode(segmentIndex+1).getEastNorth(),
                                                                             node.getEastNorth());
-                        cmds.add(new MoveCommand(node, Projections.inverseProject(newPosition)));
+                        MoveCommand c = new MoveCommand(node, Projections.inverseProject(newPosition));
+                        // Avoid moving a given node several times at the same position in case of overlapping ways
+                        if (!cmds.contains(c)) {
+                            cmds.add(c);
+                        }
                     }
                 }
                 List<Node> nodesToAdd = new LinkedList<>();
@@ -178,11 +182,13 @@ public class JoinNodeWayAction extends JosmAction {
         private final EastNorth refPoint;
         private EastNorth refPoint2;
         private final boolean projectToSegment;
+
         NodeDistanceToRefNodeComparator(Node referenceNode, Node referenceNode2, boolean projectFirst) {
             refPoint = referenceNode.getEastNorth();
             refPoint2 = referenceNode2.getEastNorth();
             projectToSegment = projectFirst;
         }
+
         @Override
         public int compare(Node first, Node second) {
             EastNorth firstPosition = first.getEastNorth();

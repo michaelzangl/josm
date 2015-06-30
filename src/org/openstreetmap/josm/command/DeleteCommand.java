@@ -35,7 +35,7 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.osm.WaySegment;
 import org.openstreetmap.josm.gui.ConditionalOptionPaneUtil;
 import org.openstreetmap.josm.gui.DefaultNameFormatter;
-import org.openstreetmap.josm.gui.actionsupport.DeleteFromRelationConfirmationDialog;
+import org.openstreetmap.josm.gui.dialogs.DeleteFromRelationConfirmationDialog;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.widgets.JMultilineLabel;
 import org.openstreetmap.josm.tools.CheckParameterUtil;
@@ -258,7 +258,7 @@ public class DeleteCommand extends Command {
             return null;
         if (!silent && !checkAndConfirmOutlyingDelete(parents, null))
             return null;
-        return new DeleteCommand(layer,parents);
+        return new DeleteCommand(layer, parents);
     }
 
     /**
@@ -404,7 +404,7 @@ public class DeleteCommand extends Command {
         if (!silent) {
             Set<RelationToChildReference> references = RelationToChildReference.getRelationToChildReferences(primitivesToDelete);
             Iterator<RelationToChildReference> it = references.iterator();
-            while(it.hasNext()) {
+            while (it.hasNext()) {
                 RelationToChildReference ref = it.next();
                 if (ref.getParent().isDeleted()) {
                     it.remove();
@@ -430,7 +430,7 @@ public class DeleteCommand extends Command {
         // build the delete command
         //
         if (!primitivesToDelete.isEmpty()) {
-            cmds.add(new DeleteCommand(layer,primitivesToDelete));
+            cmds.add(new DeleteCommand(layer, primitivesToDelete));
         }
 
         return new SequenceCommand(tr("Delete"), cmds);
@@ -440,9 +440,8 @@ public class DeleteCommand extends Command {
         if (ws.way.getNodesCount() < 3)
             return delete(layer, Collections.singleton(ws.way), false);
 
-        if (ws.way.firstNode() == ws.way.lastNode()) {
-            // If the way is circular (first and last nodes are the same),
-            // the way shouldn't be splitted
+        if (ws.way.isClosed()) {
+            // If the way is circular (first and last nodes are the same), the way shouldn't be splitted
 
             List<Node> n = new ArrayList<>();
 
@@ -455,7 +454,8 @@ public class DeleteCommand extends Command {
             return new ChangeCommand(ws.way, wnew);
         }
 
-        List<Node> n1 = new ArrayList<>(), n2 = new ArrayList<>();
+        List<Node> n1 = new ArrayList<>();
+        List<Node> n2 = new ArrayList<>();
 
         n1.addAll(ws.way.getNodes().subList(0, ws.lowerIndex + 1));
         n2.addAll(ws.way.getNodes().subList(ws.lowerIndex + 1, ws.way.getNodesCount()));
@@ -472,11 +472,12 @@ public class DeleteCommand extends Command {
             List<List<Node>> chunks = new ArrayList<>(2);
             chunks.add(n1);
             chunks.add(n2);
-            return SplitWayAction.splitWay(layer,ws.way, chunks, Collections.<OsmPrimitive>emptyList()).getCommand();
+            return SplitWayAction.splitWay(layer, ws.way, chunks, Collections.<OsmPrimitive>emptyList()).getCommand();
         }
     }
 
-    public static boolean checkAndConfirmOutlyingDelete(Collection<? extends OsmPrimitive> primitives, Collection<? extends OsmPrimitive> ignore) {
+    public static boolean checkAndConfirmOutlyingDelete(Collection<? extends OsmPrimitive> primitives,
+            Collection<? extends OsmPrimitive> ignore) {
         return Command.checkAndConfirmOutlyingOperation("delete",
                 tr("Delete confirmation"),
                 tr("You are about to delete nodes outside of the area you have downloaded."
@@ -514,5 +515,36 @@ public class DeleteCommand extends Command {
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
                 JOptionPane.YES_OPTION);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((clonedPrimitives == null) ? 0 : clonedPrimitives.hashCode());
+        result = prime * result + ((toDelete == null) ? 0 : toDelete.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DeleteCommand other = (DeleteCommand) obj;
+        if (clonedPrimitives == null) {
+            if (other.clonedPrimitives != null)
+                return false;
+        } else if (!clonedPrimitives.equals(other.clonedPrimitives))
+            return false;
+        if (toDelete == null) {
+            if (other.toDelete != null)
+                return false;
+        } else if (!toDelete.equals(other.toDelete))
+            return false;
+        return true;
     }
 }

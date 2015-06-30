@@ -58,7 +58,7 @@ public class TagCellEditor extends AbstractCellEditor implements TableCellEditor
         // remove the keys already present in the current tag model
         //
         for (String key : model.getKeys()) {
-            if (! key.equals(currentTag.getName())) {
+            if (!key.equals(currentTag.getName())) {
                 autoCompletionList.remove(key);
             }
         }
@@ -90,12 +90,12 @@ public class TagCellEditor extends AbstractCellEditor implements TableCellEditor
         currentTag = (TagModel) value;
 
         // no autocompletion for initial editor#setText()
-        if(autoCompletionList != null) {
+        if (autoCompletionList != null) {
             autoCompletionList.clear();
         }
         if (column == 0) {
             editor.setText(currentTag.getName());
-            TagEditorModel model = (TagEditorModel)table.getModel();
+            TagEditorModel model = (TagEditorModel) table.getModel();
             initAutoCompletionListForKeys(model, currentTag);
             return editor;
         } else if (column == 1) {

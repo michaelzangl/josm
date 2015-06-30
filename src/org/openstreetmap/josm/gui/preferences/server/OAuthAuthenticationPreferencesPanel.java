@@ -29,11 +29,11 @@ import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.oauth.AdvancedOAuthPropertiesPanel;
 import org.openstreetmap.josm.gui.oauth.OAuthAuthorizationWizard;
 import org.openstreetmap.josm.gui.oauth.TestAccessTokenTask;
+import org.openstreetmap.josm.gui.widgets.JMultilineLabel;
+import org.openstreetmap.josm.gui.widgets.JosmTextField;
 import org.openstreetmap.josm.io.OsmApi;
 import org.openstreetmap.josm.io.auth.CredentialsManager;
 import org.openstreetmap.josm.tools.ImageProvider;
-import org.openstreetmap.josm.gui.widgets.JMultilineLabel;
-import org.openstreetmap.josm.gui.widgets.JosmTextField;
 
 /**
  * The preferences panel for the OAuth preferences. This just a summary panel
@@ -59,12 +59,12 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
      */
     protected JPanel buildAdvancedPropertiesPanel() {
         JPanel pnl = new JPanel(new GridBagLayout());
-        GridBagConstraints gc= new GridBagConstraints();
+        GridBagConstraints gc = new GridBagConstraints();
 
         gc.anchor = GridBagConstraints.NORTHWEST;
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.weightx = 0.0;
-        gc.insets = new Insets(0,0,0,3);
+        gc.insets = new Insets(0, 0, 0, 3);
         pnl.add(cbShowAdvancedParameters = new JCheckBox(), gc);
         cbShowAdvancedParameters.setSelected(false);
         cbShowAdvancedParameters.addItemListener(
@@ -84,7 +84,7 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
 
         gc.gridy = 1;
         gc.gridx = 1;
-        gc.insets = new Insets(3,0,3,0);
+        gc.insets = new Insets(3, 0, 3, 0);
         gc.fill = GridBagConstraints.BOTH;
         gc.weightx = 1.0;
         gc.weighty = 1.0;
@@ -93,7 +93,7 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
         pnlAdvancedProperties.setBorder(
                 BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(Color.GRAY, 1),
-                        BorderFactory.createEmptyBorder(3,3,3,3)
+                        BorderFactory.createEmptyBorder(3, 3, 3, 3)
                 )
         );
         pnlAdvancedProperties.setVisible(false);
@@ -105,7 +105,7 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
      */
     protected final void build() {
         setLayout(new GridBagLayout());
-        setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         GridBagConstraints gc = new GridBagConstraints();
 
         // the panel for the OAuth parameters. pnlAuthorisationMessage is an
@@ -115,7 +115,7 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
         gc.anchor = GridBagConstraints.NORTHWEST;
         gc.weighty = 1.0;
         gc.weightx = 1.0;
-        gc.insets = new Insets(10,0,0,0);
+        gc.insets = new Insets(10, 0, 0, 0);
         add(pnlAuthorisationMessage = new JPanel(), gc);
         pnlAuthorisationMessage.setLayout(new BorderLayout());
 
@@ -179,17 +179,25 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
      *
      */
     private class NotYetAuthorisedPanel extends JPanel {
+        /**
+         * Constructs a new {@code NotYetAuthorisedPanel}.
+         */
+        public NotYetAuthorisedPanel() {
+            build();
+        }
+
         protected void build() {
             setLayout(new GridBagLayout());
             GridBagConstraints gc = new GridBagConstraints();
 
             // A message explaining that the user isn't authorised yet
             gc.anchor = GridBagConstraints.NORTHWEST;
-            gc.insets = new Insets(0,0,3,0);
+            gc.insets = new Insets(0, 0, 3, 0);
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
             JMultilineLabel lbl;
-            add(lbl = new JMultilineLabel(tr("You do not have an Access Token yet to access the OSM server using OAuth. Please authorize first.")), gc);
+            add(lbl = new JMultilineLabel(
+                    tr("You do not have an Access Token yet to access the OSM server using OAuth. Please authorize first.")), gc);
             lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN));
 
             // Action for authorising now
@@ -205,10 +213,6 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
             gc.weighty = 1.0;
             add(new JPanel(), gc);
         }
-
-        public NotYetAuthorisedPanel() {
-            build();
-        }
     }
 
     /**
@@ -223,7 +227,7 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
             setLayout(new GridBagLayout());
             GridBagConstraints gc = new GridBagConstraints();
             gc.anchor = GridBagConstraints.NORTHWEST;
-            gc.insets = new Insets(0,0,3,3);
+            gc.insets = new Insets(0, 0, 3, 3);
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
             gc.gridwidth = 2;
@@ -291,12 +295,15 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
 
         public final void refreshView() {
             String v = OAuthAccessTokenHolder.getInstance().getAccessTokenKey();
-            tfAccessTokenKey.setText(v == null? "" : v);
+            tfAccessTokenKey.setText(v == null ? "" : v);
             v = OAuthAccessTokenHolder.getInstance().getAccessTokenSecret();
-            tfAccessTokenSecret.setText(v == null? "" : v);
+            tfAccessTokenSecret.setText(v == null ? "" : v);
             cbSaveToPreferences.setSelected(OAuthAccessTokenHolder.getInstance().isSaveToPreferences());
         }
 
+        /**
+         * Constructs a new {@code AlreadyAuthorisedPanel}.
+         */
         public AlreadyAuthorisedPanel() {
             build();
             refreshView();
@@ -310,9 +317,9 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
         public AuthoriseNowAction() {
             putValue(NAME, tr("Authorize now"));
             putValue(SHORT_DESCRIPTION, tr("Click to step through the OAuth authorization process"));
-            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth"));
-
+            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth-small"));
         }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             OAuthAuthorizationWizard wizard = new OAuthAuthorizationWizard(
@@ -333,12 +340,16 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
      * Launches the OAuthAuthorisationWizard to generate a new Access Token
      */
     private class RenewAuthorisationAction extends AbstractAction {
+        /**
+         * Constructs a new {@code RenewAuthorisationAction}.
+         */
         public RenewAuthorisationAction() {
             putValue(NAME, tr("New Access Token"));
             putValue(SHORT_DESCRIPTION, tr("Click to step through the OAuth authorization process and generate a new Access Token"));
-            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth"));
+            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth-small"));
 
         }
+
         @Override
         public void actionPerformed(ActionEvent arg0) {
             OAuthAuthorizationWizard wizard = new OAuthAuthorizationWizard(
@@ -359,10 +370,13 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
      * Runs a test whether we can access the OSM server with the current Access Token
      */
     private class TestAuthorisationAction extends AbstractAction {
+        /**
+         * Constructs a new {@code TestAuthorisationAction}.
+         */
         public TestAuthorisationAction() {
             putValue(NAME, tr("Test Access Token"));
             putValue(SHORT_DESCRIPTION, tr("Click test access to the OSM server with the current access token"));
-            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth"));
+            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth-small"));
 
         }
 
@@ -382,8 +396,8 @@ public class OAuthAuthenticationPreferencesPanel extends JPanel implements Prope
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (! evt.getPropertyName().equals(OsmApiUrlInputPanel.API_URL_PROP))
+        if (!evt.getPropertyName().equals(OsmApiUrlInputPanel.API_URL_PROP))
             return;
-        setApiUrl((String)evt.getNewValue());
+        setApiUrl((String) evt.getNewValue());
     }
 }

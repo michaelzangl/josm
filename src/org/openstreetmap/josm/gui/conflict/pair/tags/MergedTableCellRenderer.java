@@ -23,7 +23,7 @@ public class MergedTableCellRenderer extends TagMergeTableCellRenderer {
 
     @Override
     protected void renderKey(TagMergeItem item, boolean isSelected) {
-        setBackgroundColor(item,isSelected);
+        setBackgroundColor(item, isSelected);
         if (MergeDecisionType.KEEP_MINE.equals(item.getMergeDecision()) && item.getMyTagValue() == null) {
             setText(tr("<undefined>"));
             setToolTipText(tr("The merged dataset will not include a tag with key {0}", item.getKey()));
@@ -40,7 +40,7 @@ public class MergedTableCellRenderer extends TagMergeTableCellRenderer {
 
     @Override
     protected void renderValue(TagMergeItem item, boolean isSelected) {
-        setBackgroundColor(item,isSelected);
+        setBackgroundColor(item, isSelected);
         if (MergeDecisionType.KEEP_MINE.equals(item.getMergeDecision()) && item.getMyTagValue() == null) {
             setText(tr("<undefined>"));
             setToolTipText(tr("The merged dataset will not include a tag with key {0}", item.getKey()));
@@ -56,10 +56,7 @@ public class MergedTableCellRenderer extends TagMergeTableCellRenderer {
             } else if (MergeDecisionType.KEEP_THEIR.equals(item.getMergeDecision())) {
                 setText(item.getTheirTagValue());
                 setToolTipText(item.getTheirTagValue());
-            } else {
-                // should not happen
             }
         }
     }
-
 }

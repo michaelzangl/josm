@@ -186,7 +186,7 @@ public class GeoImageLayer extends Layer implements PropertyChangeListener, Jump
 
             for (File f : sel) {
 
-                if(canceled) {
+                if (canceled) {
                     break;
                 }
 
@@ -328,6 +328,7 @@ public class GeoImageLayer extends Layer implements PropertyChangeListener, Jump
     }
 
     private static List<Action> menuAdditions = new LinkedList<>();
+
     public static void registerMenuAddition(Action addition) {
         menuAdditions.add(addition);
     }
@@ -424,7 +425,7 @@ public class GeoImageLayer extends Layer implements PropertyChangeListener, Jump
             GuiHelper.runInEDTAndWait(new Runnable() {
                 @Override
                 public void run() {
-                    for (int i = 0; i < data.size() ; i++) {
+                    for (int i = 0; i < data.size(); i++) {
                         if (selected.equals(data.get(i))) {
                             currentPhoto = i;
                             ImageViewerDialog.showImage(GeoImageLayer.this, data.get(i));
@@ -482,7 +483,7 @@ public class GeoImageLayer extends Layer implements PropertyChangeListener, Jump
 
             if (updateOffscreenBuffer) {
                 Graphics2D tempG = offscreenBuffer.createGraphics();
-                tempG.setColor(new Color(0,0,0,0));
+                tempG.setColor(new Color(0, 0, 0, 0));
                 Composite saveComp = tempG.getComposite();
                 tempG.setComposite(AlphaComposite.Clear);   // remove the old images
                 tempG.fillRect(0, 0, width, height);
@@ -544,9 +545,9 @@ public class GeoImageLayer extends Layer implements PropertyChangeListener, Jump
 
                     double dir = e.getExifImgDir();
                     // Rotate 90 degrees CCW
-                    double headdir = ( dir < 90 ) ? dir + 270 : dir - 90;
-                    double leftdir = ( headdir < 90 ) ? headdir + 270 : headdir - 90;
-                    double rightdir = ( headdir > 270 ) ? headdir - 270 : headdir + 90;
+                    double headdir = (dir < 90) ? dir + 270 : dir - 90;
+                    double leftdir = (headdir < 90) ? headdir + 270 : headdir - 90;
+                    double rightdir = (headdir > 270) ? headdir - 270 : headdir + 90;
 
                     double ptx = p.x + Math.cos(Math.toRadians(headdir)) * arrowlength;
                     double pty = p.y + Math.sin(Math.toRadians(headdir)) * arrowlength;
@@ -783,8 +784,8 @@ public class GeoImageLayer extends Layer implements PropertyChangeListener, Jump
                     tr("Delete image file from disk"),
                     new String[] {tr("Cancel"), tr("Delete")})
             .setButtonIcons(new String[] {"cancel", "dialogs/delete"})
-            .setContent(new JLabel(tr("<html><h3>Delete the file {0} from disk?<p>The image file will be permanently lost!</h3></html>"
-                    ,toDelete.getFile().getName()), ImageProvider.get("dialogs/geoimage/deletefromdisk"),SwingConstants.LEFT))
+            .setContent(new JLabel(tr("<html><h3>Delete the file {0} from disk?<p>The image file will be permanently lost!</h3></html>",
+                    toDelete.getFile().getName()), ImageProvider.get("dialogs/geoimage/deletefromdisk"), SwingConstants.LEFT))
                     .toggleEnable("geoimage.deleteimagefromdisk")
                     .setCancelButton(1)
                     .setDefaultButton(2)
@@ -917,7 +918,7 @@ public class GeoImageLayer extends Layer implements PropertyChangeListener, Jump
      * @return {@code true} if the map mode is supported,
      *         {@code false} otherwise
      */
-    private static final boolean isSupportedMapMode(MapMode mapMode) {
+    private static boolean isSupportedMapMode(MapMode mapMode) {
         if (mapMode instanceof SelectAction || mapMode instanceof LassoModeAction) {
             return true;
         }
@@ -937,11 +938,12 @@ public class GeoImageLayer extends Layer implements PropertyChangeListener, Jump
     @Override
     public void hookUpMapView() {
         mouseAdapter = new MouseAdapter() {
-            private final boolean isMapModeOk() {
+            private boolean isMapModeOk() {
                 return Main.map.mapMode == null || isSupportedMapMode(Main.map.mapMode);
             }
-            @Override public void mousePressed(MouseEvent e) {
 
+            @Override
+            public void mousePressed(MouseEvent e) {
                 if (e.getButton() != MouseEvent.BUTTON1)
                     return;
                 if (isVisible() && isMapModeOk()) {
@@ -949,7 +951,8 @@ public class GeoImageLayer extends Layer implements PropertyChangeListener, Jump
                 }
             }
 
-            @Override public void mouseReleased(MouseEvent ev) {
+            @Override
+            public void mouseReleased(MouseEvent ev) {
                 if (ev.getButton() != MouseEvent.BUTTON1)
                     return;
                 if (data == null || !isVisible() || !isMapModeOk())
@@ -1033,7 +1036,8 @@ public class GeoImageLayer extends Layer implements PropertyChangeListener, Jump
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (NavigatableComponent.PROPNAME_CENTER.equals(evt.getPropertyName()) || NavigatableComponent.PROPNAME_SCALE.equals(evt.getPropertyName())) {
+        if (NavigatableComponent.PROPNAME_CENTER.equals(evt.getPropertyName()) ||
+                NavigatableComponent.PROPNAME_SCALE.equals(evt.getPropertyName())) {
             updateOffscreenBuffer = true;
         }
     }

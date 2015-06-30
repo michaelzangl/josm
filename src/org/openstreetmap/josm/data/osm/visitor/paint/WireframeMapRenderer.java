@@ -169,7 +169,7 @@ public class WireframeMapRenderer extends AbstractMapRenderer implements Visitor
         List<Way> highlightedWays = new ArrayList<>();
         List<Way> untaggedWays = new ArrayList<>();
 
-        for (final Way way : data.searchWays(bbox)){
+        for (final Way way : data.searchWays(bbox)) {
             if (way.isDrawable() && !ds.isSelected(way) && !way.isDisabledAndHidden()) {
                 if (way.isHighlighted()) {
                     highlightedWays.add(way);
@@ -185,7 +185,7 @@ public class WireframeMapRenderer extends AbstractMapRenderer implements Visitor
         // Display highlighted ways after the other ones (fix #8276)
         List<Way> specialWays = new ArrayList<>(untaggedWays);
         specialWays.addAll(highlightedWays);
-        for (final Way way : specialWays){
+        for (final Way way : specialWays) {
             way.accept(this);
         }
         specialWays.clear();
@@ -223,7 +223,7 @@ public class WireframeMapRenderer extends AbstractMapRenderer implements Visitor
      * @param c Third value
      * @param d Fourth value
      */
-    private static final int max(int a, int b, int c, int d) {
+    private static int max(int a, int b, int c, int d) {
         return Math.max(Math.max(a, b), Math.max(c, d));
     }
 
@@ -432,7 +432,7 @@ public class WireframeMapRenderer extends AbstractMapRenderer implements Visitor
                 final double sy = l * (p1.y - p2.y);
 
                 path.lineTo(p2.x + (int) Math.round(cosPHI * sx - sinPHI * sy), p2.y + (int) Math.round(sinPHI * sx + cosPHI * sy));
-                path.moveTo(p2.x + (int) Math.round(cosPHI * sx + sinPHI * sy), p2.y + (int) Math.round(- sinPHI * sx + cosPHI * sy));
+                path.moveTo(p2.x + (int) Math.round(cosPHI * sx + sinPHI * sy), p2.y + (int) Math.round(-sinPHI * sx + cosPHI * sy));
                 path.lineTo(p2.x, p2.y);
             }
         }

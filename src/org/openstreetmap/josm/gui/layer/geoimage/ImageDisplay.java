@@ -72,7 +72,7 @@ public class ImageDisplay extends JComponent {
             tracker.addImage(img, 1);
 
             // Wait for the end of loading
-            while (! tracker.checkID(1, true)) {
+            while (!tracker.checkID(1, true)) {
                 if (this.file != ImageDisplay.this.file) {
                     // The file has changed
                     tracker.removeImage(img);
@@ -90,7 +90,7 @@ public class ImageDisplay extends JComponent {
                 error = true;
             }
 
-            synchronized(ImageDisplay.this) {
+            synchronized (ImageDisplay.this) {
                 if (this.file != ImageDisplay.this.file) {
                     // The file has changed
                     tracker.removeImage(img);
@@ -205,7 +205,7 @@ public class ImageDisplay extends JComponent {
             // The position is also limited by the image size
             checkVisibleRectPos(image, visibleRect);
 
-            synchronized(ImageDisplay.this) {
+            synchronized (ImageDisplay.this) {
                 if (ImageDisplay.this.file == file) {
                     ImageDisplay.this.visibleRect = visibleRect;
                 }
@@ -242,7 +242,7 @@ public class ImageDisplay extends JComponent {
 
             checkVisibleRectPos(image, visibleRect);
 
-            synchronized(ImageDisplay.this) {
+            synchronized (ImageDisplay.this) {
                 if (ImageDisplay.this.file == file) {
                     ImageDisplay.this.visibleRect = visibleRect;
                 }
@@ -289,7 +289,7 @@ public class ImageDisplay extends JComponent {
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            if (! mouseIsDragging && selectedRect == null)
+            if (!mouseIsDragging && selectedRect == null)
                 return;
 
             File file;
@@ -313,7 +313,7 @@ public class ImageDisplay extends JComponent {
                 visibleRect.x += mousePointInImg.x - p.x;
                 visibleRect.y += mousePointInImg.y - p.y;
                 checkVisibleRectPos(image, visibleRect);
-                synchronized(ImageDisplay.this) {
+                synchronized (ImageDisplay.this) {
                     if (ImageDisplay.this.file == file) {
                         ImageDisplay.this.visibleRect = visibleRect;
                     }
@@ -338,7 +338,7 @@ public class ImageDisplay extends JComponent {
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            if (! mouseIsDragging && selectedRect == null)
+            if (!mouseIsDragging && selectedRect == null)
                 return;
 
             File file;
@@ -436,7 +436,7 @@ public class ImageDisplay extends JComponent {
     }
 
     public void setImage(File file, Integer orientation) {
-        synchronized(this) {
+        synchronized (this) {
             this.file = file;
             image = null;
             selectedRect = null;
@@ -460,7 +460,7 @@ public class ImageDisplay extends JComponent {
         Rectangle visibleRect;
         boolean errorLoading;
 
-        synchronized(this) {
+        synchronized (this) {
             image = this.image;
             file = this.file;
             visibleRect = this.visibleRect;
@@ -478,7 +478,7 @@ public class ImageDisplay extends JComponent {
         } else if (image == null) {
             g.setColor(Color.black);
             String loadingStr;
-            if (! errorLoading) {
+            if (!errorLoading) {
                 loadingStr = tr("Loading {0}", file.getName());
             } else {
                 loadingStr = tr("Error on file {0}", file.getName());
@@ -546,19 +546,19 @@ public class ImageDisplay extends JComponent {
         }
     }
 
-    private final Point img2compCoord(Rectangle visibleRect, int xImg, int yImg) {
+    private Point img2compCoord(Rectangle visibleRect, int xImg, int yImg) {
         Rectangle drawRect = calculateDrawImageRectangle(visibleRect);
         return new Point(drawRect.x + ((xImg - visibleRect.x) * drawRect.width) / visibleRect.width,
                 drawRect.y + ((yImg - visibleRect.y) * drawRect.height) / visibleRect.height);
     }
 
-    private final Point comp2imgCoord(Rectangle visibleRect, int xComp, int yComp) {
+    private Point comp2imgCoord(Rectangle visibleRect, int xComp, int yComp) {
         Rectangle drawRect = calculateDrawImageRectangle(visibleRect);
         return new Point(visibleRect.x + ((xComp - drawRect.x) * visibleRect.width) / drawRect.width,
                 visibleRect.y + ((yComp - drawRect.y) * visibleRect.height) / drawRect.height);
     }
 
-    private final Point getCenterImgCoord(Rectangle visibleRect) {
+    private Point getCenterImgCoord(Rectangle visibleRect) {
         return new Point(visibleRect.x + visibleRect.width / 2,
                 visibleRect.y + visibleRect.height / 2);
     }
@@ -621,7 +621,7 @@ public class ImageDisplay extends JComponent {
             checkVisibleRectPos(image, visibleRect);
         }
 
-        synchronized(this) {
+        synchronized (this) {
             if (file == this.file) {
                 this.visibleRect = visibleRect;
             }
@@ -629,7 +629,7 @@ public class ImageDisplay extends JComponent {
         repaint();
     }
 
-    private final void checkVisibleRectPos(Image image, Rectangle visibleRect) {
+    private void checkVisibleRectPos(Image image, Rectangle visibleRect) {
         if (visibleRect.x < 0) {
             visibleRect.x = 0;
         }

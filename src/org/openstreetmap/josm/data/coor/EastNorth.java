@@ -13,7 +13,7 @@ public class EastNorth extends Coordinate {
     private static final long serialVersionUID = 1L;
 
     public EastNorth(double east, double north) {
-        super(east,north);
+        super(east, north);
     }
 
     public double east() {
@@ -116,7 +116,7 @@ public class EastNorth extends Coordinate {
      */
     public double heading(EastNorth other) {
         double hd = Math.atan2(other.east() - east(), other.north() - north());
-        if(hd < 0) {
+        if (hd < 0) {
             hd = 2 * Math.PI + hd;
         }
         return hd;

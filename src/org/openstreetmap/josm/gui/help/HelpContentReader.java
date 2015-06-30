@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.tools.Utils;
 import org.openstreetmap.josm.tools.WikiReader;
 
@@ -42,7 +43,7 @@ public class HelpContentReader extends WikiReader {
      * @throws MissingHelpContentException if this helpTopicUrl doesn't point to an existing Wiki help page
      */
     public String fetchHelpTopicContent(String helpTopicUrl, boolean dotest) throws HelpContentReaderException {
-        if(helpTopicUrl == null)
+        if (helpTopicUrl == null)
             throw new MissingHelpContentException("helpTopicUrl is null");
         HttpURLConnection con = null;
         try {
@@ -52,15 +53,18 @@ public class HelpContentReader extends WikiReader {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
                 return prepareHelpContent(in, dotest, u);
             }
-        } catch(MalformedURLException e) {
+        } catch (MalformedURLException e) {
             throw new HelpContentReaderException(e);
-        } catch(IOException e) {
+        } catch (IOException e) {
             HelpContentReaderException ex = new HelpContentReaderException(e);
             if (con != null) {
                 try {
                     ex.setResponseCode(con.getResponseCode());
-                } catch(IOException e1) {
+                } catch (IOException e1) {
                     // ignore
+                    if (Main.isTraceEnabled()) {
+                        Main.trace(e1.getMessage());
+                    }
                 }
             }
             throw ex;
@@ -84,10 +88,10 @@ public class HelpContentReader extends WikiReader {
         String s = "";
         try {
             s = readFromTrac(in, url);
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new HelpContentReaderException(e);
         }
-        if(dotest && s.isEmpty())
+        if (dotest && s.isEmpty())
             throw new MissingHelpContentException(s);
         return s;
     }

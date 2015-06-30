@@ -80,7 +80,9 @@ public class OsmChangesetContentParser {
             case "way":
             case "relation":
                 if (currentModificationType == null) {
+                    // CHECKSTYLE.OFF: LineLength
                     throwException(tr("Illegal document structure. Found node, way, or relation outside of ''create'', ''modify'', or ''delete''."));
+                    // CHECKSTYLE.ON: LineLength
                 }
                 data.put(currentPrimitive, currentModificationType);
                 break;
@@ -151,7 +153,7 @@ public class OsmChangesetContentParser {
             progressMonitor.beginTask("");
             progressMonitor.indeterminateSubTask(tr("Parsing changeset content ..."));
             Utils.parseSafeSAX(source, new Parser());
-        } catch(XmlParsingException e) {
+        } catch (XmlParsingException e) {
             throw e;
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new XmlParsingException(e);

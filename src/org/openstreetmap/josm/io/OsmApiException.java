@@ -2,6 +2,8 @@
 package org.openstreetmap.josm.io;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
+import org.openstreetmap.josm.Main;
+
 /**
  * Exception thrown when a communication error occurs when accessing the <a href="http://wiki.openstreetmap.org/wiki/API_v0.6">OSM API</a>.
  * @see OsmApi
@@ -15,7 +17,8 @@ public class OsmApiException extends OsmTransferException {
 
     /**
      * Constructs an {@code OsmApiException} with the specified response code, error header and error body
-     * @param responseCode The HTTP response code replied by the OSM server. See {@link java.net.HttpURLConnection HttpURLConnection} for predefined HTTP response code values
+     * @param responseCode The HTTP response code replied by the OSM server.
+     * See {@link java.net.HttpURLConnection HttpURLConnection} for predefined HTTP response code values
      * @param errorHeader The error header, as transmitted in the {@code Error} field of the HTTP response header
      * @param errorBody The error body, as transmitted in the HTTP response body
      * @param accessedUrl The complete URL accessed when this error occured
@@ -30,7 +33,8 @@ public class OsmApiException extends OsmTransferException {
 
     /**
      * Constructs an {@code OsmApiException} with the specified response code, error header and error body
-     * @param responseCode The HTTP response code replied by the OSM server. See {@link java.net.HttpURLConnection HttpURLConnection} for predefined HTTP response code values
+     * @param responseCode The HTTP response code replied by the OSM server.
+     * See {@link java.net.HttpURLConnection HttpURLConnection} for predefined HTTP response code values
      * @param errorHeader The error header, as transmitted in the {@code Error} field of the HTTP response header
      * @param errorBody The error body, as transmitted in the HTTP response body
      */
@@ -77,7 +81,8 @@ public class OsmApiException extends OsmTransferException {
 
     /**
      * Replies the HTTP response code.
-     * @return The HTTP response code replied by the OSM server. Refer to <a href="http://wiki.openstreetmap.org/wiki/API_v0.6">OSM API</a> to see the list of response codes returned by the API for each call.
+     * @return The HTTP response code replied by the OSM server. Refer to
+     * <a href="http://wiki.openstreetmap.org/wiki/API_v0.6">OSM API</a> to see the list of response codes returned by the API for each call.
      */
     public int getResponseCode() {
         return responseCode;
@@ -85,7 +90,8 @@ public class OsmApiException extends OsmTransferException {
 
     /**
      * Sets the HTTP response code.
-     * @param responseCode The HTTP response code replied by the OSM server. See {@link java.net.HttpURLConnection HttpURLConnection} for predefined HTTP response code values
+     * @param responseCode The HTTP response code replied by the OSM server.
+     * See {@link java.net.HttpURLConnection HttpURLConnection} for predefined HTTP response code values
      */
     public void setResponseCode(int responseCode) {
         this.responseCode = responseCode;
@@ -130,7 +136,7 @@ public class OsmApiException extends OsmTransferException {
         .append(responseCode);
         String eh = "";
         try {
-            if(errorHeader != null)
+            if (errorHeader != null)
                 eh = tr(errorHeader.trim());
             if (!eh.isEmpty()) {
                 sb.append(", Error Header=<")
@@ -139,6 +145,9 @@ public class OsmApiException extends OsmTransferException {
             }
         } catch (Exception e) {
             // Ignored
+            if (Main.isTraceEnabled()) {
+                Main.trace(e.getMessage());
+            }
         }
         try {
             String eb = errorBody != null ? tr(errorBody.trim()) : "";
@@ -149,6 +158,9 @@ public class OsmApiException extends OsmTransferException {
             }
         } catch (Exception e) {
             // Ignored
+            if (Main.isTraceEnabled()) {
+                Main.trace(e.getMessage());
+            }
         }
         return sb.toString();
     }
@@ -174,7 +186,8 @@ public class OsmApiException extends OsmTransferException {
     }
 
     /**
-     * Sets the complete URL accessed when this error occured. This is distinct from the one set with {@link #setUrl}, which is generally only the base URL of the server.
+     * Sets the complete URL accessed when this error occured.
+     * This is distinct from the one set with {@link #setUrl}, which is generally only the base URL of the server.
      * @param url the complete URL accessed when this error occured.
      */
     public void setAccessedUrl(String url) {
@@ -182,7 +195,8 @@ public class OsmApiException extends OsmTransferException {
     }
 
     /**
-     * Replies the complete URL accessed when this error occured. This is distinct from the one returned by {@link #getUrl}, which is generally only the base URL of the server.
+     * Replies the complete URL accessed when this error occured.
+     * This is distinct from the one returned by {@link #getUrl}, which is generally only the base URL of the server.
      * @return the complete URL accessed when this error occured.
      */
     public String getAccessedUrl() {

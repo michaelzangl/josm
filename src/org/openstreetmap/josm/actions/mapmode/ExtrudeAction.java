@@ -173,7 +173,8 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
     // Dual alignment mode stuff
     /** {@code true}, if dual alignment mode is enabled. User wants following extrude to be dual aligned. */
     private boolean dualAlignEnabled;
-    /** {@code true}, if dual alignment is active. User is dragging the mouse, required conditions are met. Treat {@link #mode} (extrude/translate/create_new) as dual aligned. */
+    /** {@code true}, if dual alignment is active. User is dragging the mouse, required conditions are met.
+     * Treat {@link #mode} (extrude/translate/create_new) as dual aligned. */
     private boolean dualAlignActive;
     /** Dual alignment reference segments */
     private transient ReferenceSegment dualAlignSegment1, dualAlignSegment2;
@@ -231,7 +232,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
 
     private JCheckBoxMenuItem addDualAlignMenuItem() {
         int n = Main.main.menu.editMenu.getItemCount();
-        for (int i = n-1; i>0; i--) {
+        for (int i = n-1; i > 0; i--) {
             JMenuItem item = Main.main.menu.editMenu.getItem(i);
             if (item != null && item.getAction() != null && item.getAction() instanceof DualAlignChangeAction) {
                 Main.main.menu.editMenu.remove(i);
@@ -295,7 +296,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
     }
 
     private void readPreferences() {
-        initialMoveDelay = Main.pref.getInteger("edit.initial-move-delay",200);
+        initialMoveDelay = Main.pref.getInteger("edit.initial-move-delay", 200);
         initialMoveThreshold = Main.pref.getInteger("extrude.initial-move-threshold", 1);
         mainColor = Main.pref.getColor(marktr("Extrude: main line"), null);
         if (mainColor == null) mainColor = PaintColors.SELECTED.get();
@@ -339,7 +340,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
         if (mode == Mode.select) {
             Main.map.mapView.setNewCursor(ctrl ? cursorTranslate : alt ? cursorCreateNew : shift ? cursorCreateNodes : cursor, this);
         }
-    };
+    }
 
     @Override
     public void doKeyPressed(KeyEvent e) {
@@ -368,13 +369,13 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
      * If the left mouse button is pressed over a segment or a node, switches
      * to appropriate {@link #mode}, depending on Ctrl/Alt/Shift modifiers and
      * {@link #dualAlignEnabled}.
-     * @param e
+     * @param e current mouse event
      */
     @Override
     public void mousePressed(MouseEvent e) {
-        if(!Main.map.mapView.isActiveLayerVisible())
+        if (!Main.map.mapView.isActiveLayerVisible())
             return;
-        if (!(Boolean)this.getValue("active"))
+        if (!(Boolean) this.getValue("active"))
             return;
         if (e.getButton() != MouseEvent.BUTTON1)
             return;
@@ -447,11 +448,11 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
 
     /**
      * Performs action depending on what {@link #mode} we're in.
-     * @param e
+     * @param e current mouse event
      */
     @Override
     public void mouseDragged(MouseEvent e) {
-        if(!Main.map.mapView.isActiveLayerVisible())
+        if (!Main.map.mapView.isActiveLayerVisible())
             return;
 
         // do not count anything as a drag if it lasts less than 100 milliseconds.
@@ -509,12 +510,12 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
 
     /**
      * Does anything that needs to be done, then switches back to select mode.
-     * @param e
+     * @param e current mouse event
      */
     @Override
     public void mouseReleased(MouseEvent e) {
 
-        if(!Main.map.mapView.isActiveLayerVisible())
+        if (!Main.map.mapView.isActiveLayerVisible())
             return;
 
         if (mode == Mode.select) {
@@ -525,7 +526,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
                     createNewRectangle();
                 }
             } else if (mode == Mode.extrude) {
-                if( e.getClickCount() == 2 && e.getPoint().equals(initialMousePos) ) {
+                if (e.getClickCount() == 2 && e.getPoint().equals(initialMousePos)) {
                     // double click adds a new node
                     addNewNode(e);
                 } else if (e.getPoint().distance(initialMousePos) > initialMoveThreshold && newN1en != null && selectedSegment != null) {
@@ -621,7 +622,8 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
         //find if the new points overlap existing segments (in case of 90 degree angles)
         Node prevNode = getPreviousNode(selectedSegment.lowerIndex);
         boolean nodeOverlapsSegment = prevNode != null && Geometry.segmentsParallel(initialN1en, prevNode.getEastNorth(), initialN1en, newN1en);
-        // segmentAngleZero marks subset of nodeOverlapsSegment. nodeOverlapsSegment is true if angle between segments is 0 or PI, segmentAngleZero only if angle is 0
+        // segmentAngleZero marks subset of nodeOverlapsSegment.
+        // nodeOverlapsSegment is true if angle between segments is 0 or PI, segmentAngleZero only if angle is 0
         boolean segmentAngleZero = prevNode != null && Math.abs(Geometry.getCornerAngle(prevNode.getEastNorth(), initialN1en, newN1en)) < 1e-5;
         boolean hasOtherWays = hasNodeOtherWays(selectedSegment.getFirstNode(), selectedSegment.way);
         List<Node> changedNodes = new ArrayList<>();
@@ -644,7 +646,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
             Node n1New = new Node(Main.getProjection().eastNorth2latlon(newN1en));
             wnew.addNode(insertionPoint, n1New);
             wayWasModified = true;
-            insertionPoint ++;
+            insertionPoint++;
             cmds.add(new AddCommand(n1New));
             changedNodes.add(n1New);
         }
@@ -674,7 +676,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
             Node n2New = new Node(Main.getProjection().eastNorth2latlon(newN2en));
             wnew.addNode(insertionPoint, n2New);
             wayWasModified = true;
-            insertionPoint ++;
+            insertionPoint++;
             cmds.add(new AddCommand(n2New));
             changedNodes.add(n2New);
         }
@@ -700,7 +702,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
         Node targetNode = MergeNodesAction.selectTargetNode(changedNodes);
         Node locNode = MergeNodesAction.selectTargetLocationNode(changedNodes);
         Command mergeCmd = MergeNodesAction.mergeNodes(Main.main.getEditLayer(), changedNodes, targetNode, locNode);
-        if (mergeCmd!=null) {
+        if (mergeCmd != null) {
             Main.main.undoRedo.add(mergeCmd);
         } else {
             // undo extruding command itself
@@ -710,8 +712,8 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
 
     /**
      * This method tests if {@code node} has other ways apart from the given one.
-     * @param node
-     * @param myWay
+     * @param node node to test
+     * @param myWay way known to contain this node
      * @return {@code true} if {@code node} belongs only to {@code myWay}, false if there are more ways.
      */
     private static boolean hasNodeOtherWays(Node node, Way myWay) {
@@ -769,7 +771,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
     private static EastNorth calculateSegmentOffset(EastNorth segmentP1, EastNorth segmentP2, EastNorth moveDirection,
             EastNorth targetPos) {
         EastNorth intersectionPoint;
-        if (segmentP1.distanceSq(segmentP2)>1e-7) {
+        if (segmentP1.distanceSq(segmentP2) > 1e-7) {
             intersectionPoint = Geometry.getLineLineIntersection(segmentP1, segmentP2, targetPos, targetPos.add(moveDirection));
         } else {
             intersectionPoint = Geometry.closestPointToLine(targetPos, targetPos.add(moveDirection), segmentP1);
@@ -855,8 +857,8 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
 
         EastNorth n1en = selectedSegment.getFirstNode().getEastNorth();
         EastNorth n2en = selectedSegment.getSecondNode().getEastNorth();
-        if (n1en.distance(prevNode.getEastNorth())<1e-4 ||
-            n2en.distance(nextNode.getEastNorth())<1e-4 ) {
+        if (n1en.distance(prevNode.getEastNorth()) < 1e-4 ||
+            n2en.distance(nextNode.getEastNorth()) < 1e-4) {
             return false;
         }
 
@@ -912,7 +914,8 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
         EastNorth n1movedEn = initialN1en.add(bestMovement), n2movedEn;
 
         // find out the movement distance, in metres
-        double distance = Main.getProjection().eastNorth2latlon(initialN1en).greatCircleDistance(Main.getProjection().eastNorth2latlon(n1movedEn));
+        double distance = Main.getProjection().eastNorth2latlon(initialN1en).greatCircleDistance(
+                Main.getProjection().eastNorth2latlon(n1movedEn));
         Main.map.statusLine.setDist(distance);
         updateStatusLine();
 
@@ -926,7 +929,8 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
             newN2en = Geometry.getLineLineIntersection(n1movedEn, n2movedEn, dualAlignSegment2.p1, dualAlignSegment2.p2);
             if (newN1en == null || newN2en == null) return bestMovement;
             if (keepSegmentDirection && isOppositeDirection(newN1en, newN2en, initialN1en, initialN2en)) {
-                EastNorth collapsedSegmentPosition = Geometry.getLineLineIntersection(dualAlignSegment1.p1, dualAlignSegment1.p2, dualAlignSegment2.p1, dualAlignSegment2.p2);
+                EastNorth collapsedSegmentPosition = Geometry.getLineLineIntersection(dualAlignSegment1.p1, dualAlignSegment1.p2,
+                        dualAlignSegment2.p1, dualAlignSegment2.p2);
                 newN1en = collapsedSegmentPosition;
                 newN2en = collapsedSegmentPosition;
                 dualAlignSegmentCollapsed = true;
@@ -1049,8 +1053,8 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
                     g2.setColor(mainColor);
                     if (p1.distance(p2) < 3) {
                         g2.setStroke(mainStroke);
-                        g2.drawOval((int)(p1.x-symbolSize/2), (int)(p1.y-symbolSize/2),
-                                (int)(symbolSize), (int)(symbolSize));
+                        g2.drawOval((int) (p1.x-symbolSize/2), (int) (p1.y-symbolSize/2),
+                                (int) (symbolSize), (int) (symbolSize));
                     } else {
                         Line2D oldline = new Line2D.Double(p1, p2);
                         g2.setStroke(oldLineStroke);
@@ -1130,9 +1134,9 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
         Point2D ra2 = new Point2D.Double(ra1.getX() - raoffsety*k, ra1.getY() + raoffsetx*k);
 
         GeneralPath ra = new GeneralPath();
-        ra.moveTo((float)ra1.getX(), (float)ra1.getY());
-        ra.lineTo((float)ra2.getX(), (float)ra2.getY());
-        ra.lineTo((float)ra3.getX(), (float)ra3.getY());
+        ra.moveTo((float) ra1.getX(), (float) ra1.getY());
+        ra.lineTo((float) ra2.getX(), (float) ra2.getY());
+        ra.lineTo((float) ra3.getX(), (float) ra3.getY());
         g2.setStroke(helperStrokeRA);
         g2.draw(ra);
     }
@@ -1140,7 +1144,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
     /**
      * Draws given reference segment.
      * @param g2 the Graphics2D object used to draw on
-     * @param mv
+     * @param mv map view
      * @param seg the reference segment
      */
     private void drawReferenceSegment(Graphics2D g2, MapView mv, ReferenceSegment seg) {
@@ -1165,17 +1169,20 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
         Rectangle bounds = g.getDeviceConfiguration().getBounds();
         try {
             AffineTransform invtrans = g.getTransform().createInverse();
-            Point2D widthpoint = invtrans.deltaTransform(new Point2D.Double(bounds.width,0), null);
-            Point2D heightpoint = invtrans.deltaTransform(new Point2D.Double(0,bounds.height), null);
+            Point2D widthpoint = invtrans.deltaTransform(new Point2D.Double(bounds.width, 0), null);
+            Point2D heightpoint = invtrans.deltaTransform(new Point2D.Double(0, bounds.height), null);
 
             // Here we should end up with a gross overestimate of the maximum viewport diagonal in what
             // Graphics2D calls 'user space'. Essentially a manhattan distance of manhattan distances.
             // This can be used as a safe length of line to generate which will always go off-viewport.
-            double linelength = Math.abs(widthpoint.getX()) + Math.abs(widthpoint.getY()) + Math.abs(heightpoint.getX()) + Math.abs(heightpoint.getY());
+            double linelength = Math.abs(widthpoint.getX()) + Math.abs(widthpoint.getY())
+                    + Math.abs(heightpoint.getX()) + Math.abs(heightpoint.getY());
 
-            return new Line2D.Double(start, new Point2D.Double(start.getX() + (unitvector.getX() * linelength) , start.getY() + (unitvector.getY() * linelength)));
+            return new Line2D.Double(start, new Point2D.Double(start.getX() + (unitvector.getX() * linelength) , start.getY()
+                    + (unitvector.getY() * linelength)));
         } catch (NoninvertibleTransformException e) {
-            return new Line2D.Double(start, new Point2D.Double(start.getX() + (unitvector.getX() * 10) , start.getY() + (unitvector.getY() * 10)));
+            return new Line2D.Double(start, new Point2D.Double(start.getX() + (unitvector.getX() * 10) , start.getY()
+                    + (unitvector.getY() * 10)));
         }
     }
 }

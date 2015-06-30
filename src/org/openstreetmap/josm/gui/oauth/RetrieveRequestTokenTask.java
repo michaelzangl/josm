@@ -38,7 +38,7 @@ public class RetrieveRequestTokenTask extends PleaseWaitRunnable {
      * @param parameters the OAuth parameters. Must not be null.
      * @throws IllegalArgumentException if parameters is null.
      */
-    public RetrieveRequestTokenTask(Component parent, OAuthParameters parameters ) {
+    public RetrieveRequestTokenTask(Component parent, OAuthParameters parameters) {
         super(parent, tr("Retrieving OAuth Request Token..."), false /* don't ignore exceptions */);
         CheckParameterUtil.ensureParameterNotNull(parameters, "parameters");
         this.parameters = parameters;
@@ -48,7 +48,7 @@ public class RetrieveRequestTokenTask extends PleaseWaitRunnable {
     @Override
     protected void cancel() {
         canceled = true;
-        synchronized(this) {
+        synchronized (this) {
             if (client != null) {
                 client.cancel();
             }
@@ -74,18 +74,18 @@ public class RetrieveRequestTokenTask extends PleaseWaitRunnable {
     @Override
     protected void realRun() throws SAXException, IOException, OsmTransferException {
         try {
-            synchronized(this) {
+            synchronized (this) {
                 client = new OsmOAuthAuthorizationClient(parameters);
             }
             requestToken = client.getRequestToken(getProgressMonitor().createSubTaskMonitor(0, false));
-        } catch(OsmTransferCanceledException e) {
+        } catch (OsmTransferCanceledException e) {
             return;
         } catch (OsmOAuthAuthorizationException e) {
             Main.error(e);
             alertRetrievingRequestTokenFailed(e);
             requestToken = null;
         } finally {
-            synchronized(this) {
+            synchronized (this) {
                 client = null;
             }
         }

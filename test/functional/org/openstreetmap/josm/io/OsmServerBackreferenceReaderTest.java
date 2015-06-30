@@ -45,7 +45,7 @@ import org.openstreetmap.josm.gui.progress.NullProgressMonitor;
  * @since 1806
  */
 public class OsmServerBackreferenceReaderTest {
-    static private final Logger logger = Logger.getLogger(OsmServerBackreferenceReader.class.getName());
+    private static final Logger logger = Logger.getLogger(OsmServerBackreferenceReader.class.getName());
 
     protected static Node lookupNode(DataSet ds, int i) {
         for (Node n : ds.getNodes()) {
@@ -72,18 +72,18 @@ public class OsmServerBackreferenceReaderTest {
     }
 
     protected static void populateTestDataSetWithNodes(DataSet ds) {
-        for (int i=0;i<100;i++) {
+        for (int i = 0; i < 100; i++) {
             Node n = new Node();
-            n.setCoor(new LatLon(-36.6,47.6));
+            n.setCoor(new LatLon(-36.6, 47.6));
             n.put("name", "node-"+i);
             ds.addPrimitive(n);
         }
     }
 
     protected static void populateTestDataSetWithWays(DataSet ds) {
-        for (int i=0;i<20;i++) {
+        for (int i = 0; i < 20; i++) {
             Way w = new Way();
-            for (int j = 0; j < 10;j++) {
+            for (int j = 0; j < 10; j++) {
                 w.addNode(lookupNode(ds, i+j));
             }
             w.put("name", "way-"+i);
@@ -92,19 +92,19 @@ public class OsmServerBackreferenceReaderTest {
     }
 
     protected static void populateTestDataSetWithRelations(DataSet ds) {
-        for (int i=0;i<10;i++) {
+        for (int i = 0; i < 10; i++) {
             Relation r = new Relation();
             r.put("name", "relation-" +i);
-            for (int j =0; j < 10; j++) {
+            for (int j = 0; j < 10; j++) {
                 RelationMember member = new RelationMember("node-" + j, lookupNode(ds, i + j));
                 r.addMember(member);
             }
-            for (int j =0; j < 5; j++) {
+            for (int j = 0; j < 5; j++) {
                 RelationMember member = new RelationMember("way-" + j, lookupWay(ds, i + j));
                 r.addMember(member);
             }
             if (i > 5) {
-                for (int j =0; j < 3; j++) {
+                for (int j = 0; j < 3; j++) {
                     RelationMember member = new RelationMember("relation-" + j, lookupRelation(ds, j));
                     logger.info(MessageFormat.format("adding relation {0} to relation {1}", j, i));
                     r.addMember(member);
@@ -128,9 +128,9 @@ public class OsmServerBackreferenceReaderTest {
      * creates the dataset on the server.
      *
      * @param ds the data set
-     * @throws OsmTransferException
+     * @throws OsmTransferException if something goes wrong
      */
-    static public void createDataSetOnServer(APIDataSet ds) throws OsmTransferException, CyclicUploadDependencyException {
+    public static void createDataSetOnServer(APIDataSet ds) throws OsmTransferException, CyclicUploadDependencyException {
         logger.info("creating data set on the server ...");
         ds.adjustRelationUploadOrder();
         OsmServerWriter writer = new OsmServerWriter();
@@ -155,7 +155,8 @@ public class OsmServerBackreferenceReaderTest {
         Main.setProjection(Projections.getProjectionByCode("EPSG:3857")); // Mercator
         Main.logLevel = 4;
 
-        File dataSetCacheOutputFile = new File(System.getProperty("java.io.tmpdir"), MultiFetchServerObjectReaderTest.class.getName() + ".dataset");
+        File dataSetCacheOutputFile = new File(System.getProperty("java.io.tmpdir"),
+                MultiFetchServerObjectReaderTest.class.getName() + ".dataset");
 
         String p = System.getProperty("useCachedDataset");
         if (p != null && Boolean.parseBoolean(p.trim().toLowerCase())) {
@@ -163,7 +164,8 @@ public class OsmServerBackreferenceReaderTest {
             return;
         }
 
-        logger.info(MessageFormat.format("property ''{0}'' not set to true, creating test dataset on the server. property is ''{1}''", "useCachedDataset", p));
+        logger.info(MessageFormat.format(
+                "property ''{0}'' not set to true, creating test dataset on the server. property is ''{1}''", "useCachedDataset", p));
 
         // build and upload the test data set
         //
@@ -183,7 +185,7 @@ public class OsmServerBackreferenceReaderTest {
                 w.writeContent(testDataSet);
                 w.footer();
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             fail(MessageFormat.format("failed to open file ''{0}'' for writing", dataSetCacheOutputFile.toString()));
         }
     }
@@ -454,7 +456,7 @@ public class OsmServerBackreferenceReaderTest {
 
     protected static Set<Long> getNodeIdsInWay(Way way) {
         HashSet<Long> ret = new HashSet<>();
-        if (way == null)return ret;
+        if (way == null) return ret;
         for (Node n: way.getNodes()) {
             ret.add(n.getId());
         }

@@ -44,19 +44,18 @@ public class TMSCachedTileLoaderJob extends JCSCachedTileLoaderJob<String, Buffe
     private Tile tile;
     private volatile URL url;
 
-
     // we need another deduplication of Tile Loader listeners, as for each submit, new TMSCachedTileLoaderJob was created
     // that way, we reduce calls to tileLoadingFinished, and general CPU load due to surplus Map repaints
-    private static final ConcurrentMap<String,Set<TileLoaderListener>> inProgress = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, Set<TileLoaderListener>> inProgress = new ConcurrentHashMap<>();
 
     /**
      * Constructor for creating a job, to get a specific tile from cache
-     * @param listener
+     * @param listener Tile loader listener
      * @param tile to be fetched from cache
      * @param cache object
      * @param connectTimeout when connecting to remote resource
      * @param readTimeout when connecting to remote resource
-     * @param headers to be sent together with request
+     * @param headers HTTP headers to be sent together with request
      * @param downloadExecutor that will be executing the jobs
      */
     public TMSCachedTileLoaderJob(TileLoaderListener listener, Tile tile,
@@ -136,15 +135,18 @@ public class TMSCachedTileLoaderJob extends JCSCachedTileLoaderJob<String, Buffe
     }
 
     @Override
-    protected boolean cacheAsEmpty(Map<String, List<String>> headers, int statusCode, byte[] content) {
-        // cacheAsEmpty is called for every successful download, so we can put
-        // metadata handling here
+    protected boolean isResponseLoadable(Map<String, List<String>> headers, int statusCode, byte[] content) {
         attributes.setMetadata(tile.getTileSource().getMetadata(headers));
         if (tile.getTileSource().isNoTileAtZoom(headers, statusCode, content)) {
             attributes.setNoTileAtZoom(true);
-            return true;
+            return false; // do no try to load data from no-tile at zoom, cache empty object instead
         }
-        return false;
+        return super.isResponseLoadable(headers, statusCode, content);
+    }
+
+    @Override
+    protected boolean cacheAsEmpty() {
+        return isNoTileAtZoom() || super.cacheAsEmpty();
     }
 
     private boolean handleNoTileAtZoom() {
@@ -170,9 +172,10 @@ public class TMSCachedTileLoaderJob extends JCSCachedTileLoaderJob<String, Buffe
         synchronized (inProgress) {
             listeners = inProgress.remove(getCacheKey());
         }
+        boolean status = result.equals(LoadResult.SUCCESS);
 
         try {
-            if(!tile.isLoaded()) { //if someone else already loaded tile, skip all the handling
+            if (!tile.isLoaded()) { //if someone else already loaded tile, skip all the handling
                 tile.finishLoading(); // whatever happened set that loading has finished
                 // set tile metadata
                 if (this.attributes != null) {
@@ -181,18 +184,23 @@ public class TMSCachedTileLoaderJob extends JCSCachedTileLoaderJob<String, Buffe
                     }
                 }
 
-                switch(result){
+                switch(result) {
                 case SUCCESS:
                     handleNoTileAtZoom();
                     if (object != null) {
                         byte[] content = object.getContent();
                         if (content != null && content.length > 0) {
                             tile.loadImage(new ByteArrayInputStream(content));
+                            if (tile.getImage() == null) {
+                                tile.setError(tr("Could not load image from tile server"));
+                                status = false;
+                            }
                         }
                     }
                     int httpStatusCode = attributes.getResponseCode();
                     if (!isNoTileAtZoom() && httpStatusCode >= 400) {
                         tile.setError(tr("HTTP error {0} when loading tiles", httpStatusCode));
+                        status = false;
                     }
                     break;
                 case FAILURE:
@@ -205,8 +213,8 @@ public class TMSCachedTileLoaderJob extends JCSCachedTileLoaderJob<String, Buffe
 
             // always check, if there is some listener interested in fact, that tile has finished loading
             if (listeners != null) { // listeners might be null, if some other thread notified already about success
-                for(TileLoaderListener l: listeners) {
-                    l.tileLoadingFinished(tile, result.equals(LoadResult.SUCCESS));
+                for (TileLoaderListener l: listeners) {
+                    l.tileLoadingFinished(tile, status);
                 }
             }
         } catch (IOException e) {
@@ -214,7 +222,7 @@ public class TMSCachedTileLoaderJob extends JCSCachedTileLoaderJob<String, Buffe
             tile.setError(e.getMessage());
             tile.setLoaded(false);
             if (listeners != null) { // listeners might be null, if some other thread notified already about success
-                for(TileLoaderListener l: listeners) {
+                for (TileLoaderListener l: listeners) {
                     l.tileLoadingFinished(tile, false);
                 }
             }
@@ -236,9 +244,14 @@ public class TMSCachedTileLoaderJob extends JCSCachedTileLoaderJob<String, Buffe
                     }
                 }
 
-                if (data != null && data.getImage() != null) {
-                    tile.setImage(data.getImage());
-                    tile.finishLoading();
+                if (data != null) {
+                    if (data.getImage() != null) {
+                        tile.setImage(data.getImage());
+                        tile.finishLoading();
+                    } else {
+                        // we had some data, but we didn't get any image. Malformed image?
+                        tile.setError(tr("Could not load image from tile server"));
+                    }
                 }
                 if (isNoTileAtZoom()) {
                     handleNoTileAtZoom();
@@ -256,16 +269,6 @@ public class TMSCachedTileLoaderJob extends JCSCachedTileLoaderJob<String, Buffe
         } else {
             return tile;
         }
-    }
-
-    @Override
-    protected boolean handleNotFound() {
-        if (tile.getSource().isNoTileAtZoom(null, 404, null)) {
-            tile.setError("No tile at this zoom level");
-            tile.putValue("tile-info", "no-tile");
-            return true;
-        }
-        return false;
     }
 
     /**

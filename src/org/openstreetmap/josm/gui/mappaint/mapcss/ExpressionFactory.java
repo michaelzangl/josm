@@ -100,16 +100,18 @@ public final class ExpressionFactory {
      * List of functions that can be used in MapCSS expressions.
      *
      * First parameter can be of type {@link Environment} (if needed). This is
-     * automatically filled in by JOSM and the user only sees the remaining
-     * arguments.
+     * automatically filled in by JOSM and the user only sees the remaining arguments.
      * When one of the user supplied arguments cannot be converted the
      * expected type or is null, the function is not called and it returns null
-     * immediately. Add the annotation {@link NullableArguments} to allow
-     * null arguments.
+     * immediately. Add the annotation {@link NullableArguments} to allow null arguments.
      * Every method must be static.
      */
     @SuppressWarnings("UnusedDeclaration")
-    public static class Functions {
+    public static final class Functions {
+
+        private Functions() {
+            // Hide implicit public constructor for utility classes
+        }
 
         /**
          * Identity function for compatibility with MapCSS specification.
@@ -208,7 +210,6 @@ public final class ExpressionFactory {
          * The name originates from <a href="http://wiki.openstreetmap.org/wiki/MapCSS/0.2/eval">MapCSS standard</a>.
          * @param args arguments
          * @return the first non-null object
-         * @see #coalesce(Object...)
          * @see Utils#firstNonNull(Object[])
          */
         @NullableArguments
@@ -260,7 +261,8 @@ public final class ExpressionFactory {
         }
 
         /**
-         * Creates a color value with the specified amounts of {@code r}ed, {@code g}reen, {@code b}lue, {@code alpha} (arguments from 0.0 to 1.0)
+         * Creates a color value with the specified amounts of {@code r}ed, {@code g}reen, {@code b}lue, {@code alpha}
+         * (arguments from 0.0 to 1.0)
          * @param r the red component
          * @param g the green component
          * @param b the blue component
@@ -578,8 +580,8 @@ public final class ExpressionFactory {
          * {@code e}, {@code east}, {@code se}, {@code southeast}, {@code s}, {@code south},
          * {@code sw}, {@code southwest}, {@code w}, {@code west}, {@code nw}, {@code northwest}.
          * @param cardinal the angle in cardinal directions.
-         * @see RotationAngle#parseCardinalRotation(String)
          * @return the angle in radians
+         * @see RotationAngle#parseCardinalRotation(String)
          */
         public static Double cardinal_to_radians(String cardinal) {
             try {
@@ -610,7 +612,7 @@ public final class ExpressionFactory {
          * @see Object#equals(Object)
          */
         public static boolean not_equal(Object a, Object b) {
-            return !equal(a,b);
+            return !equal(a, b);
         }
         /**
          * Determines whether the JOSM search with {@code searchStr} applies to the object.
@@ -739,7 +741,7 @@ public final class ExpressionFactory {
         public static String tr(String... args) {
             final String text = args[0];
             System.arraycopy(args, 1, args, 0, args.length - 1);
-            return org.openstreetmap.josm.tools.I18n.tr(text, (Object[])args);
+            return org.openstreetmap.josm.tools.I18n.tr(text, (Object[]) args);
         }
 
         /**

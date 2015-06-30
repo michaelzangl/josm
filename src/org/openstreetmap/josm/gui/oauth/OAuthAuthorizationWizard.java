@@ -70,7 +70,7 @@ public class OAuthAuthorizationWizard extends JDialog {
      *
      * @return panel with buttons
      */
-    protected JPanel buildButtonRow(){
+    protected JPanel buildButtonRow() {
         JPanel pnl = new JPanel(new FlowLayout(FlowLayout.CENTER));
 
         AcceptAccessTokenAction actAcceptAccessToken = new AcceptAccessTokenAction();
@@ -88,11 +88,11 @@ public class OAuthAuthorizationWizard extends JDialog {
     /**
      * Builds the panel with general information in the header
      *
-     * @return panel woth information display
+     * @return panel with information display
      */
     protected JPanel buildHeaderInfoPanel() {
         JPanel pnl = new JPanel(new GridBagLayout());
-        pnl.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        pnl.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         GridBagConstraints gc = new GridBagConstraints();
 
         // the oauth logo in the header
@@ -100,14 +100,15 @@ public class OAuthAuthorizationWizard extends JDialog {
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.weightx = 1.0;
         gc.gridwidth = 2;
-        JLabel lbl = new JLabel();
-        lbl.setIcon(ImageProvider.get("oauth", "oauth-logo"));
+        ImageProvider logoProv = new ImageProvider("oauth", "oauth-logo");
+        JLabel lbl = new JLabel(logoProv.get());
+        lbl.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         lbl.setOpaque(true);
         pnl.add(lbl, gc);
 
         // OAuth in a nutshell ...
         gc.gridy  = 1;
-        gc.insets = new Insets(5,0,0,5);
+        gc.insets = new Insets(5, 0, 0, 5);
         HtmlPanel pnlMessage = new HtmlPanel();
         pnlMessage.setText("<html><body>"
                 + tr("With OAuth you grant JOSM the right to upload map data and GPS tracks "
@@ -123,12 +124,12 @@ public class OAuthAuthorizationWizard extends JDialog {
         gc.weightx = 0.0;
         lbl = new JLabel(tr("Please select an authorization procedure: "));
         lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN));
-        pnl.add(lbl,gc);
+        pnl.add(lbl, gc);
 
         gc.gridx = 1;
         gc.gridwidth = 1;
         gc.weightx = 1.0;
-        pnl.add(cbAuthorisationProcedure = new AuthorizationProcedureComboBox(),gc);
+        pnl.add(cbAuthorisationProcedure = new AuthorizationProcedureComboBox(), gc);
         cbAuthorisationProcedure.addItemListener(new AuthorisationProcedureChangeListener());
         lbl.setLabelFor(cbAuthorisationProcedure);
         return pnl;
@@ -139,7 +140,7 @@ public class OAuthAuthorizationWizard extends JDialog {
      * currently selected
      */
     protected void refreshAuthorisationProcedurePanel() {
-        AuthorizationProcedure procedure = (AuthorizationProcedure)cbAuthorisationProcedure.getSelectedItem();
+        AuthorizationProcedure procedure = (AuthorizationProcedure) cbAuthorisationProcedure.getSelectedItem();
         switch(procedure) {
         case FULLY_AUTOMATIC:
             spAuthorisationProcedureUI.getViewport().setView(pnlFullyAutomaticAuthorisationUI);
@@ -166,6 +167,7 @@ public class OAuthAuthorizationWizard extends JDialog {
         getContentPane().add(buildHeaderInfoPanel(), BorderLayout.NORTH);
 
         setTitle(tr("Get an Access Token for ''{0}''", apiUrl));
+        this.setMinimumSize(new Dimension(420, 400));
 
         pnlFullyAutomaticAuthorisationUI = new FullyAutomaticAuthorizationUI(apiUrl);
         pnlSemiAutomaticAuthorisationUI = new SemiAutomaticAuthorizationUI(apiUrl);
@@ -186,6 +188,7 @@ public class OAuthAuthorizationWizard extends JDialog {
 
                     @Override
                     public void componentResized(ComponentEvent e) {}
+
                     @Override
                     public void componentMoved(ComponentEvent e) {}
                 }
@@ -236,7 +239,7 @@ public class OAuthAuthorizationWizard extends JDialog {
     }
 
     protected AbstractAuthorizationUI getCurrentAuthorisationUI() {
-        switch((AuthorizationProcedure)cbAuthorisationProcedure.getSelectedItem()) {
+        switch((AuthorizationProcedure) cbAuthorisationProcedure.getSelectedItem()) {
         case FULLY_AUTOMATIC: return pnlFullyAutomaticAuthorisationUI;
         case MANUALLY: return pnlManualAuthorisationUI;
         case SEMI_AUTOMATIC: return pnlSemiAutomaticAuthorisationUI;
@@ -293,7 +296,7 @@ public class OAuthAuthorizationWizard extends JDialog {
                     getClass().getName() + ".geometry",
                     WindowGeometry.centerInWindow(
                             Main.parent,
-                            new Dimension(450,540)
+                            new Dimension(450, 540)
                     )
             ).applySafe(this);
             initFromPreferences();
@@ -315,6 +318,10 @@ public class OAuthAuthorizationWizard extends JDialog {
     }
 
     class CancelAction extends AbstractAction {
+
+        /**
+         * Constructs a new {@code CancelAction}.
+         */
         public CancelAction() {
             putValue(NAME, tr("Cancel"));
             putValue(SMALL_ICON, ImageProvider.get("cancel"));
@@ -333,8 +340,10 @@ public class OAuthAuthorizationWizard extends JDialog {
     }
 
     class AcceptAccessTokenAction extends AbstractAction implements PropertyChangeListener {
-        private transient OAuthToken token;
 
+        /**
+         * Constructs a new {@code AcceptAccessTokenAction}.
+         */
         public AcceptAccessTokenAction() {
             putValue(NAME, tr("Accept Access Token"));
             putValue(SMALL_ICON, ImageProvider.get("ok"));
@@ -356,14 +365,13 @@ public class OAuthAuthorizationWizard extends JDialog {
         public void propertyChange(PropertyChangeEvent evt) {
             if (!evt.getPropertyName().equals(AbstractAuthorizationUI.ACCESS_TOKEN_PROP))
                 return;
-            token = (OAuthToken)evt.getNewValue();
-            updateEnabledState(token);
+            updateEnabledState((OAuthToken) evt.getNewValue());
         }
     }
 
     class WindowEventHandler extends WindowAdapter {
         @Override
-        public void windowClosing(WindowEvent arg0) {
+        public void windowClosing(WindowEvent e) {
             new CancelAction().cancel();
         }
     }

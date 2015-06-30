@@ -49,7 +49,7 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
     public static final String UPLOAD_STRATEGY_SPECIFICATION_PROP =
         UploadStrategySelectionPanel.class.getName() + ".uploadStrategySpecification";
 
-    private static final Color BG_COLOR_ERROR = new Color(255,224,224);
+    private static final Color BG_COLOR_ERROR = new Color(255, 224, 224);
 
     private transient Map<UploadStrategy, JRadioButton> rbStrategy;
     private transient Map<UploadStrategy, JLabel> lblNumRequests;
@@ -91,7 +91,7 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
         gc.weighty = 0.0;
         gc.gridwidth = 4;
         gc.fill = GridBagConstraints.HORIZONTAL;
-        gc.insets = new Insets(0,0,3,0);
+        gc.insets = new Insets(0, 0, 3, 0);
         gc.anchor = GridBagConstraints.FIRST_LINE_START;
         pnl.add(new JMultilineLabel(tr("Please select the upload strategy:")), gc);
 
@@ -172,7 +172,7 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
         StrategyChangeListener strategyChangeListener = new StrategyChangeListener();
         tfChunkSize.addFocusListener(strategyChangeListener);
         tfChunkSize.addActionListener(strategyChangeListener);
-        for(UploadStrategy strategy: UploadStrategy.values()) {
+        for (UploadStrategy strategy: UploadStrategy.values()) {
             rbStrategy.get(strategy).addItemListener(strategyChangeListener);
         }
 
@@ -188,11 +188,16 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.anchor = GridBagConstraints.FIRST_LINE_START;
         gc.weightx = 1.0;
-        pnlMultiChangesetPolicyPanel.add(lblMultiChangesetPoliciesHeader = new JMultilineLabel(tr("<html>There are <strong>multiple changesets</strong> necessary in order to upload {0} objects. Which strategy do you want to use?</html>", numUploadedObjects)), gc);
+        pnlMultiChangesetPolicyPanel.add(lblMultiChangesetPoliciesHeader = new JMultilineLabel(
+                tr("<html>There are <strong>multiple changesets</strong> necessary in order to upload {0} objects. " +
+                   "Which strategy do you want to use?</html>",
+                        numUploadedObjects)), gc);
         gc.gridy = 1;
-        pnlMultiChangesetPolicyPanel.add(rbFillOneChangeset = new JRadioButton(tr("Fill up one changeset and return to the Upload Dialog")),gc);
+        pnlMultiChangesetPolicyPanel.add(rbFillOneChangeset = new JRadioButton(
+                tr("Fill up one changeset and return to the Upload Dialog")), gc);
         gc.gridy = 2;
-        pnlMultiChangesetPolicyPanel.add(rbUseMultipleChangesets = new JRadioButton(tr("Open and use as many new changesets as necessary")),gc);
+        pnlMultiChangesetPolicyPanel.add(rbUseMultipleChangesets = new JRadioButton(
+                tr("Open and use as many new changesets as necessary")), gc);
 
         ButtonGroup bgMultiChangesetPolicies = new ButtonGroup();
         bgMultiChangesetPolicies.add(rbFillOneChangeset);
@@ -209,7 +214,7 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
         gc.weightx = 1.0;
         gc.weighty = 0.0;
         gc.anchor = GridBagConstraints.NORTHWEST;
-        gc.insets = new Insets(3,3,3,3);
+        gc.insets = new Insets(3, 3, 3, 3);
 
         add(buildUploadStrategyPanel(), gc);
         gc.gridy = 1;
@@ -229,7 +234,7 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
     }
 
     public void setNumUploadedObjects(int numUploadedObjects) {
-        this.numUploadedObjects = Math.max(numUploadedObjects,0);
+        this.numUploadedObjects = Math.max(numUploadedObjects, 0);
         updateNumRequestsLabels();
     }
 
@@ -259,7 +264,7 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
             spec.setStrategy(strategy).setChunkSize(chunkSize);
             break;
         }
-        if(pnlMultiChangesetPolicyPanel.isVisible()) {
+        if (pnlMultiChangesetPolicyPanel.isVisible()) {
             if (rbFillOneChangeset.isSelected()) {
                 spec.setPolicy(MaxChangesetSizeExceededPolicy.FILL_ONE_CHANGESET_AND_RETURN_TO_UPLOAD_DIALOG);
             } else if (rbUseMultipleChangesets.isSelected()) {
@@ -287,7 +292,7 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
     protected int getChunkSize() {
         try {
             return Integer.parseInt(tfChunkSize.getText().trim());
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             return UploadStrategySpecification.UNSPECIFIED_CHUNK_SIZE;
         }
     }
@@ -307,8 +312,11 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
         try {
             chunkSize = Integer.parseInt(tfChunkSize.getText().trim());
             Main.pref.putInteger("osm-server.upload-strategy.chunk-size", chunkSize);
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             // don't save invalid value to preferences
+            if (Main.isTraceEnabled()) {
+                Main.trace(e.getMessage());
+            }
         }
     }
 
@@ -320,16 +328,17 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
             lbl.setText(tr("Upload in one request not possible (too many objects to upload)"));
             lbl.setToolTipText(tr("<html>Cannot upload {0} objects in one request because the<br>"
                     + "max. changeset size {1} on server ''{2}'' is exceeded.</html>",
-                    numUploadedObjects,
-                    maxChunkSize,
-                    OsmApi.getOsmApi().getBaseUrl()
+                    numUploadedObjects, maxChunkSize, OsmApi.getOsmApi().getBaseUrl()
             )
             );
             rbStrategy.get(UploadStrategy.CHUNKED_DATASET_STRATEGY).setSelected(true);
             lblNumRequests.get(UploadStrategy.SINGLE_REQUEST_STRATEGY).setVisible(false);
 
-            lblMultiChangesetPoliciesHeader.setText(tr("<html>There are <strong>multiple changesets</strong> necessary in order to upload {0} objects. Which strategy do you want to use?</html>", numUploadedObjects));
-            if (!rbFillOneChangeset.isSelected() && ! rbUseMultipleChangesets.isSelected()) {
+            lblMultiChangesetPoliciesHeader.setText(
+                    tr("<html>There are <strong>multiple changesets</strong> necessary in order to upload {0} objects. " +
+                       "Which strategy do you want to use?</html>",
+                            numUploadedObjects));
+            if (!rbFillOneChangeset.isSelected() && !rbUseMultipleChangesets.isSelected()) {
                 rbUseMultipleChangesets.setSelected(true);
             }
             pnlMultiChangesetPolicyPanel.setVisible(true);
@@ -357,7 +366,7 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
             if (chunkSize == UploadStrategySpecification.UNSPECIFIED_CHUNK_SIZE) {
                 lblNumRequests.get(UploadStrategy.CHUNKED_DATASET_STRATEGY).setText(tr("(# requests unknown)"));
             } else {
-                int chunks = (int)Math.ceil((double)numUploadedObjects / (double)chunkSize);
+                int chunks = (int) Math.ceil((double) numUploadedObjects / (double) chunkSize);
                 lblNumRequests.get(UploadStrategy.CHUNKED_DATASET_STRATEGY).setText(
                         trn("({0} request)", "({0} requests)", chunks, chunks)
                 );
@@ -372,7 +381,7 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals(UploadedObjectsSummaryPanel.NUM_OBJECTS_TO_UPLOAD_PROP)) {
-            setNumUploadedObjects((Integer)evt.getNewValue());
+            setNumUploadedObjects((Integer) evt.getNewValue());
         }
     }
 
@@ -381,10 +390,11 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
         public void focusGained(FocusEvent e) {
             Component c = e.getComponent();
             if (c instanceof JosmTextField) {
-                JosmTextField tf = (JosmTextField)c;
+                JosmTextField tf = (JosmTextField) c;
                 tf.selectAll();
             }
         }
+
         @Override
         public void focusLost(FocusEvent e) {}
     }
@@ -409,16 +419,19 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
                 if (chunkSize <= 0) {
                     setErrorFeedback(tfChunkSize, tr("Illegal chunk size <= 0. Please enter an integer > 1"));
                 } else if (maxChunkSize > 0 && chunkSize > maxChunkSize) {
-                    setErrorFeedback(tfChunkSize, tr("Chunk size {0} exceeds max. changeset size {1} for server ''{2}''", chunkSize, maxChunkSize, OsmApi.getOsmApi().getBaseUrl()));
+                    setErrorFeedback(tfChunkSize, tr("Chunk size {0} exceeds max. changeset size {1} for server ''{2}''",
+                            chunkSize, maxChunkSize, OsmApi.getOsmApi().getBaseUrl()));
                 } else {
                     clearErrorFeedback(tfChunkSize, tr("Please enter an integer > 1"));
                 }
 
                 if (maxChunkSize > 0 && chunkSize > maxChunkSize) {
-                    setErrorFeedback(tfChunkSize, tr("Chunk size {0} exceeds max. changeset size {1} for server ''{2}''", chunkSize, maxChunkSize, OsmApi.getOsmApi().getBaseUrl()));
+                    setErrorFeedback(tfChunkSize, tr("Chunk size {0} exceeds max. changeset size {1} for server ''{2}''",
+                            chunkSize, maxChunkSize, OsmApi.getOsmApi().getBaseUrl()));
                 }
-            } catch(NumberFormatException e) {
-                setErrorFeedback(tfChunkSize, tr("Value ''{0}'' is not a number. Please enter an integer > 1", tfChunkSize.getText().trim()));
+            } catch (NumberFormatException e) {
+                setErrorFeedback(tfChunkSize, tr("Value ''{0}'' is not a number. Please enter an integer > 1",
+                        tfChunkSize.getText().trim()));
             } finally {
                 updateNumRequestsLabels();
             }
@@ -443,7 +456,7 @@ public class UploadStrategySelectionPanel extends JPanel implements PropertyChan
         public void propertyChange(PropertyChangeEvent evt) {
             if (evt.getSource() == tfChunkSize
                     && "enabled".equals(evt.getPropertyName())
-                    && (Boolean)evt.getNewValue()
+                    && (Boolean) evt.getNewValue()
             ) {
                 validateChunkSize();
             }

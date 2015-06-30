@@ -165,7 +165,8 @@ public class ChangePropertyCommand extends Command {
                 text = trn("Remove \"{0}\" for {1} object", "Remove \"{0}\" for {1} objects", objects.size(), entry.getKey(), objects.size());
             } else {
                 /* I18n: plural form for objects, but value < 2 not possible! */
-                text = trn("Set {0}={1} for {2} object", "Set {0}={1} for {2} objects", objects.size(), entry.getKey(), entry.getValue(), objects.size());
+                text = trn("Set {0}={1} for {2} object", "Set {0}={1} for {2} objects",
+                        objects.size(), entry.getKey(), entry.getValue(), objects.size());
             }
         } else {
             boolean allnull = true;
@@ -221,5 +222,36 @@ public class ChangePropertyCommand extends Command {
      */
     public Map<String, String> getTags() {
         return Collections.unmodifiableMap(tags);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((objects == null) ? 0 : objects.hashCode());
+        result = prime * result + ((tags == null) ? 0 : tags.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ChangePropertyCommand other = (ChangePropertyCommand) obj;
+        if (objects == null) {
+            if (other.objects != null)
+                return false;
+        } else if (!objects.equals(other.objects))
+            return false;
+        if (tags == null) {
+            if (other.tags != null)
+                return false;
+        } else if (!tags.equals(other.tags))
+            return false;
+        return true;
     }
 }

@@ -54,14 +54,14 @@ public class DuplicateRelation extends Test {
 
         @Override
         public int hashCode() {
-            return role.hashCode()+(int)relId+tags.hashCode()+type.hashCode()+coor.hashCode();
+            return role.hashCode()+(int) relId+tags.hashCode()+type.hashCode()+coor.hashCode();
         }
 
         @Override
         public boolean equals(Object obj) {
             if (!(obj instanceof RelMember)) return false;
             RelMember rm = (RelMember) obj;
-            return rm.role.equals(role) && rm.type.equals(type) && rm.relId==relId && rm.tags.equals(tags) && rm.coor.equals(coor);
+            return rm.role.equals(role) && rm.type.equals(type) && rm.relId == relId && rm.tags.equals(tags) && rm.coor.equals(coor);
         }
 
         /** Extract and store relation information based on the relation member
@@ -194,14 +194,14 @@ public class DuplicateRelation extends Test {
         for (Set<OsmPrimitive> duplicated : relations.values()) {
             if (duplicated.size() > 1) {
                 TestError testError = new TestError(this, Severity.ERROR, tr("Duplicated relations"), DUPLICATE_RELATION, duplicated);
-                errors.add( testError );
+                errors.add(testError);
             }
         }
         relations = null;
         for (Set<OsmPrimitive> duplicated : relationsNoKeys.values()) {
             if (duplicated.size() > 1) {
                 TestError testError = new TestError(this, Severity.WARNING, tr("Relations with same members"), SAME_RELATION, duplicated);
-                errors.add( testError );
+                errors.add(testError);
             }
         }
         relationsNoKeys = null;
@@ -213,8 +213,9 @@ public class DuplicateRelation extends Test {
             return;
         List<RelationMember> rMembers = r.getMembers();
         Map<String, String> rkeys = r.getKeys();
-        for (String key : ignoreKeys)
+        for (String key : ignoreKeys) {
             rkeys.remove(key);
+        }
         RelationPair rKey = new RelationPair(rMembers, rkeys);
         relations.put(rKey, r);
         relationsNoKeys.put(rMembers, r);
@@ -230,10 +231,11 @@ public class DuplicateRelation extends Test {
         Collection<? extends OsmPrimitive> sel = testError.getPrimitives();
         Set<Relation> relFix = new HashSet<>();
 
-        for (OsmPrimitive osm : sel)
+        for (OsmPrimitive osm : sel) {
             if (osm instanceof Relation && !osm.isDeleted()) {
-                relFix.add((Relation)osm);
+                relFix.add((Relation) osm);
             }
+        }
 
         if (relFix.size() < 2)
             return null;
@@ -293,10 +295,11 @@ public class DuplicateRelation extends Test {
         Collection<? extends OsmPrimitive> sel = testError.getPrimitives();
         Set<Relation> relations = new HashSet<>();
 
-        for (OsmPrimitive osm : sel)
+        for (OsmPrimitive osm : sel) {
             if (osm instanceof Relation) {
-                relations.add((Relation)osm);
+                relations.add((Relation) osm);
             }
+        }
 
         if (relations.size() < 2)
             return false;

@@ -34,7 +34,7 @@ public abstract class RequestHandler {
     public static final boolean loadInNewLayerDefault = false;
 
     /** The GET request arguments */
-    protected Map<String,String> args;
+    protected Map<String, String> args;
 
     /** The request URL without "GET". */
     protected String request;
@@ -56,9 +56,9 @@ public abstract class RequestHandler {
     /**
      * Check permission and parameters and handle request.
      *
-     * @throws RequestHandlerForbiddenException
-     * @throws RequestHandlerBadRequestException
-     * @throws RequestHandlerErrorException
+     * @throws RequestHandlerForbiddenException if request is forbidden by preferences
+     * @throws RequestHandlerBadRequestException if request is invalid
+     * @throws RequestHandlerErrorException if an error occurs while processing request
      */
     public final void handle() throws RequestHandlerForbiddenException, RequestHandlerBadRequestException, RequestHandlerErrorException {
         checkMandatoryParams();
@@ -69,7 +69,7 @@ public abstract class RequestHandler {
 
     /**
      * Validates the request before attempting to perform it.
-     * @throws RequestHandlerBadRequestException
+     * @throws RequestHandlerBadRequestException if request is invalid
      * @since 5678
      */
     protected abstract void validateRequest() throws RequestHandlerBadRequestException;
@@ -79,8 +79,8 @@ public abstract class RequestHandler {
      *
      * This method of the subclass will do the real work.
      *
-     * @throws RequestHandlerErrorException
-     * @throws RequestHandlerBadRequestException
+     * @throws RequestHandlerErrorException if an error occurs while processing request
+     * @throws RequestHandlerBadRequestException if request is invalid
      */
     protected abstract void handleRequest() throws RequestHandlerErrorException, RequestHandlerBadRequestException;
 
@@ -132,10 +132,9 @@ public abstract class RequestHandler {
     }
 
     /**
-     * Check permissions in preferences and display error message
-     * or ask for permission.
+     * Check permissions in preferences and display error message or ask for permission.
      *
-     * @throws RequestHandlerForbiddenException
+     * @throws RequestHandlerForbiddenException if request is forbidden by preferences
      */
     public final void checkPermission() throws RequestHandlerForbiddenException {
         /*
@@ -220,7 +219,7 @@ public abstract class RequestHandler {
         String[] optional = getOptionalParams();
         List<String> missingKeys = new LinkedList<>();
         boolean error = false;
-        if(mandatory != null) for (String key : mandatory) {
+        if (mandatory != null) for (String key : mandatory) {
             String value = args.get(key);
             if (value == null || value.isEmpty()) {
                 error = true;
@@ -312,6 +311,7 @@ public abstract class RequestHandler {
         public RequestHandlerBadRequestException(String message) {
             super(message);
         }
+
         public RequestHandlerBadRequestException(String message, Throwable cause) {
             super(message, cause);
         }

@@ -19,7 +19,7 @@ import org.openstreetmap.josm.tools.ImageProvider;
  *
  */
 public class RelationTreeCellRenderer extends JLabel implements TreeCellRenderer {
-    public static final Color BGCOLOR_SELECTED = new Color(143,170,255);
+    public static final Color BGCOLOR_SELECTED = new Color(143, 170, 255);
 
     /** the relation icon */
     private ImageIcon icon;
@@ -65,14 +65,14 @@ public class RelationTreeCellRenderer extends JLabel implements TreeCellRenderer
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
             boolean leaf, int row, boolean hasFocus) {
 
-        // Hackish fix for #7056 - if name template for duplicated relation contains tags from parent, template will fail because getReffers doesn't work on primitives not yet in dataset
+        // Hackish fix for #7056 - if name template for duplicated relation contains tags from parent,
+        // template will fail because getReffers doesn't work on primitives not yet in dataset
         if (!tree.isRootVisible() && tree.getModel().getRoot() == value)
             return this;
 
         renderIcon();
-        renderValue((Relation)value);
+        renderValue((Relation) value);
         renderBackground(selected);
         return this;
     }
-
 }

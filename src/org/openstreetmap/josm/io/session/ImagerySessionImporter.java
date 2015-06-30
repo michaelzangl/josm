@@ -10,9 +10,9 @@ import java.util.Map;
 import org.openstreetmap.josm.data.Preferences;
 import org.openstreetmap.josm.data.imagery.ImageryInfo;
 import org.openstreetmap.josm.data.imagery.ImageryInfo.ImageryPreferenceEntry;
+import org.openstreetmap.josm.gui.layer.AbstractTileSourceLayer;
 import org.openstreetmap.josm.gui.layer.ImageryLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
-import org.openstreetmap.josm.gui.layer.WMSLayer;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.io.IllegalDataException;
 import org.openstreetmap.josm.io.session.SessionReader.ImportSupport;
@@ -35,7 +35,7 @@ public class ImagerySessionImporter implements SessionLayerImporter {
 
         NodeList nodes = elem.getChildNodes();
 
-        for (int i=0; i<nodes.getLength(); ++i) {
+        for (int i = 0; i < nodes.getLength(); ++i) {
             Node node = nodes.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element e = (Element) node;
@@ -45,15 +45,18 @@ public class ImagerySessionImporter implements SessionLayerImporter {
         ImageryPreferenceEntry prefEntry = Preferences.deserializeStruct(attributes, ImageryPreferenceEntry.class);
         ImageryInfo i = new ImageryInfo(prefEntry);
         ImageryLayer layer = ImageryLayer.create(i);
-        if (layer instanceof WMSLayer) {
-            WMSLayer wms = (WMSLayer) layer;
-            String autoDownload = attributes.get("automatic-downloading");
-            if (autoDownload != null) {
-                wms.setAutoDownload(Boolean.parseBoolean(autoDownload));
+        if (layer instanceof AbstractTileSourceLayer) {
+            AbstractTileSourceLayer tsLayer = (AbstractTileSourceLayer) layer;
+            if (attributes.containsKey("automatic-downloading")) {
+                tsLayer.autoLoad = Boolean.valueOf(attributes.get("automatic-downloading"));
             }
-            String autoResolution = attributes.get("automatically-change-resolution");
-            if (autoResolution != null) {
-                wms.setAutoResolution(Boolean.parseBoolean(autoResolution));
+
+            if (attributes.containsKey("automatically-change-resolution")) {
+                tsLayer.autoZoom = Boolean.valueOf(attributes.get("automatically-change-resolution"));
+            }
+
+            if (attributes.containsKey("show-errors")) {
+                tsLayer.showErrors = Boolean.valueOf(attributes.get("show-errors"));
             }
         }
         return layer;

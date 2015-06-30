@@ -30,6 +30,7 @@ public class LambertConformalConic implements Proj {
 
     public abstract static class Parameters {
         public final double latitudeOrigin;
+
         public Parameters(double latitudeOrigin) {
             this.latitudeOrigin = latitudeOrigin;
         }
@@ -44,6 +45,7 @@ public class LambertConformalConic implements Proj {
     public static class Parameters2SP extends Parameters {
         public final double standardParallel1;
         public final double standardParallel2;
+
         public Parameters2SP(double latitudeOrigin, double standardParallel1, double standardParallel2) {
             super(latitudeOrigin);
             this.standardParallel1 = standardParallel1;
@@ -152,22 +154,22 @@ public class LambertConformalConic implements Proj {
     @Override
     public double[] project(double phi, double lambda) {
         double sinphi = sin(phi);
-        double L = (0.5*log((1+sinphi)/(1-sinphi))) - e/2*log((1+e*sinphi)/(1-e*sinphi));
-        double r = f*exp(-n*L);
+        double l = (0.5*log((1+sinphi)/(1-sinphi))) - e/2*log((1+e*sinphi)/(1-e*sinphi));
+        double r = f*exp(-n*l);
         double gamma = n*lambda;
-        double X = r*sin(gamma);
-        double Y = r0 - r*cos(gamma);
-        return new double[] { X, Y };
+        double x = r*sin(gamma);
+        double y = r0 - r*cos(gamma);
+        return new double[] {x, y};
     }
 
     @Override
     public double[] invproject(double east, double north) {
-        double r = sqrt(pow(east,2) + pow(north-r0, 2));
+        double r = sqrt(pow(east, 2) + pow(north-r0, 2));
         double gamma = atan(east / (r0-north));
         double lambda = gamma/n;
         double latIso = (-1/n) * log(abs(r/f));
         double phi = ellps.latitude(latIso, e, epsilon);
-        return new double[] { phi, lambda };
+        return new double[] {phi, lambda};
     }
 
     public final Parameters getParameters() {

@@ -48,7 +48,7 @@ public class BoundingBoxDownloader extends OsmServerReader {
         boolean done = false;
         GpxData result = null;
         String url = "trackpoints?bbox="+b.getMinLon()+","+b.getMinLat()+","+b.getMaxLon()+","+b.getMaxLat()+"&page=";
-        for (int i = 0;!done;++i) {
+        for (int i = 0; !done; ++i) {
             progressMonitor.subTask(tr("Downloading points {0} to {1}...", i * 5000, (i + 1) * 5000));
             try (InputStream in = getInputStream(url+i, progressMonitor.createSubTaskMonitor(1, true))) {
                 if (in == null) {
@@ -62,7 +62,7 @@ public class BoundingBoxDownloader extends OsmServerReader {
                     result = currentGpx;
                 } else if (currentGpx.hasTrackPoints()) {
                     result.mergeFrom(currentGpx);
-                } else{
+                } else {
                     done = true;
                 }
             }
@@ -125,13 +125,15 @@ public class BoundingBoxDownloader extends OsmServerReader {
                 // API 0.6 does not support requests crossing the 180th meridian, so make two requests
                 DataSet ds2 = null;
 
-                try (InputStream in = getInputStream(getRequestForBbox(lon1, lat1, 180.0, lat2), progressMonitor.createSubTaskMonitor(9, false))) {
+                try (InputStream in = getInputStream(getRequestForBbox(lon1, lat1, 180.0, lat2),
+                        progressMonitor.createSubTaskMonitor(9, false))) {
                     if (in == null)
                         return null;
                     ds = OsmReader.parseDataSet(in, progressMonitor.createSubTaskMonitor(1, false));
                 }
 
-                try (InputStream in = getInputStream(getRequestForBbox(-180.0, lat1, lon2, lat2), progressMonitor.createSubTaskMonitor(9, false))) {
+                try (InputStream in = getInputStream(getRequestForBbox(-180.0, lat1, lon2, lat2),
+                        progressMonitor.createSubTaskMonitor(9, false))) {
                     if (in == null)
                         return null;
                     ds2 = OsmReader.parseDataSet(in, progressMonitor.createSubTaskMonitor(1, false));
@@ -142,14 +144,15 @@ public class BoundingBoxDownloader extends OsmServerReader {
 
             } else {
                 // Simple request
-                try (InputStream in = getInputStream(getRequestForBbox(lon1, lat1, lon2, lat2), progressMonitor.createSubTaskMonitor(9, false))) {
+                try (InputStream in = getInputStream(getRequestForBbox(lon1, lat1, lon2, lat2),
+                        progressMonitor.createSubTaskMonitor(9, false))) {
                     if (in == null)
                         return null;
                     ds = OsmReader.parseDataSet(in, progressMonitor.createSubTaskMonitor(1, false));
                 }
             }
             return ds;
-        } catch(OsmTransferException e) {
+        } catch (OsmTransferException e) {
             throw e;
         } catch (Exception e) {
             throw new OsmTransferException(e);
@@ -160,7 +163,8 @@ public class BoundingBoxDownloader extends OsmServerReader {
     }
 
     @Override
-    public List<Note> parseNotes(int noteLimit, int daysClosed, ProgressMonitor progressMonitor) throws OsmTransferException, MoreNotesException {
+    public List<Note> parseNotes(int noteLimit, int daysClosed, ProgressMonitor progressMonitor)
+            throws OsmTransferException, MoreNotesException {
         progressMonitor.beginTask("Downloading notes");
         CheckParameterUtil.ensureThat(noteLimit > 0, "Requested note limit is less than 1.");
         // see result_limit in https://github.com/openstreetmap/openstreetmap-website/blob/master/app/controllers/notes_controller.rb
@@ -187,7 +191,7 @@ public class BoundingBoxDownloader extends OsmServerReader {
     /**
      * Indicates that the number of fetched notes equals the specified limit. Thus there might be more notes to download.
      */
-    public static class MoreNotesException extends RuntimeException{
+    public static class MoreNotesException extends RuntimeException {
         /**
          * The downloaded notes
          */

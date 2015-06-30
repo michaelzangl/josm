@@ -37,6 +37,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -52,7 +53,6 @@ import org.openstreetmap.josm.data.Version;
 import org.openstreetmap.josm.gui.download.DownloadDialog;
 import org.openstreetmap.josm.gui.preferences.server.OAuthAccessTokenHolder;
 import org.openstreetmap.josm.gui.preferences.server.ProxyPreference;
-import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.DefaultProxySelector;
 import org.openstreetmap.josm.io.MessageNotifier;
@@ -102,7 +102,7 @@ public class MainApplication extends Main {
         l.add(ImageProvider.get("logo_48x48x8").getImage());
         l.add(ImageProvider.get("logo").getImage());
         mainFrame.setIconImages(l);
-        mainFrame.addWindowListener(new WindowAdapter(){
+        mainFrame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(final WindowEvent arg0) {
                 Main.exitJosm(true, 0);
@@ -241,7 +241,7 @@ public class MainApplication extends Main {
         Map<Option, Collection<String>> argMap = new EnumMap<>(Option.class);
 
         int c;
-        while ((c = g.getopt()) != -1 ) {
+        while ((c = g.getopt()) != -1) {
             Option opt = null;
             switch (c) {
                 case 'h':
@@ -402,15 +402,28 @@ public class MainApplication extends Main {
         ProxySelector.setDefault(proxySelector);
         OAuthAccessTokenHolder.getInstance().init(Main.pref, CredentialsManager.getInstance());
 
-        final SplashScreen splash = new SplashScreen();
-        final ProgressMonitor monitor = splash.getProgressMonitor();
+        final SplashScreen splash = GuiHelper.runInEDTAndWaitAndReturn(new Callable<SplashScreen>() {
+            @Override
+            public SplashScreen call() {
+                return new SplashScreen();
+            }
+        });
+        final SplashScreen.SplashProgressMonitor monitor = splash.getProgressMonitor();
         monitor.beginTask(tr("Initializing"));
         splash.setVisible(Main.pref.getBoolean("draw.splashscreen", true));
         Main.setInitStatusListener(new InitStatusListener() {
 
             @Override
-            public void updateStatus(String event) {
-                monitor.indeterminateSubTask(event);
+            public Object updateStatus(String event) {
+                monitor.beginTask(event);
+                return event;
+            }
+
+            @Override
+            public void finish(Object status) {
+                if (status instanceof String) {
+                    monitor.finishTask((String) status);
+                }
             }
         });
 
@@ -474,7 +487,8 @@ public class MainApplication extends Main {
         if (Main.isPlatformWindows()) {
             try {
                 // Check for insecure certificates to remove.
-                // This is Windows-dependant code but it can't go to preStartupHook (need i18n) neither startupHook (need to be called before remote control)
+                // This is Windows-dependant code but it can't go to preStartupHook (need i18n)
+                // neither startupHook (need to be called before remote control)
                 PlatformHookWindows.removeInsecureCertificates();
             } catch (NoSuchAlgorithmException | CertificateException | KeyStoreException | IOException e) {
                 error(e);
@@ -490,7 +504,8 @@ public class MainApplication extends Main {
         }
 
         if (Main.pref.getBoolean("debug.edt-checker.enable", Version.getInstance().isLocalBuild())) {
-            // Repaint manager is registered so late for a reason - there is lots of violation during startup process but they don't seem to break anything and are difficult to fix
+            // Repaint manager is registered so late for a reason - there is lots of violation during startup process
+            // but they don't seem to break anything and are difficult to fix
             info("Enabled EDT checker, wrongful access to gui from non EDT thread will be printed to console");
             RepaintManager.setCurrentManager(new CheckThreadViolationRepaintManager());
         }
@@ -522,7 +537,7 @@ public class MainApplication extends Main {
      * disabling or enabling IPV6 may only be done with next start.
      */
     private static void checkIPv6() {
-        if("auto".equals(Main.pref.get("prefer.ipv6", "auto"))) {
+        if ("auto".equals(Main.pref.get("prefer.ipv6", "auto"))) {
              new Thread(new Runnable() { /* this may take some time (DNS, Connect) */
                 public void run() {
                     boolean hasv6 = false;
@@ -530,14 +545,14 @@ public class MainApplication extends Main {
                     try {
                         /* Use the check result from last run of the software, as after the test, value
                            changes have no effect anymore */
-                        if(wasv6) {
+                        if (wasv6) {
                             Utils.updateSystemProperty("java.net.preferIPv6Addresses", "true");
                         }
-                        for(InetAddress a : InetAddress.getAllByName("josm.openstreetmap.de")) {
-                            if(a instanceof Inet6Address) {
-                                if(a.isReachable(1000)) {
+                        for (InetAddress a : InetAddress.getAllByName("josm.openstreetmap.de")) {
+                            if (a instanceof Inet6Address) {
+                                if (a.isReachable(1000)) {
                                     Utils.updateSystemProperty("java.net.preferIPv6Addresses", "true");
-                                    if(!wasv6) {
+                                    if (!wasv6) {
                                         Main.info(tr("Detected useable IPv6 network, prefering IPv6 over IPv4 after next restart."));
                                     } else {
                                         Main.info(tr("Detected useable IPv6 network, prefering IPv6 over IPv4."));
@@ -552,7 +567,7 @@ public class MainApplication extends Main {
                             Main.debug("Exception while checking IPv6 connectivity: "+e);
                         }
                     }
-                    if(wasv6 && !hasv6) {
+                    if (wasv6 && !hasv6) {
                         Main.info(tr("Detected no useable IPv6 network, prefering IPv4 over IPv6 after next restart."));
                     }
                     Main.pref.put("validated.ipv6", hasv6);

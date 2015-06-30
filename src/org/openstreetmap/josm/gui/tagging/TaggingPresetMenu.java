@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.swing.Action;
 import javax.swing.JMenu;
@@ -37,6 +38,22 @@ public class TaggingPresetMenu extends TaggingPreset {
         }
     }
 
+    /**
+     * {@code TaggingPresetMenu} are considered equivalent if (and only if) their {@link #getRawName()} match.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TaggingPresetMenu that = (TaggingPresetMenu) o;
+        return Objects.equals(getRawName(), that.getRawName());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getRawName());
+    }
+
     @Override
     public void setDisplayName() {
         putValue(Action.NAME, getName());
@@ -49,7 +66,7 @@ public class TaggingPresetMenu extends TaggingPreset {
 
     private Component copyMenuComponent(Component menuComponent) {
         if (menuComponent instanceof JMenu) {
-            JMenu menu = (JMenu)menuComponent;
+            JMenu menu = (JMenu) menuComponent;
             JMenu result = new JMenu(menu.getAction());
             for (Component item:menu.getMenuComponents()) {
                 result.add(copyMenuComponent(item));
@@ -57,11 +74,11 @@ public class TaggingPresetMenu extends TaggingPreset {
             result.setText(menu.getText());
             return result;
         } else if (menuComponent instanceof JMenuItem) {
-            JMenuItem menuItem = (JMenuItem)menuComponent;
+            JMenuItem menuItem = (JMenuItem) menuComponent;
             JMenuItem result = new JMenuItem(menuItem.getAction());
             result.setText(menuItem.getText());
             return result;
-        } else if(menuComponent instanceof JSeparator) {
+        } else if (menuComponent instanceof JSeparator) {
             return new JSeparator();
         } else {
             return menuComponent;
@@ -84,32 +101,32 @@ public class TaggingPresetMenu extends TaggingPreset {
     /**
      * Sorts the menu items using the translated item text
      */
-    public void sortMenu(){
+    public void sortMenu() {
         TaggingPresetMenu.sortMenu(this.menu);
     }
 
     /**
      * Sorts the menu items using the translated item text
      */
-    public static void sortMenu(JMenu menu){
+    public static void sortMenu(JMenu menu) {
         Component[] items = menu.getMenuComponents();
         PresetTextComparator comp = new PresetTextComparator();
         List<JMenuItem> sortarray = new ArrayList<>();
         int lastSeparator = 0;
         for (int i = 0; i < items.length; i++) {
             Object item = items[i];
-            if (item instanceof JMenu){
-                sortMenu((JMenu)item);
+            if (item instanceof JMenu) {
+                sortMenu((JMenu) item);
             }
-            if (item instanceof JMenuItem){
-                sortarray.add((JMenuItem)item);
-                if (i == items.length-1){
+            if (item instanceof JMenuItem) {
+                sortarray.add((JMenuItem) item);
+                if (i == items.length-1) {
                     Collections.sort(sortarray, comp);
                     int pos = 0;
                     for (JMenuItem menuItem : sortarray) {
                         int oldPos;
-                        if (lastSeparator == 0){
-                            oldPos=pos;
+                        if (lastSeparator == 0) {
+                            oldPos = pos;
                         } else {
                             oldPos = pos+lastSeparator+1;
                         }
@@ -119,14 +136,14 @@ public class TaggingPresetMenu extends TaggingPreset {
                     sortarray = new ArrayList<>();
                     lastSeparator = 0;
                 }
-            } else if (item instanceof JSeparator){
+            } else if (item instanceof JSeparator) {
                 Collections.sort(sortarray, comp);
                 int pos = 0;
                 for (JMenuItem menuItem : sortarray) {
                     int oldPos;
-                    if(lastSeparator == 0){
-                        oldPos=pos;
-                    }else {
+                    if (lastSeparator == 0) {
+                        oldPos = pos;
+                    } else {
                         oldPos = pos+lastSeparator+1;
                     }
                     menu.add(menuItem, oldPos);

@@ -107,7 +107,7 @@ public final class HistoryBrowserDialogManager implements MapView.LayerChangeLis
      * @param dialog History dialog to hide
      */
     public void hide(HistoryBrowserDialog dialog) {
-        for (Iterator<Entry<Long, HistoryBrowserDialog>> it = dialogs.entrySet().iterator(); it.hasNext(); ) {
+        for (Iterator<Entry<Long, HistoryBrowserDialog>> it = dialogs.entrySet().iterator(); it.hasNext();) {
             if (Objects.equals(it.next().getValue(), dialog)) {
                 it.remove();
                 if (dialogs.isEmpty()) {
@@ -153,13 +153,14 @@ public final class HistoryBrowserDialogManager implements MapView.LayerChangeLis
     /* ----------------------------------------------------------------------------- */
     @Override
     public void activeLayerChange(Layer oldLayer, Layer newLayer) {}
+
     @Override
     public void layerAdded(Layer newLayer) {}
 
     @Override
     public void layerRemoved(Layer oldLayer) {
         // remove all history browsers if the number of layers drops to 0
-        if (Main.isDisplayingMapView() && !Main.map.mapView.hasLayers()) {
+        if (Main.isDisplayingMapView() && Main.map.mapView.getNumLayers() == 0) {
             hideAll();
         }
     }

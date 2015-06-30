@@ -68,7 +68,7 @@ public final class ChangesetCache implements PreferenceChangedListener{
     protected void fireChangesetCacheEvent(final ChangesetCacheEvent e) {
         GuiHelper.runInEDT(new Runnable() {
             @Override public void run() {
-                for(ChangesetCacheListener l: listeners) {
+                for (ChangesetCacheListener l: listeners) {
                     l.changesetCacheUpdated(e);
                 }
             }
@@ -104,7 +104,7 @@ public final class ChangesetCache implements PreferenceChangedListener{
     }
 
     public boolean contains(int id) {
-        if (id <=0) return false;
+        if (id <= 0) return false;
         return cache.get(id) != null;
     }
 
@@ -133,7 +133,7 @@ public final class ChangesetCache implements PreferenceChangedListener{
     public void remove(int id) {
         DefaultChangesetCacheEvent e = new DefaultChangesetCacheEvent(this);
         remove(id, e);
-        if (! e.isEmpty()) {
+        if (!e.isEmpty()) {
             fireChangesetCacheEvent(e);
         }
     }
@@ -159,7 +159,7 @@ public final class ChangesetCache implements PreferenceChangedListener{
             }
             remove(cs.getId(), evt);
         }
-        if (! evt.isEmpty()) {
+        if (!evt.isEmpty()) {
             fireChangesetCacheEvent(evt);
         }
     }

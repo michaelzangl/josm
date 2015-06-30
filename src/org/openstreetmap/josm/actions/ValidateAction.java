@@ -123,7 +123,8 @@ public class ValidateAction extends JosmAction {
          * @param validatedPrimitives the collection of primitives to validate.
          * @param formerValidatedPrimitives the last collection of primitives being validates. May be null.
          */
-        public ValidationTask(Collection<Test> tests, Collection<OsmPrimitive> validatedPrimitives, Collection<OsmPrimitive> formerValidatedPrimitives) {
+        public ValidationTask(Collection<Test> tests, Collection<OsmPrimitive> validatedPrimitives,
+                Collection<OsmPrimitive> formerValidatedPrimitives) {
             super(tr("Validating"), false /*don't ignore exceptions */);
             this.validatedPrimitives  = validatedPrimitives;
             this.formerValidatedPrimitives = formerValidatedPrimitives;
@@ -163,7 +164,7 @@ public class ValidateAction extends JosmAction {
                 if (canceled)
                     return;
                 testCounter++;
-                getProgressMonitor().setCustomText(tr("Test {0}/{1}: Starting {2}", testCounter, tests.size(),test.getName()));
+                getProgressMonitor().setCustomText(tr("Test {0}/{1}: Starting {2}", testCounter, tests.size(), test.getName()));
                 test.setPartialSelection(formerValidatedPrimitives != null);
                 test.startTest(getProgressMonitor().createSubTaskMonitor(validatedPrimitives.size(), false));
                 test.visit(validatedPrimitives);

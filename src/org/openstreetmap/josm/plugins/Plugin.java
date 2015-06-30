@@ -92,7 +92,9 @@ public abstract class Plugin implements MapFrameListener {
      * Called in the preferences dialog to create a preferences page for the plugin,
      * if any available.
      */
-    public PreferenceSetting getPreferenceSetting() { return null; }
+    public PreferenceSetting getPreferenceSetting() {
+        return null;
+    }
 
     /**
      * Called in the download dialog to give the plugin a chance to modify the list
@@ -102,8 +104,11 @@ public abstract class Plugin implements MapFrameListener {
 
     /**
      * Copies the resource 'from' to the file in the plugin directory named 'to'.
+     * @throws FileNotFoundException if the file exists but is a directory rather than a regular file,
+     * does not exist but cannot be created, or cannot be opened for any other reason
+     * @throws IOException if any other I/O error occurs
      */
-    public void copy(String from, String to) throws FileNotFoundException, IOException {
+    public void copy(String from, String to) throws IOException {
         String pluginDirName = getPluginDir();
         File pluginDir = new File(pluginDirName);
         if (!pluginDir.exists()) {
@@ -117,7 +122,7 @@ public abstract class Plugin implements MapFrameListener {
                 throw new IOException("Resource not found: "+from);
             }
             byte[] buffer = new byte[8192];
-            for(int len = in.read(buffer); len > 0; len = in.read(buffer)) {
+            for (int len = in.read(buffer); len > 0; len = in.read(buffer)) {
                 out.write(buffer, 0, len);
             }
         }

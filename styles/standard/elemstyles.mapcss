@@ -1976,7 +1976,7 @@ node[shop=newsagent] {
     text: auto;
 }
 node[shop=optician] {
-    icon-image: "shop/optician.png";
+    icon-image: "shop/optician.svg";
     set icon_z17;
     text: auto;
 }
@@ -2156,6 +2156,7 @@ area[amenity=pub],
 area[amenity=biergarten],
 area[amenity=nightclub],
 area[amenity=stripclub],
+area[amenity=casino],
 area[amenity=brothel],
 area[amenity=cafe],
 area[amenity=restaurant],
@@ -2185,6 +2186,11 @@ node[amenity=stripclub] {
     set icon_z17;
     text: auto;
 }
+node[amenity=casino] {
+    icon-image: "leisure/casino.svg";
+    set icon_z17;
+    text: auto;
+}
 node[amenity=brothel] {
     icon-image: "leisure/stripclub.png";
     set icon_z17;
@@ -2195,7 +2201,11 @@ node[amenity=cafe] {
     set icon_z17;
     text: auto;
 }
-node[amenity=restaurant],
+node[amenity=restaurant] {
+    icon-image: "food/restaurant.svg";
+    set icon_z17;
+    text: auto;
+}
 node[amenity=food_court] {
     icon-image: "food/restaurant.png";
     set icon_z17;
@@ -3997,8 +4007,11 @@ area[natural=water] {
     fill-color: water#0000ff;
 }
 way[natural=coastline] {
-    width: 1;
+    width: 2;
     color: water#0000ff;
+    right-casing-color: water#0000ff;
+    right-casing-width: 5;
+    right-casing-opacity: 0.30; 
 }
 area[natural=mud] {
     fill-color: mud#cba762;

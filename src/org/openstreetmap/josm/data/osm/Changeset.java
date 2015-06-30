@@ -41,7 +41,7 @@ public final class Changeset implements Tagged {
     /** the number of comments for this changeset */
     private int commentsCount;
     /** the map of tags */
-    private Map<String,String> tags;
+    private Map<String, String> tags;
     /** indicates whether this changeset is incomplete. For an incomplete changeset we only know its id */
     private boolean incomplete;
     /** the changeset content */
@@ -158,7 +158,7 @@ public final class Changeset implements Tagged {
 
     public Bounds getBounds() {
         if (min != null && max != null)
-            return new Bounds(min,max);
+            return new Bounds(min, max);
         return null;
     }
 
@@ -171,7 +171,7 @@ public final class Changeset implements Tagged {
      * @return the number of comments for this changeset
      * @since 7700
      */
-    public final int getCommentsCount() {
+    public int getCommentsCount() {
         return commentsCount;
     }
 
@@ -180,7 +180,7 @@ public final class Changeset implements Tagged {
      * @param commentsCount the number of comments for this changeset
      * @since 7700
      */
-    public final void setCommentsCount(int commentsCount) {
+    public void setCommentsCount(int commentsCount) {
         this.commentsCount = commentsCount;
     }
 
@@ -348,7 +348,7 @@ public final class Changeset implements Tagged {
      * @return the list of comments in the changeset discussion. May be empty but never null
      * @since 7704
      */
-    public final synchronized List<ChangesetDiscussionComment> getDiscussion() {
+    public synchronized List<ChangesetDiscussionComment> getDiscussion() {
         if (discussion == null) {
             return Collections.emptyList();
         }
@@ -360,7 +360,7 @@ public final class Changeset implements Tagged {
      * @param comment the comment to add. Ignored if null
      * @since 7704
      */
-    public final synchronized void addDiscussionComment(ChangesetDiscussionComment comment) {
+    public synchronized void addDiscussionComment(ChangesetDiscussionComment comment) {
         if (comment == null) {
             return;
         }

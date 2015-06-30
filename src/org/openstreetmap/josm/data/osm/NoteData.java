@@ -192,7 +192,7 @@ public class NoteData {
      * @param text Required comment with which to open the note
      */
     public synchronized void createNote(LatLon location, String text) {
-        if(text == null || text.isEmpty()) {
+        if (text == null || text.isEmpty()) {
             throw new IllegalArgumentException("Comment can not be blank when creating a note");
         }
         Note note = new Note(location);
@@ -272,8 +272,10 @@ public class NoteData {
     }
 
     private void dataUpdated() {
-        Main.map.noteDialog.setNotes(getSortedNotes());
-        Main.map.mapView.repaint();
+        if (Main.isDisplayingMapView()) {
+            Main.map.noteDialog.setNotes(getSortedNotes());
+            Main.map.mapView.repaint();
+        }
     }
 
     private User getCurrentUser() {
@@ -290,7 +292,14 @@ public class NoteData {
         for (Map.Entry<Note, Note> entry : updatedNotes.entrySet()) {
             Note oldNote = entry.getKey();
             Note newNote = entry.getValue();
+            boolean reindex = oldNote.hashCode() != newNote.hashCode();
+            if (reindex) {
+                noteList.removeElem(oldNote);
+            }
             oldNote.updateWith(newNote);
+            if (reindex) {
+                noteList.add(oldNote);
+            }
         }
         dataUpdated();
     }

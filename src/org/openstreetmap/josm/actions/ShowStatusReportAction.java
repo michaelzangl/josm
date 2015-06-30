@@ -106,7 +106,7 @@ public final class ShowStatusReportAction extends JosmAction {
             final String propJavaHomeAlt = "<java.home>";
             // Build a new list of VM parameters to modify it below if needed (default implementation returns an UnmodifiableList instance)
             List<String> vmArguments = new ArrayList<>(ManagementFactory.getRuntimeMXBean().getInputArguments());
-            for (ListIterator<String> it = vmArguments.listIterator(); it.hasNext(); ) {
+            for (ListIterator<String> it = vmArguments.listIterator(); it.hasNext();) {
                 String value = it.next();
                 if (value.contains("=")) {
                     String[] param = value.split("=");
@@ -128,6 +128,9 @@ public final class ShowStatusReportAction extends JosmAction {
             }
         } catch (SecurityException e) {
             // Ignore exception
+            if (Main.isTraceEnabled()) {
+                Main.trace(e.getMessage());
+            }
         }
         List<String> commandLineArgs = Main.getCommandLineArgs();
         if (!commandLineArgs.isEmpty()) {
@@ -195,7 +198,7 @@ public final class ShowStatusReportAction extends JosmAction {
 
         switch (ed.showDialog().getValue()) {
             case 1: Utils.copyToClipboard(text.toString()); break;
-            case 2: ReportBugAction.reportBug(reportHeader) ; break;
+            case 2: ReportBugAction.reportBug(reportHeader); break;
         }
     }
 }

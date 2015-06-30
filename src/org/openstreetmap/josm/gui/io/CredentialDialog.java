@@ -43,7 +43,8 @@ import org.openstreetmap.josm.tools.WindowGeometry;
 
 public class CredentialDialog extends JDialog {
 
-    public static CredentialDialog getOsmApiCredentialDialog(String username, String password, String host, String saveUsernameAndPasswordCheckboxText) {
+    public static CredentialDialog getOsmApiCredentialDialog(String username, String password, String host,
+            String saveUsernameAndPasswordCheckboxText) {
         CredentialDialog dialog = new CredentialDialog(saveUsernameAndPasswordCheckboxText);
         if (Objects.equals(OsmApi.getOsmApi().getHost(), host)) {
             dialog.prepareForOsmApiCredentials(username, password);
@@ -54,7 +55,8 @@ public class CredentialDialog extends JDialog {
         return dialog;
     }
 
-    public static CredentialDialog getHttpProxyCredentialDialog(String username, String password, String host, String saveUsernameAndPasswordCheckboxText) {
+    public static CredentialDialog getHttpProxyCredentialDialog(String username, String password, String host,
+            String saveUsernameAndPasswordCheckboxText) {
         CredentialDialog dialog = new CredentialDialog(saveUsernameAndPasswordCheckboxText);
         dialog.prepareForProxyCredentials(username, password);
         dialog.pack();
@@ -76,7 +78,7 @@ public class CredentialDialog extends JDialog {
     @Override
     public void setVisible(boolean visible) {
         if (visible) {
-            WindowGeometry.centerInWindow(Main.parent, new Dimension(350,300)).applySafe(this);
+            WindowGeometry.centerInWindow(Main.parent, new Dimension(350, 300)).applySafe(this);
         }
         super.setVisible(visible);
     }
@@ -94,10 +96,11 @@ public class CredentialDialog extends JDialog {
         getContentPane().add(createButtonPanel(), BorderLayout.SOUTH);
 
         addWindowListener(new WindowEventHander());
-        getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
+        getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
         getRootPane().getActionMap().put("escape", new CancelAction());
 
-        getRootPane().setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        getRootPane().setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
     }
 
     public CredentialDialog(String saveUsernameAndPasswordCheckboxText) {
@@ -105,7 +108,7 @@ public class CredentialDialog extends JDialog {
         setModalityType(ModalityType.DOCUMENT_MODAL);
         try {
             setAlwaysOnTop(true);
-        } catch(SecurityException e) {
+        } catch (SecurityException e) {
             Main.warn(tr("Failed to put Credential Dialog always on top. Caught security exception."));
         }
         build();
@@ -133,17 +136,17 @@ public class CredentialDialog extends JDialog {
     }
 
     public String getUsername() {
-        if (pnlCredentials== null) return null;
+        if (pnlCredentials == null) return null;
         return pnlCredentials.getUserName();
     }
 
     public char[] getPassword() {
-        if (pnlCredentials== null) return null;
+        if (pnlCredentials == null) return null;
         return pnlCredentials.getPassword();
     }
 
     public boolean isSaveCredentials() {
-        if (pnlCredentials== null) return false;
+        if (pnlCredentials == null) return false;
         return pnlCredentials.isSaveCredentials();
     }
 
@@ -171,7 +174,7 @@ public class CredentialDialog extends JDialog {
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
             gc.weighty = 0.0;
-            gc.insets = new Insets(0,0,10,0);
+            gc.insets = new Insets(0, 0, 10, 0);
             add(lblHeading = new JMultilineLabel(""), gc);
 
             gc.gridx = 0;
@@ -181,7 +184,7 @@ public class CredentialDialog extends JDialog {
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
             gc.weighty = 0.0;
-            gc.insets = new Insets(0,0,10,10);
+            gc.insets = new Insets(0, 0, 10, 10);
             add(new JLabel(tr("Username")), gc);
             gc.gridx = 1;
             gc.gridy = 1;
@@ -217,7 +220,7 @@ public class CredentialDialog extends JDialog {
             gc.gridx = 0;
             gc.gridy = 5;
             gc.weighty = 1.0;
-            add(new JPanel(),gc);
+            add(new JPanel(), gc);
 
         }
 
@@ -310,8 +313,11 @@ public class CredentialDialog extends JDialog {
             tfPassword.setToolTipText(tr("Please enter the password for authenticating at your proxy server"));
             lblHeading.setText(
                     "<html>" + tr("Authenticating at the HTTP proxy ''{0}'' failed. Please enter a valid username and a valid password.",
-                            Main.pref.get(ProxyPreferencesPanel.PROXY_HTTP_HOST) + ":" + Main.pref.get(ProxyPreferencesPanel.PROXY_HTTP_PORT)) + "</html>");
-            lblWarning.setText("<html>" + tr("Warning: depending on the authentication method the proxy server uses the password may be transferred unencrypted.") + "</html>");
+                            Main.pref.get(ProxyPreferencesPanel.PROXY_HTTP_HOST) + ":" +
+                            Main.pref.get(ProxyPreferencesPanel.PROXY_HTTP_PORT)) + "</html>");
+            lblWarning.setText("<html>" +
+                    tr("Warning: depending on the authentication method the proxy server uses the password may be transferred unencrypted.")
+                    + "</html>");
         }
 
         public HttpProxyCredentialsPanel(CredentialDialog owner) {
@@ -324,7 +330,7 @@ public class CredentialDialog extends JDialog {
         @Override
         public void focusGained(FocusEvent e) {
             if (e.getSource() instanceof JTextField) {
-                JTextField tf = (JTextField)e.getSource();
+                JTextField tf = (JTextField) e.getSource();
                 tf.selectAll();
             }
         }
@@ -350,7 +356,7 @@ public class CredentialDialog extends JDialog {
 
         @Override
         public void keyPressed(KeyEvent e) {
-            if(e.getKeyChar() == KeyEvent.VK_ENTER) {
+            if (e.getKeyChar() == KeyEvent.VK_ENTER) {
                 if (currentTF.getText().trim().isEmpty()) {
                     currentTF.selectAll();
                     return;

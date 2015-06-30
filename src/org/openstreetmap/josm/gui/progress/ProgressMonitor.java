@@ -36,13 +36,13 @@ public interface ProgressMonitor {
     }
 
     /** Ticks count used, when no other value is supplied */
-    public final int DEFAULT_TICKS = 10000;
+    int DEFAULT_TICKS = 10000;
 
     /**
      * Can be used with {@link #worked(int)} and {@link #createSubTaskMonitor(int, boolean)} to
      * express that the task should use all remaining ticks
      */
-    public final int ALL_TICKS = -1;
+    int ALL_TICKS = -1;
 
     /**
      * Starts this progress monitor. Must be called exactly once
@@ -115,17 +115,17 @@ public interface ProgressMonitor {
      * Normal subtask
      * @param title Can be {@code null}, in that case task title is not changed
      */
-
     void subTask(String title);
+
     /**
      * Shows additional text
+     * @param text custom text
      */
-
     void setCustomText(String text);
+
     /**
-     * Show extra text after normal task title. Hack for ProgressInputStream to show number of kB
-     * already downloaded
-     * @param text
+     * Show extra text after normal task title. Hack for ProgressInputStream to show number of kB already downloaded
+     * @param text extra text
      */
     void setExtraText(String text);
 

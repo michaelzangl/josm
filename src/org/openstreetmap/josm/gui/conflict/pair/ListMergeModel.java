@@ -125,8 +125,8 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
     protected abstract void setValueAt(DefaultTableModel model, Object value, int row, int col);
 
     /**
-     *
-     * @param entry
+     * Replies primitive from my dataset referenced by entry
+     * @param entry entry
      * @return Primitive from my dataset referenced by entry
      */
     public OsmPrimitive getMyPrimitive(T entry) {
@@ -138,7 +138,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
         if (result == null && mergedMap != null) {
             PrimitiveId id = mergedMap.get(entry);
             if (id == null && entry instanceof OsmPrimitive) {
-                id = mergedMap.get(((OsmPrimitive)entry).getPrimitiveId());
+                id = mergedMap.get(((OsmPrimitive) entry).getPrimitiveId());
             }
             if (id != null) {
                 result = myDataset.getPrimitiveById(id);
@@ -207,7 +207,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
-        synchronized(listeners) {
+        synchronized (listeners) {
             if (listener != null && !listeners.contains(listener)) {
                 listeners.add(listener);
             }
@@ -215,7 +215,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
     }
 
     public void removePropertyChangeListener(PropertyChangeListener listener) {
-        synchronized(listeners) {
+        synchronized (listeners) {
             if (listener != null && listeners.contains(listener)) {
                 listeners.remove(listener);
             }
@@ -223,7 +223,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
     }
 
     protected void fireFrozenChanged(boolean oldValue, boolean newValue) {
-        synchronized(listeners) {
+        synchronized (listeners) {
             PropertyChangeEvent evt = new PropertyChangeEvent(this, FROZEN_PROP, oldValue, newValue);
             for (PropertyChangeListener listener: listeners) {
                 listener.propertyChange(evt);
@@ -273,7 +273,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
         notifyObservers();
     }
 
-    protected void copyToTop(ListRole role, int []rows) {
+    protected void copyToTop(ListRole role, int[] rows) {
         copy(role, rows, 0);
         mergedEntriesSelectionModel.setSelectionInterval(0, rows.length -1);
     }
@@ -285,7 +285,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      *
      * @param rows the indices
      */
-    public void copyMyToTop(int [] rows) {
+    public void copyMyToTop(int[] rows) {
         copyToTop(MY_ENTRIES, rows);
     }
 
@@ -296,7 +296,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      *
      * @param rows the indices
      */
-    public void copyTheirToTop(int [] rows) {
+    public void copyTheirToTop(int[] rows) {
         copyToTop(THEIR_ENTRIES, rows);
     }
 
@@ -309,7 +309,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      * @param rows the indices
      */
 
-    public void copyToEnd(ListRole source, int [] rows) {
+    public void copyToEnd(ListRole source, int[] rows) {
         copy(source, rows, getMergedEntriesSize());
         mergedEntriesSelectionModel.setSelectionInterval(getMergedEntriesSize()-rows.length, getMergedEntriesSize() -1);
 
@@ -322,7 +322,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      *
      * @param rows the indices
      */
-    public void copyMyToEnd(int [] rows) {
+    public void copyMyToEnd(int[] rows) {
         copyToEnd(MY_ENTRIES, rows);
     }
 
@@ -333,7 +333,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      *
      * @param rows the indices
      */
-    public void copyTheirToEnd(int [] rows) {
+    public void copyTheirToEnd(int[] rows) {
         copyToEnd(THEIR_ENTRIES, rows);
     }
 
@@ -354,7 +354,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
 
     protected void alertCopyFailedForDeletedPrimitives(List<PrimitiveId> deletedIds) {
         List<String> items = new ArrayList<>();
-        for (int i=0; i<Math.min(MAX_DELETED_PRIMITIVE_IN_DIALOG, deletedIds.size()); i++) {
+        for (int i = 0; i < Math.min(MAX_DELETED_PRIMITIVE_IN_DIALOG, deletedIds.size()); i++) {
             items.add(deletedIds.get(i).toString());
         }
         if (deletedIds.size() > MAX_DELETED_PRIMITIVE_IN_DIALOG) {
@@ -401,7 +401,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
         getMergedEntries().clear();
 
         int[] rows = new int[entries.get(source).size()];
-        for (int i=0; i<rows.length; i++) {
+        for (int i = 0; i < rows.length; i++) {
             rows[i] = i;
         }
         copy(source, rows, 0);
@@ -416,7 +416,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      * @param current the row index before which the nodes are inserted
      * @throws IllegalArgumentException if current &lt; 0 or &gt;= #nodes in list of merged nodes
      */
-    protected void copyBeforeCurrent(ListRole source, int [] rows, int current) {
+    protected void copyBeforeCurrent(ListRole source, int[] rows, int current) {
         copy(source, rows, current);
         mergedEntriesSelectionModel.setSelectionInterval(current, current + rows.length-1);
     }
@@ -429,8 +429,8 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      * @param current the row index before which the nodes are inserted
      * @throws IllegalArgumentException if current &lt; 0 or &gt;= #nodes in list of merged nodes
      */
-    public void copyMyBeforeCurrent(int [] rows, int current) {
-        copyBeforeCurrent(MY_ENTRIES,rows,current);
+    public void copyMyBeforeCurrent(int[] rows, int current) {
+        copyBeforeCurrent(MY_ENTRIES, rows, current);
     }
 
     /**
@@ -441,8 +441,8 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      * @param current the row index before which the nodes are inserted
      * @throws IllegalArgumentException if current &lt; 0 or &gt;= #nodes in list of merged nodes
      */
-    public void copyTheirBeforeCurrent(int [] rows, int current) {
-        copyBeforeCurrent(THEIR_ENTRIES,rows,current);
+    public void copyTheirBeforeCurrent(int[] rows, int current) {
+        copyBeforeCurrent(THEIR_ENTRIES, rows, current);
     }
 
     /**
@@ -454,7 +454,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      * @param current the row index after which the nodes are inserted
      * @throws IllegalArgumentException if current &lt; 0 or &gt;= #nodes in list of merged nodes
      */
-    protected void copyAfterCurrent(ListRole source, int [] rows, int current) {
+    protected void copyAfterCurrent(ListRole source, int[] rows, int current) {
         copy(source, rows, current + 1);
         mergedEntriesSelectionModel.setSelectionInterval(current+1, current + rows.length-1);
         notifyObservers();
@@ -468,7 +468,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      * @param current the row index after which the nodes are inserted
      * @throws IllegalArgumentException if current &lt; 0 or &gt;= #nodes in list of merged nodes
      */
-    public void copyMyAfterCurrent(int [] rows, int current) {
+    public void copyMyAfterCurrent(int[] rows, int current) {
         copyAfterCurrent(MY_ENTRIES, rows, current);
     }
 
@@ -480,7 +480,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      * @param current the row index after which the nodes are inserted
      * @throws IllegalArgumentException if current &lt; 0 or &gt;= #nodes in list of merged nodes
      */
-    public void copyTheirAfterCurrent(int [] rows, int current) {
+    public void copyTheirAfterCurrent(int[] rows, int current) {
         copyAfterCurrent(THEIR_ENTRIES, rows, current);
     }
 
@@ -491,7 +491,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      * @param rows the indices
      *
      */
-    public void moveUpMerged(int [] rows) {
+    public void moveUpMerged(int[] rows) {
         if (rows == null || rows.length == 0)
             return;
         if (rows[0] == 0)
@@ -517,14 +517,14 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      *
      * @param rows the indices
      */
-    public void moveDownMerged(int [] rows) {
+    public void moveDownMerged(int[] rows) {
         if (rows == null || rows.length == 0)
             return;
         List<T> mergedEntries = getMergedEntries();
         if (rows[rows.length -1] == mergedEntries.size() -1)
             // can't move down
             return;
-        for (int i = rows.length-1; i>=0;i--) {
+        for (int i = rows.length-1; i >= 0; i--) {
             int row = rows[i];
             T n = mergedEntries.get(row);
             mergedEntries.remove(row);
@@ -544,13 +544,13 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
      *
      * @param rows the indices
      */
-    public void removeMerged(int [] rows) {
+    public void removeMerged(int[] rows) {
         if (rows == null || rows.length == 0)
             return;
 
         List<T> mergedEntries = getMergedEntries();
 
-        for (int i = rows.length-1; i>=0;i--) {
+        for (int i = rows.length-1; i >= 0; i--) {
             mergedEntries.remove(rows[i]);
         }
         fireModelDataChanged();
@@ -568,8 +568,8 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
 
         if (getMyEntriesSize() != getTheirEntriesSize())
             return false;
-        for (int i=0; i < getMyEntriesSize(); i++) {
-            if (! isEqualEntry(getMyEntries().get(i), getTheirEntries().get(i)))
+        for (int i = 0; i < getMyEntriesSize(); i++) {
+            if (!isEqualEntry(getMyEntries().get(i), getTheirEntries().get(i)))
                 return false;
         }
         return true;
@@ -616,7 +616,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
 
         @Override
         public void setValueAt(Object value, int row, int col) {
-            ListMergeModel.this.setValueAt(this, value,row,col);
+            ListMergeModel.this.setValueAt(this, value, row, col);
         }
 
         public ListMergeModel<T> getListMergeModel() {
@@ -711,7 +711,7 @@ public abstract class ListMergeModel<T extends PrimitiveId> extends Observable {
             if (value instanceof OsmPrimitive) {
                 return (OsmPrimitive) value;
             } else if (value instanceof RelationMember) {
-                return ((RelationMember)value).getMember();
+                return ((RelationMember) value).getMember();
             } else {
                 Main.error("Unknown object type: "+value);
                 return null;

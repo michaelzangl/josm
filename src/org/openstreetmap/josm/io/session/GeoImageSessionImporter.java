@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.layer.GpxLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
@@ -23,7 +24,8 @@ import org.w3c.dom.NodeList;
 public class GeoImageSessionImporter implements SessionLayerImporter {
 
     @Override
-    public Layer load(Element elem, SessionReader.ImportSupport support, ProgressMonitor progressMonitor) throws IOException, IllegalDataException {
+    public Layer load(Element elem, SessionReader.ImportSupport support, ProgressMonitor progressMonitor)
+            throws IOException, IllegalDataException {
         String version = elem.getAttribute("version");
         if (!"0.1".equals(version)) {
             throw new IllegalDataException(tr("Version ''{0}'' of meta data for geoimage layer is not supported. Expected: 0.1", version));
@@ -32,14 +34,14 @@ public class GeoImageSessionImporter implements SessionLayerImporter {
         List<ImageEntry> entries = new ArrayList<>();
         NodeList imgNodes = elem.getChildNodes();
         boolean useThumbs = false;
-        for (int i=0; i<imgNodes.getLength(); ++i) {
+        for (int i = 0; i < imgNodes.getLength(); ++i) {
             Node imgNode = imgNodes.item(i);
             if (imgNode.getNodeType() == Node.ELEMENT_NODE) {
                 Element imgElem = (Element) imgNode;
                 if ("geoimage".equals(imgElem.getTagName())) {
                     ImageEntry entry = new ImageEntry();
                     NodeList attrNodes = imgElem.getChildNodes();
-                    for (int j=0; j<attrNodes.getLength(); ++j) {
+                    for (int j = 0; j < attrNodes.getLength(); ++j) {
                         Node attrNode = attrNodes.item(j);
                         if (attrNode.getNodeType() == Node.ELEMENT_NODE) {
                             Element attrElem = (Element) attrNode;
@@ -86,7 +88,10 @@ public class GeoImageSessionImporter implements SessionLayerImporter {
                                 }
                                 // TODO: handle thumbnail loading
                             } catch (NumberFormatException e) {
-                                // nothing
+                                // do nothing
+                                if (Main.isTraceEnabled()) {
+                                    Main.trace(e.getMessage());
+                                }
                             }
                         }
                     }

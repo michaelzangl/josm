@@ -19,7 +19,7 @@ import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.imagery.ImageryInfo;
 import org.openstreetmap.josm.data.imagery.ImageryInfo.ImageryType;
 import org.openstreetmap.josm.gui.ExtendedDialog;
-import org.openstreetmap.josm.gui.actionsupport.AlignImageryPanel;
+import org.openstreetmap.josm.gui.layer.AlignImageryPanel;
 import org.openstreetmap.josm.gui.layer.ImageryLayer;
 import org.openstreetmap.josm.gui.preferences.imagery.WMSLayerTree;
 import org.openstreetmap.josm.gui.util.GuiHelper;
@@ -42,7 +42,7 @@ public class AddImageryLayerAction extends JosmAction implements AdaptableAction
      * @param info The imagery info
      */
     public AddImageryLayerAction(ImageryInfo info) {
-        super(info.getMenuName(), /* ICON */"imagery_menu", tr("Add imagery layer {0}",info.getName()), null, false, false);
+        super(info.getMenuName(), /* ICON */"imagery_menu", tr("Add imagery layer {0}", info.getName()), null, false, false);
         putValue("toolbar", "imagery_" + info.getToolbarName());
         putValue("help", ht("/Preferences/Imagery"));
         this.info = info;
@@ -104,14 +104,14 @@ public class AddImageryLayerAction extends JosmAction implements AdaptableAction
             formats.setSelectedItem(wms.getPreferredFormats());
             formats.setToolTipText(tr("Select image format for WMS layer"));
 
-            if (1 != new ExtendedDialog(Main.parent, tr("Select WMS layers"), new String[]{tr("Add layers"), tr("Cancel")}) {{
+            if (1 != new ExtendedDialog(Main.parent, tr("Select WMS layers"), new String[]{tr("Add layers"), tr("Cancel")}) { {
                 final JScrollPane scrollPane = new JScrollPane(tree.getLayerTree());
                 scrollPane.setPreferredSize(new Dimension(400, 400));
                 final JPanel panel = new JPanel(new GridBagLayout());
                 panel.add(scrollPane, GBC.eol().fill());
                 panel.add(formats, GBC.eol().fill(GBC.HORIZONTAL));
                 setContent(panel);
-            }}.showDialog().getValue()) {
+            } }.showDialog().getValue()) {
                 return null;
             }
 
@@ -145,10 +145,12 @@ public class AddImageryLayerAction extends JosmAction implements AdaptableAction
 
     @Override
     protected void updateEnabledState() {
+        ImageryType type = info.getImageryType();
         // never enable blacklisted entries. Do not add same imagery layer twice (fix #2519)
-        if (info.isBlacklisted() /*|| isLayerAlreadyPresent()*/) { // FIXME check disabled to allow several instances with different settings (see #7981)
+        if (info.isBlacklisted() /*|| isLayerAlreadyPresent()*/) {
+            // FIXME check disabled to allow several instances with different settings (see #7981)
             setEnabled(false);
-        } else if (info.getImageryType() == ImageryType.TMS || info.getImageryType() == ImageryType.BING || info.getImageryType() == ImageryType.SCANEX) {
+        } else if (type == ImageryType.TMS || type == ImageryType.BING || type == ImageryType.SCANEX) {
             setEnabled(true);
         } else if (Main.isDisplayingMapView() && !Main.map.mapView.getAllLayers().isEmpty()) {
             setEnabled(true);

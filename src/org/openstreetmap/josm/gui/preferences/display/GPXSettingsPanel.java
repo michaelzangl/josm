@@ -84,8 +84,8 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
      */
     public GPXSettingsPanel(String layerName, boolean local, boolean nonlocal) {
         super(new GridBagLayout());
-        this.local=local;
-        this.nonlocal=nonlocal;
+        this.local = local;
+        this.nonlocal = nonlocal;
         this.layerName = "layer "+layerName;
         initComponents();
         loadPreferences();
@@ -97,22 +97,22 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
     public GPXSettingsPanel() {
         super(new GridBagLayout());
         initComponents();
-        local=false;
-        nonlocal=false;
+        local = false;
+        nonlocal = false;
         loadPreferences(); // preferences -> controls
     }
 
     private void initComponents() {
-        setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         // makeAutoMarkers
         makeAutoMarkers.setToolTipText(tr("Automatically make a marker layer from any waypoints when opening a GPX layer."));
         ExpertToggleAction.addVisibilitySwitcher(makeAutoMarkers);
-        add(makeAutoMarkers, GBC.eol().insets(20,0,0,5));
+        add(makeAutoMarkers, GBC.eol().insets(20, 0, 0, 5));
 
         // drawRawGpsLines
         ButtonGroup gpsLinesGroup = new ButtonGroup();
-        if (layerName!=null) {
+        if (layerName != null) {
             gpsLinesGroup.add(drawRawGpsLinesGlobal);
         }
         gpsLinesGroup.add(drawRawGpsLinesNone);
@@ -122,16 +122,16 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
         /* ensure that default is in data base */
 
         JLabel label = new JLabel(tr("Draw lines between raw GPS points"));
-        add(label, GBC.eol().insets(20,0,0,0));
-        if (layerName!=null) {
-            add(drawRawGpsLinesGlobal, GBC.eol().insets(40,0,0,0));
+        add(label, GBC.eol().insets(20, 0, 0, 0));
+        if (layerName != null) {
+            add(drawRawGpsLinesGlobal, GBC.eol().insets(40, 0, 0, 0));
         }
-        add(drawRawGpsLinesNone, GBC.eol().insets(40,0,0,0));
-        if (layerName==null || local) {
-            add(drawRawGpsLinesLocal, GBC.eol().insets(40,0,0,0));
+        add(drawRawGpsLinesNone, GBC.eol().insets(40, 0, 0, 0));
+        if (layerName == null || local) {
+            add(drawRawGpsLinesLocal, GBC.eol().insets(40, 0, 0, 0));
         }
-        if (layerName==null || nonlocal) {
-            add(drawRawGpsLinesAll, GBC.eol().insets(40,0,0,0));
+        if (layerName == null || nonlocal) {
+            add(drawRawGpsLinesAll, GBC.eol().insets(40, 0, 0, 0));
         }
         ExpertToggleAction.addVisibilitySwitcher(label);
         ExpertToggleAction.addVisibilitySwitcher(drawRawGpsLinesGlobal);
@@ -139,10 +139,10 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
         ExpertToggleAction.addVisibilitySwitcher(drawRawGpsLinesLocal);
         ExpertToggleAction.addVisibilitySwitcher(drawRawGpsLinesAll);
 
-        drawRawGpsLinesActionListener = new ActionListener(){
+        drawRawGpsLinesActionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                boolean f=drawRawGpsLinesNone.isSelected()||drawRawGpsLinesGlobal.isSelected();
+                boolean f = drawRawGpsLinesNone.isSelected() || drawRawGpsLinesGlobal.isSelected();
                 forceRawGpsLines.setEnabled(!f);
                 drawRawGpsMaxLineLength.setEnabled(!(f || drawRawGpsLinesLocal.isSelected()));
                 drawRawGpsMaxLineLengthLocal.setEnabled(!f);
@@ -158,28 +158,29 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
         drawRawGpsLinesAll.addActionListener(drawRawGpsLinesActionListener);
 
         // drawRawGpsMaxLineLengthLocal
-        drawRawGpsMaxLineLengthLocal.setToolTipText(tr("Maximum length (in meters) to draw lines for local files. Set to ''-1'' to draw all lines."));
+        drawRawGpsMaxLineLengthLocal.setToolTipText(
+                tr("Maximum length (in meters) to draw lines for local files. Set to ''-1'' to draw all lines."));
         label = new JLabel(tr("Maximum length for local files (meters)"));
-        add(label, GBC.std().insets(40,0,0,0));
-        add(drawRawGpsMaxLineLengthLocal, GBC.eol().fill(GBC.HORIZONTAL).insets(5,0,0,5));
+        add(label, GBC.std().insets(40, 0, 0, 0));
+        add(drawRawGpsMaxLineLengthLocal, GBC.eol().fill(GBC.HORIZONTAL).insets(5, 0, 0, 5));
         ExpertToggleAction.addVisibilitySwitcher(label);
         ExpertToggleAction.addVisibilitySwitcher(drawRawGpsMaxLineLengthLocal);
 
         // drawRawGpsMaxLineLength
         drawRawGpsMaxLineLength.setToolTipText(tr("Maximum length (in meters) to draw lines. Set to ''-1'' to draw all lines."));
         label = new JLabel(tr("Maximum length (meters)"));
-        add(label, GBC.std().insets(40,0,0,0));
-        add(drawRawGpsMaxLineLength, GBC.eol().fill(GBC.HORIZONTAL).insets(5,0,0,5));
+        add(label, GBC.std().insets(40, 0, 0, 0));
+        add(drawRawGpsMaxLineLength, GBC.eol().fill(GBC.HORIZONTAL).insets(5, 0, 0, 5));
         ExpertToggleAction.addVisibilitySwitcher(label);
         ExpertToggleAction.addVisibilitySwitcher(drawRawGpsMaxLineLength);
 
         // forceRawGpsLines
         forceRawGpsLines.setToolTipText(tr("Force drawing of lines if the imported data contain no line information."));
-        add(forceRawGpsLines, GBC.eop().insets(40,0,0,0));
+        add(forceRawGpsLines, GBC.eop().insets(40, 0, 0, 0));
         ExpertToggleAction.addVisibilitySwitcher(forceRawGpsLines);
 
         // drawGpsArrows
-        drawGpsArrows.addActionListener(new ActionListener(){
+        drawGpsArrows.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 drawGpsArrowsFast.setEnabled(drawGpsArrows.isSelected() && drawGpsArrows.isEnabled());
@@ -187,31 +188,31 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
             }
         });
         drawGpsArrows.setToolTipText(tr("Draw direction arrows for lines, connecting GPS points."));
-        add(drawGpsArrows, GBC.eop().insets(40,0,0,0));
+        add(drawGpsArrows, GBC.eop().insets(40, 0, 0, 0));
 
         // drawGpsArrowsFast
         drawGpsArrowsFast.setToolTipText(tr("Draw the direction arrows using table lookups instead of complex math."));
-        add(drawGpsArrowsFast, GBC.eop().insets(60,0,0,0));
+        add(drawGpsArrowsFast, GBC.eop().insets(60, 0, 0, 0));
         ExpertToggleAction.addVisibilitySwitcher(drawGpsArrowsFast);
 
         // drawGpsArrowsMinDist
         drawGpsArrowsMinDist.setToolTipText(tr("Do not draw arrows if they are not at least this distance away from the last one."));
-        add(new JLabel(tr("Minimum distance (pixels)")), GBC.std().insets(60,0,0,0));
-        add(drawGpsArrowsMinDist, GBC.eol().fill(GBC.HORIZONTAL).insets(5,0,0,5));
+        add(new JLabel(tr("Minimum distance (pixels)")), GBC.std().insets(60, 0, 0, 0));
+        add(drawGpsArrowsMinDist, GBC.eol().fill(GBC.HORIZONTAL).insets(5, 0, 0, 5));
 
         // hdopCircleGpsPoints
         hdopCircleGpsPoints.setToolTipText(tr("Draw a circle from HDOP value."));
-        add(hdopCircleGpsPoints, GBC.eop().insets(20,0,0,0));
+        add(hdopCircleGpsPoints, GBC.eop().insets(20, 0, 0, 0));
         ExpertToggleAction.addVisibilitySwitcher(hdopCircleGpsPoints);
 
         // largeGpsPoints
         largeGpsPoints.setToolTipText(tr("Draw larger dots for the GPS points."));
-        add(largeGpsPoints, GBC.eop().insets(20,0,0,0));
+        add(largeGpsPoints, GBC.eop().insets(20, 0, 0, 0));
 
         // drawLineWidth
         drawLineWidth.setToolTipText(tr("Width of drawn GPX line (0 for default)"));
-        add(new JLabel(tr("Drawing width of GPX lines")), GBC.std().insets(20,0,0,0));
-        add(drawLineWidth, GBC.eol().fill(GBC.HORIZONTAL).insets(5,0,0,5));
+        add(new JLabel(tr("Drawing width of GPX lines")), GBC.std().insets(20, 0, 0, 0));
+        add(drawLineWidth, GBC.eol().fill(GBC.HORIZONTAL).insets(5, 0, 0, 5));
 
         // antialiasing
         useGpsAntialiasing.setToolTipText(tr("Apply antialiasing to the GPX lines resulting in a smoother appearance."));
@@ -220,7 +221,7 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
 
         // colorTracks
         ButtonGroup colorGroup = new ButtonGroup();
-        if (layerName!=null) {
+        if (layerName != null) {
             colorGroup.add(colorTypeGlobal);
         }
         colorGroup.add(colorTypeNone);
@@ -229,14 +230,14 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
         colorGroup.add(colorTypeDilution);
         colorGroup.add(colorTypeTime);
 
-        colorTypeVelocity.addChangeListener(new ChangeListener(){
+        colorTypeVelocity.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 colorTypeVelocityTune.setEnabled(colorTypeVelocity.isSelected());
                 colorDynamic.setEnabled(colorTypeVelocity.isSelected() || colorTypeDilution.isSelected());
             }
         });
-        colorTypeDilution.addChangeListener(new ChangeListener(){
+        colorTypeDilution.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 colorDynamic.setEnabled(colorTypeVelocity.isSelected() || colorTypeDilution.isSelected());
@@ -246,7 +247,8 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
         colorTypeNone.setToolTipText(tr("All points and track segments will have the same color. Can be customized in Layer Manager."));
         colorTypeVelocity.setToolTipText(tr("Colors points and track segments by velocity."));
         colorTypeDirection.setToolTipText(tr("Colors points and track segments by direction."));
-        colorTypeDilution.setToolTipText(tr("Colors points and track segments by dilution of position (HDOP). Your capture device needs to log that information."));
+        colorTypeDilution.setToolTipText(
+                tr("Colors points and track segments by dilution of position (HDOP). Your capture device needs to log that information."));
         colorTypeTime.setToolTipText(tr("Colors points and track segments by its timestamp."));
 
         // color Tracks by Velocity Tune
@@ -254,21 +256,21 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
 
         add(Box.createVerticalGlue(), GBC.eol().insets(0, 20, 0, 0));
 
-        add(new JLabel(tr("Track and Point Coloring")), GBC.eol().insets(20,0,0,0));
-        if (layerName!=null) {
-            add(colorTypeGlobal, GBC.eol().insets(40,0,0,0));
+        add(new JLabel(tr("Track and Point Coloring")), GBC.eol().insets(20, 0, 0, 0));
+        if (layerName != null) {
+            add(colorTypeGlobal, GBC.eol().insets(40, 0, 0, 0));
         }
-        add(colorTypeNone, GBC.eol().insets(40,0,0,0));
-        add(colorTypeVelocity, GBC.std().insets(40,0,0,0));
-        add(colorTypeVelocityTune, GBC.eop().insets(5,0,0,5));
-        add(colorTypeDirection, GBC.eol().insets(40,0,0,0));
-        add(colorTypeDilution, GBC.eol().insets(40,0,0,0));
-        add(colorTypeTime, GBC.eol().insets(40,0,0,0));
+        add(colorTypeNone, GBC.eol().insets(40, 0, 0, 0));
+        add(colorTypeVelocity, GBC.std().insets(40, 0, 0, 0));
+        add(colorTypeVelocityTune, GBC.eop().insets(5, 0, 0, 5));
+        add(colorTypeDirection, GBC.eol().insets(40, 0, 0, 0));
+        add(colorTypeDilution, GBC.eol().insets(40, 0, 0, 0));
+        add(colorTypeTime, GBC.eol().insets(40, 0, 0, 0));
         ExpertToggleAction.addVisibilitySwitcher(colorTypeDirection);
         ExpertToggleAction.addVisibilitySwitcher(colorTypeDilution);
 
         colorDynamic.setToolTipText(tr("Colors points and track segments by data limits."));
-        add(colorDynamic, GBC.eop().insets(40,0,0,0));
+        add(colorDynamic, GBC.eop().insets(40, 0, 0, 0));
         ExpertToggleAction.addVisibilitySwitcher(colorDynamic);
 
         if (layerName == null) {
@@ -277,9 +279,9 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
 
             // waypointLabel
             label = new JLabel(tr("Waypoint labelling"));
-            add(label, GBC.std().insets(20,0,0,0));
+            add(label, GBC.std().insets(20, 0, 0, 0));
             label.setLabelFor(waypointLabel);
-            add(waypointLabel, GBC.eol().fill(GBC.HORIZONTAL).insets(5,0,0,5));
+            add(waypointLabel, GBC.eol().fill(GBC.HORIZONTAL).insets(5, 0, 0, 5));
             waypointLabel.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -287,7 +289,7 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
                 }
             });
             updateWaypointLabelCombobox(waypointLabel, waypointLabelPattern, TemplateEntryProperty.forMarker(layerName));
-            add(waypointLabelPattern, GBC.eol().fill(GBC.HORIZONTAL).insets(20,0,0,5));
+            add(waypointLabelPattern, GBC.eol().fill(GBC.HORIZONTAL).insets(20, 0, 0, 5));
             ExpertToggleAction.addVisibilitySwitcher(label);
             ExpertToggleAction.addVisibilitySwitcher(waypointLabel);
             ExpertToggleAction.addVisibilitySwitcher(waypointLabelPattern);
@@ -298,9 +300,9 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
             ExpertToggleAction.addVisibilitySwitcher(glue);
 
             label = new JLabel(tr("Audio waypoint labelling"));
-            add(label, GBC.std().insets(20,0,0,0));
+            add(label, GBC.std().insets(20, 0, 0, 0));
             label.setLabelFor(audioWaypointLabel);
-            add(audioWaypointLabel, GBC.eol().fill(GBC.HORIZONTAL).insets(5,0,0,5));
+            add(audioWaypointLabel, GBC.eol().fill(GBC.HORIZONTAL).insets(5, 0, 0, 5));
             audioWaypointLabel.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -308,7 +310,7 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
                 }
             });
             updateWaypointLabelCombobox(audioWaypointLabel, audioWaypointLabelPattern, TemplateEntryProperty.forAudioMarker(layerName));
-            add(audioWaypointLabelPattern, GBC.eol().fill(GBC.HORIZONTAL).insets(20,0,0,5));
+            add(audioWaypointLabelPattern, GBC.eol().fill(GBC.HORIZONTAL).insets(20, 0, 0, 5));
             ExpertToggleAction.addVisibilitySwitcher(label);
             ExpertToggleAction.addVisibilitySwitcher(audioWaypointLabel);
             ExpertToggleAction.addVisibilitySwitcher(audioWaypointLabelPattern);
@@ -322,13 +324,13 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
      */
     public final void loadPreferences() {
         makeAutoMarkers.setSelected(Main.pref.getBoolean("marker.makeautomarkers", true));
-        if(layerName!=null && Main.pref.get("draw.rawgps.lines."+layerName).isEmpty()
-                && Main.pref.get("draw.rawgps.lines.local."+layerName).isEmpty()){
+        if (layerName != null && Main.pref.get("draw.rawgps.lines."+layerName).isEmpty()
+                && Main.pref.get("draw.rawgps.lines.local."+layerName).isEmpty()) {
             // no line preferences for layer is found
             drawRawGpsLinesGlobal.setSelected(true);
         } else {
-            Boolean lf = Main.pref.getBoolean("draw.rawgps.lines.local",layerName, true);
-            if(Main.pref.getBoolean("draw.rawgps.lines",layerName, true)) {
+            Boolean lf = Main.pref.getBoolean("draw.rawgps.lines.local", layerName, true);
+            if (Main.pref.getBoolean("draw.rawgps.lines", layerName, true)) {
                 drawRawGpsLinesAll.setSelected(true);
             } else if (lf) {
                 drawRawGpsLinesLocal.setSelected(true);
@@ -337,34 +339,34 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
             }
         }
 
-        drawRawGpsMaxLineLengthLocal.setText(Integer.toString(Main.pref.getInteger("draw.rawgps.max-line-length.local",layerName, -1)));
-        drawRawGpsMaxLineLength.setText(Integer.toString(Main.pref.getInteger("draw.rawgps.max-line-length",layerName, 200)));
-        drawLineWidth.setText(Integer.toString(Main.pref.getInteger("draw.rawgps.linewidth",layerName, 0)));
-        forceRawGpsLines.setSelected(Main.pref.getBoolean("draw.rawgps.lines.force",layerName, false));
-        drawGpsArrows.setSelected(Main.pref.getBoolean("draw.rawgps.direction",layerName, false));
-        drawGpsArrowsFast.setSelected(Main.pref.getBoolean("draw.rawgps.alternatedirection",layerName, false));
-        drawGpsArrowsMinDist.setText(Integer.toString(Main.pref.getInteger("draw.rawgps.min-arrow-distance",layerName, 40)));
-        hdopCircleGpsPoints.setSelected(Main.pref.getBoolean("draw.rawgps.hdopcircle",layerName, false));
-        largeGpsPoints.setSelected(Main.pref.getBoolean("draw.rawgps.large",layerName, false));
+        drawRawGpsMaxLineLengthLocal.setText(Integer.toString(Main.pref.getInteger("draw.rawgps.max-line-length.local", layerName, -1)));
+        drawRawGpsMaxLineLength.setText(Integer.toString(Main.pref.getInteger("draw.rawgps.max-line-length", layerName, 200)));
+        drawLineWidth.setText(Integer.toString(Main.pref.getInteger("draw.rawgps.linewidth", layerName, 0)));
+        forceRawGpsLines.setSelected(Main.pref.getBoolean("draw.rawgps.lines.force", layerName, false));
+        drawGpsArrows.setSelected(Main.pref.getBoolean("draw.rawgps.direction", layerName, false));
+        drawGpsArrowsFast.setSelected(Main.pref.getBoolean("draw.rawgps.alternatedirection", layerName, false));
+        drawGpsArrowsMinDist.setText(Integer.toString(Main.pref.getInteger("draw.rawgps.min-arrow-distance", layerName, 40)));
+        hdopCircleGpsPoints.setSelected(Main.pref.getBoolean("draw.rawgps.hdopcircle", layerName, false));
+        largeGpsPoints.setSelected(Main.pref.getBoolean("draw.rawgps.large", layerName, false));
         useGpsAntialiasing.setSelected(Main.pref.getBoolean("mappaint.gpx.use-antialiasing", false));
         drawRawGpsLinesActionListener.actionPerformed(null);
 
-        if(layerName!=null && Main.pref.get("draw.rawgps.colors."+layerName).isEmpty()) {
+        if (layerName != null && Main.pref.get("draw.rawgps.colors."+layerName).isEmpty()) {
             colorTypeGlobal.setSelected(true);
             colorDynamic.setSelected(false);
             colorDynamic.setEnabled(false);
         } else {
-            switch(Main.pref.getInteger("draw.rawgps.colors",layerName, 0)) {
+            switch(Main.pref.getInteger("draw.rawgps.colors", layerName, 0)) {
             case 0: colorTypeNone.setSelected(true);   break;
             case 1: colorTypeVelocity.setSelected(true);  break;
             case 2: colorTypeDilution.setSelected(true);  break;
             case 3: colorTypeDirection.setSelected(true); break;
             case 4: colorTypeTime.setSelected(true);  break;
             }
-            int ccts = Main.pref.getInteger("draw.rawgps.colorTracksTune",layerName, 45);
-            colorTypeVelocityTune.setSelectedIndex(ccts==10 ? 2 : (ccts==20 ? 1 : 0));
+            int ccts = Main.pref.getInteger("draw.rawgps.colorTracksTune", layerName, 45);
+            colorTypeVelocityTune.setSelectedIndex(ccts == 10 ? 2 : (ccts == 20 ? 1 : 0));
             colorTypeVelocityTune.setEnabled(colorTypeVelocity.isSelected() && colorTypeVelocity.isEnabled());
-            colorDynamic.setSelected(Main.pref.getBoolean("draw.rawgps.colors.dynamic",layerName, false));
+            colorDynamic.setSelected(Main.pref.getBoolean("draw.rawgps.colors.dynamic", layerName, false));
             colorDynamic.setEnabled(colorTypeVelocity.isSelected() || colorTypeDilution.isSelected());
         }
     }
@@ -377,8 +379,8 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
      */
     public boolean savePreferences(String layerName, boolean locLayer) {
         String layerNameDot = ".layer "+layerName;
-        if (layerName==null) {
-            layerNameDot="";
+        if (layerName == null) {
+            layerNameDot = "";
         }
         Main.pref.put("marker.makeautomarkers"+layerNameDot, makeAutoMarkers.isSelected());
         if (drawRawGpsLinesGlobal.isSelected()) {
@@ -391,11 +393,11 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
             Main.pref.put("draw.rawgps.alternatedirection"+layerNameDot, null);
             Main.pref.put("draw.rawgps.min-arrow-distance"+layerNameDot, null);
         } else {
-            if (layerName==null || !locLayer) {
+            if (layerName == null || !locLayer) {
                 Main.pref.put("draw.rawgps.lines" +  layerNameDot, drawRawGpsLinesAll.isSelected());
                 Main.pref.put("draw.rawgps.max-line-length" + layerNameDot, drawRawGpsMaxLineLength.getText());
             }
-            if (layerName==null || locLayer) {
+            if (layerName == null || locLayer) {
                 Main.pref.put("draw.rawgps.lines.local" + layerNameDot, drawRawGpsLinesAll.isSelected() || drawRawGpsLinesLocal.isSelected());
                 Main.pref.put("draw.rawgps.max-line-length.local" + layerNameDot, drawRawGpsMaxLineLengthLocal.getText());
             }
@@ -413,25 +415,25 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
         TemplateEntryProperty.forMarker(layerName).put(waypointLabelPattern.getText());
         TemplateEntryProperty.forAudioMarker(layerName).put(audioWaypointLabelPattern.getText());
 
-        if(colorTypeGlobal.isSelected()) {
+        if (colorTypeGlobal.isSelected()) {
             Main.pref.put("draw.rawgps.colors"+layerNameDot, null);
             Main.pref.put("draw.rawgps.colors.dynamic"+layerNameDot, null);
             Main.pref.put("draw.rawgps.colorTracksTunec"+layerNameDot, null);
             return false;
-        } else if(colorTypeVelocity.isSelected()) {
+        } else if (colorTypeVelocity.isSelected()) {
             Main.pref.putInteger("draw.rawgps.colors"+layerNameDot, 1);
-        } else if(colorTypeDilution.isSelected()) {
+        } else if (colorTypeDilution.isSelected()) {
             Main.pref.putInteger("draw.rawgps.colors"+layerNameDot, 2);
-        } else if(colorTypeDirection.isSelected()) {
+        } else if (colorTypeDirection.isSelected()) {
             Main.pref.putInteger("draw.rawgps.colors"+layerNameDot, 3);
-        } else if(colorTypeTime.isSelected()) {
+        } else if (colorTypeTime.isSelected()) {
             Main.pref.putInteger("draw.rawgps.colors"+layerNameDot, 4);
         } else {
             Main.pref.putInteger("draw.rawgps.colors"+layerNameDot, 0);
         }
         Main.pref.put("draw.rawgps.colors.dynamic"+layerNameDot, colorDynamic.isSelected());
-        int ccti=colorTypeVelocityTune.getSelectedIndex();
-        Main.pref.putInteger("draw.rawgps.colorTracksTune"+layerNameDot, ccti==2 ? 10 : (ccti==1 ? 20 : 45));
+        int ccti = colorTypeVelocityTune.getSelectedIndex();
+        Main.pref.putInteger("draw.rawgps.colorTracksTune"+layerNameDot, ccti == 2 ? 10 : (ccti == 1 ? 20 : 45));
         return false;
     }
 
@@ -446,7 +448,7 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
     private void updateWaypointLabelCombobox(JosmComboBox<String> cb, JosmTextField tf, TemplateEntryProperty property) {
         String labelPattern = property.getAsString();
         boolean found = false;
-        for (int i=0; i<LABEL_PATTERN_TEMPLATE.length; i++) {
+        for (int i = 0; i < LABEL_PATTERN_TEMPLATE.length; i++) {
             if (LABEL_PATTERN_TEMPLATE[i].equals(labelPattern)) {
                 cb.setSelectedIndex(i);
                 found = true;
@@ -475,7 +477,8 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
         try {
             parser.parse();
         } catch (ParseError e) {
-            JOptionPane.showMessageDialog(Main.parent, tr("Incorrect waypoint label pattern: {0}", e.getMessage()), tr("Incorrect pattern"), JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(Main.parent,
+                    tr("Incorrect waypoint label pattern: {0}", e.getMessage()), tr("Incorrect pattern"), JOptionPane.ERROR_MESSAGE);
             waypointLabelPattern.requestFocus();
             return false;
         }
@@ -483,7 +486,8 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
         try {
             parser.parse();
         } catch (ParseError e) {
-            JOptionPane.showMessageDialog(Main.parent, tr("Incorrect audio waypoint label pattern: {0}", e.getMessage()), tr("Incorrect pattern"), JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(Main.parent,
+                    tr("Incorrect audio waypoint label pattern: {0}", e.getMessage()), tr("Incorrect pattern"), JOptionPane.ERROR_MESSAGE);
             audioWaypointLabelPattern.requestFocus();
             return false;
         }

@@ -88,7 +88,8 @@ public class TaggingPresetSelector extends JPanel implements SelectionChangedLis
     private static class ResultListCellRenderer implements ListCellRenderer<TaggingPreset> {
         private final DefaultListCellRenderer def = new DefaultListCellRenderer();
         @Override
-        public Component getListCellRendererComponent(JList<? extends TaggingPreset> list, TaggingPreset tp, int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<? extends TaggingPreset> list, TaggingPreset tp, int index,
+                boolean isSelected, boolean cellHasFocus) {
             JLabel result = (JLabel) def.getListCellRendererComponent(list, tp, index, isSelected, cellHasFocus);
             result.setText(tp.getName());
             result.setIcon((Icon) tp.getValue(Action.SMALL_ICON));
@@ -219,9 +220,20 @@ public class TaggingPresetSelector extends JPanel implements SelectionChangedLis
 
         edSearchText = new JosmTextField();
         edSearchText.getDocument().addDocumentListener(new DocumentListener() {
-            @Override public void removeUpdate(DocumentEvent e) { filterPresets(); }
-            @Override public void insertUpdate(DocumentEvent e) { filterPresets(); }
-            @Override public void changedUpdate(DocumentEvent e) { filterPresets(); }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filterPresets();
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filterPresets();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filterPresets();
+            }
         });
         edSearchText.addKeyListener(new KeyAdapter() {
             @Override
@@ -255,11 +267,11 @@ public class TaggingPresetSelector extends JPanel implements SelectionChangedLis
         lsResult.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount()>1) {
-                    if (dblClickListener!=null)
+                if (e.getClickCount() > 1) {
+                    if (dblClickListener != null)
                         dblClickListener.actionPerformed(null);
                 } else {
-                    if (clickListener!=null)
+                    if (clickListener != null)
                         clickListener.actionPerformed(null);
                 }
             }
@@ -334,7 +346,7 @@ public class TaggingPresetSelector extends JPanel implements SelectionChangedLis
         boolean inTags = ckSearchInTags != null && ckSearchInTags.isSelected();
 
         DataSet ds = Main.main.getCurrentDataSet();
-        Collection<OsmPrimitive> selected = (ds==null)? Collections.<OsmPrimitive>emptyList() : ds.getSelected();
+        Collection<OsmPrimitive> selected = (ds == null) ? Collections.<OsmPrimitive>emptyList() : ds.getSelected();
         final List<PresetClassification> result = classifications.getMatchingPresets(
                 text, onlyApplicable, inTags, getTypesInSelection(), selected);
 
@@ -384,9 +396,9 @@ public class TaggingPresetSelector extends JPanel implements SelectionChangedLis
                 if (onlyApplicable) {
                     boolean suitable = preset.typeMatches(presetTypes);
 
-                    if (!suitable && preset.types.contains(TaggingPresetType.RELATION) && preset.roles != null && !preset.roles.roles.isEmpty()) {
+                    if (!suitable && preset.types.contains(TaggingPresetType.RELATION)
+                            && preset.roles != null && !preset.roles.roles.isEmpty()) {
                         final Predicate<Role> memberExpressionMatchesOnePrimitive = new Predicate<Role>() {
-
                             @Override
                             public boolean evaluate(Role object) {
                                 return object.memberExpression != null
@@ -459,7 +471,7 @@ public class TaggingPresetSelector extends JPanel implements SelectionChangedLis
             synchronized (typesInSelection) {
                 typesInSelectionDirty = false;
                 typesInSelection.clear();
-                if (Main.main==null || Main.main.getCurrentDataSet() == null) return typesInSelection;
+                if (Main.main == null || Main.main.getCurrentDataSet() == null) return typesInSelection;
                 for (OsmPrimitive primitive : Main.main.getCurrentDataSet().getSelected()) {
                     typesInSelection.add(TaggingPresetType.forPrimitive(primitive));
                 }

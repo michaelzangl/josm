@@ -85,7 +85,7 @@ public class DownloadDialog extends JDialog  {
     protected SideButton btnDownload;
 
     private void makeCheckBoxRespondToEnter(JCheckBox cb) {
-        cb.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0), "doDownload");
+        cb.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "doDownload");
         cb.getActionMap().put("doDownload", actDownload);
     }
 
@@ -102,7 +102,7 @@ public class DownloadDialog extends JDialog  {
         };
 
         // adding the download tasks
-        pnl.add(new JLabel(tr("Data Sources and Types:")), GBC.std().insets(5,5,1,5));
+        pnl.add(new JLabel(tr("Data Sources and Types:")), GBC.std().insets(5, 5, 1, 5));
         cbDownloadOsmData = new JCheckBox(tr("OpenStreetMap data"), true);
         cbDownloadOsmData.setToolTipText(tr("Select to download OSM data in the selected download area."));
         cbDownloadOsmData.getModel().addChangeListener(checkboxChangeListener);
@@ -154,21 +154,24 @@ public class DownloadDialog extends JDialog  {
                 +"Unselect to download into the currently active data layer.</html>"));
 
         cbStartup = new JCheckBox(tr("Open this dialog on startup"));
-        cbStartup.setToolTipText(tr("<html>Autostart ''Download from OSM'' dialog every time JOSM is started.<br>You can open it manually from File menu or toolbar.</html>"));
+        cbStartup.setToolTipText(
+                tr("<html>Autostart ''Download from OSM'' dialog every time JOSM is started.<br>" +
+                        "You can open it manually from File menu or toolbar.</html>"));
         cbStartup.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                  Main.pref.put("download.autorun", cbStartup.isSelected());
             }});
 
-        pnl.add(cbNewLayer, GBC.std().anchor(GBC.WEST).insets(5,5,5,5));
-        pnl.add(cbStartup, GBC.std().anchor(GBC.WEST).insets(15,5,5,5));
+        pnl.add(cbNewLayer, GBC.std().anchor(GBC.WEST).insets(5, 5, 5, 5));
+        pnl.add(cbStartup, GBC.std().anchor(GBC.WEST).insets(15, 5, 5, 5));
 
-        pnl.add(sizeCheck,  GBC.eol().anchor(GBC.EAST).insets(5,5,5,2));
+        pnl.add(sizeCheck,  GBC.eol().anchor(GBC.EAST).insets(5, 5, 5, 2));
 
         if (!ExpertToggleAction.isExpert()) {
-            JLabel infoLabel  = new JLabel(tr("Use left click&drag to select area, arrows or right mouse button to scroll map, wheel or +/- to zoom."));
-            pnl.add(infoLabel,GBC.eol().anchor(GBC.SOUTH).insets(0,0,0,0));
+            JLabel infoLabel  = new JLabel(
+                    tr("Use left click&drag to select area, arrows or right mouse button to scroll map, wheel or +/- to zoom."));
+            pnl.add(infoLabel, GBC.eol().anchor(GBC.SOUTH).insets(0, 0, 0, 0));
         }
         return pnl;
     }
@@ -200,7 +203,7 @@ public class DownloadDialog extends JDialog  {
         InputMapUtils.enableEnter(btnCancel);
 
         // -- cancel on ESC
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0), "cancel");
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel");
         getRootPane().getActionMap().put("cancel", actCancel);
 
         // -- help button
@@ -216,7 +219,7 @@ public class DownloadDialog extends JDialog  {
      * @param parent the parent component
      */
     public DownloadDialog(Component parent) {
-        super(JOptionPane.getFrameForComponent(parent),tr("Download"), ModalityType.DOCUMENT_MODAL);
+        super(JOptionPane.getFrameForComponent(parent), tr("Download"), ModalityType.DOCUMENT_MODAL);
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(buildMainPanel(), BorderLayout.CENTER);
         getContentPane().add(buildButtonPanel(), BorderLayout.SOUTH);
@@ -280,8 +283,8 @@ public class DownloadDialog extends JDialog  {
     }
 
     /**
-     * Invoked by
-     * @param b
+     * Starts download for the given bounding box
+     * @param b bounding box to download
      */
     public void startDownload(Bounds b) {
         this.currentBounds = b;
@@ -366,7 +369,7 @@ public class DownloadDialog extends JDialog  {
         cbDownloadGpxData.setSelected(Main.pref.getBoolean("download.gps", false));
         cbDownloadNotes.setSelected(Main.pref.getBoolean("download.notes", false));
         cbNewLayer.setSelected(Main.pref.getBoolean("download.newlayer", false));
-        cbStartup.setSelected( isAutorunEnabled() );
+        cbStartup.setSelected(isAutorunEnabled());
         int idx = Main.pref.getInteger("download.tab", 0);
         if (idx < 0 || idx > tpDownloadAreaSelectors.getTabCount()) {
             idx = 0;
@@ -379,7 +382,7 @@ public class DownloadDialog extends JDialog  {
                     mv.getLatLon(0, mv.getHeight()),
                     mv.getLatLon(mv.getWidth(), 0)
             );
-            boundingBoxChanged(currentBounds,null);
+            boundingBoxChanged(currentBounds, null);
         } else {
             Bounds bounds = getSavedDownloadBounds();
             if (bounds != null) {
@@ -411,7 +414,7 @@ public class DownloadDialog extends JDialog  {
      * @return {@code true} if the download dialog must be open at startup, {@code false} otherwise
      */
     public static boolean isAutorunEnabled() {
-        return Main.pref.getBoolean("download.autorun",false);
+        return Main.pref.getBoolean("download.autorun", false);
     }
 
     public static void autostartIfNeeded() {
@@ -435,7 +438,7 @@ public class DownloadDialog extends JDialog  {
                     getClass().getName() + ".geometry",
                     WindowGeometry.centerInWindow(
                             getParent(),
-                            new Dimension(1000,600)
+                            new Dimension(1000, 600)
                     )
             ).applySafe(this);
         } else if (isShowing()) { // Avoid IllegalComponentStateException like in #8775

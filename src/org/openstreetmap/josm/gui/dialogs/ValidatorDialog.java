@@ -119,7 +119,7 @@ public class ValidatorDialog extends ToggleDialog implements SelectionChangedLis
             {
                 putValue(NAME, tr("Fix"));
                 putValue(SHORT_DESCRIPTION,  tr("Fix the selected issue."));
-                putValue(SMALL_ICON, ImageProvider.get("dialogs","fix"));
+                putValue(SMALL_ICON, ImageProvider.get("dialogs", "fix"));
             }
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -134,7 +134,7 @@ public class ValidatorDialog extends ToggleDialog implements SelectionChangedLis
                 {
                     putValue(NAME, tr("Ignore"));
                     putValue(SHORT_DESCRIPTION,  tr("Ignore the selected issue next time."));
-                    putValue(SMALL_ICON, ImageProvider.get("dialogs","fix"));
+                    putValue(SMALL_ICON, ImageProvider.get("dialogs", "fix"));
                 }
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -206,7 +206,7 @@ public class ValidatorDialog extends ToggleDialog implements SelectionChangedLis
                 processedNodes.add(childNode);
                 Object nodeInfo = childNode.getUserObject();
                 if (nodeInfo instanceof TestError) {
-                    errorsToFix.add((TestError)nodeInfo);
+                    errorsToFix.add((TestError) nodeInfo);
                 }
             }
         }
@@ -240,7 +240,7 @@ public class ValidatorDialog extends ToggleDialog implements SelectionChangedLis
                 Set<String> state = new HashSet<>();
                 // ask if the whole set should be ignored
                 if (asked == JOptionPane.DEFAULT_OPTION) {
-                    String[] a = new String[] { tr("Whole group"), tr("Single elements"), tr("Nothing") };
+                    String[] a = new String[] {tr("Whole group"), tr("Single elements"), tr("Nothing")};
                     asked = JOptionPane.showOptionDialog(Main.parent, tr("Ignore whole group or individual elements?"),
                             tr("Ignoring elements"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null,
                             a, a[1]);
@@ -386,7 +386,7 @@ public class ValidatorDialog extends ToggleDialog implements SelectionChangedLis
     @Override
     public void activeLayerChange(Layer oldLayer, Layer newLayer) {
         if (newLayer instanceof OsmDataLayer) {
-            linkedLayer = (OsmDataLayer)newLayer;
+            linkedLayer = (OsmDataLayer) newLayer;
             tree.setErrorList(linkedLayer.validationErrors);
         }
     }
@@ -438,7 +438,7 @@ public class ValidatorDialog extends ToggleDialog implements SelectionChangedLis
     public TestError getSelectedError() {
         Object comp = tree.getLastSelectedPathComponent();
         if (comp instanceof DefaultMutableTreeNode) {
-            Object object = ((DefaultMutableTreeNode)comp).getUserObject();
+            Object object = ((DefaultMutableTreeNode) comp).getUserObject();
             if (object instanceof TestError) {
                 return (TestError) object;
             }
@@ -568,7 +568,7 @@ public class ValidatorDialog extends ToggleDialog implements SelectionChangedLis
 
         public FixTask(Collection<TestError> testErrors) {
             super(tr("Fixing errors ..."), false /* don't ignore exceptions */);
-            this.testErrors = testErrors == null ? new ArrayList<TestError>(): testErrors;
+            this.testErrors = testErrors == null ? new ArrayList<TestError>() : testErrors;
         }
 
         @Override
@@ -593,7 +593,8 @@ public class ValidatorDialog extends ToggleDialog implements SelectionChangedLis
                     });
                 }
                 // It is wanted to ignore an error if it said fixable, even if fixCommand was null
-                // This is to fix #5764 and #5773: a delete command, for example, may be null if all concerned primitives have already been deleted
+                // This is to fix #5764 and #5773:
+                // a delete command, for example, may be null if all concerned primitives have already been deleted
                 error.setIgnored(true);
             }
         }
@@ -604,7 +605,7 @@ public class ValidatorDialog extends ToggleDialog implements SelectionChangedLis
             ProgressMonitor monitor = getProgressMonitor();
             try {
                 monitor.setTicksCount(testErrors.size());
-                int i=0;
+                int i = 0;
                 SwingUtilities.invokeAndWait(new Runnable() {
                     @Override
                     public void run() {
@@ -614,7 +615,7 @@ public class ValidatorDialog extends ToggleDialog implements SelectionChangedLis
                 try {
                     for (TestError error: testErrors) {
                         i++;
-                        monitor.subTask(tr("Fixing ({0}/{1}): ''{2}''", i, testErrors.size(),error.getMessage()));
+                        monitor.subTask(tr("Fixing ({0}/{1}): ''{2}''", i, testErrors.size(), error.getMessage()));
                         if (this.canceled)
                             return;
                         fixError(error);
@@ -638,7 +639,7 @@ public class ValidatorDialog extends ToggleDialog implements SelectionChangedLis
                         Main.main.getCurrentDataSet().fireSelectionChanged();
                     }
                 });
-            } catch(InterruptedException | InvocationTargetException e) {
+            } catch (InterruptedException | InvocationTargetException e) {
                 // FIXME: signature of realRun should have a generic checked exception we
                 // could throw here
                 throw new RuntimeException(e);

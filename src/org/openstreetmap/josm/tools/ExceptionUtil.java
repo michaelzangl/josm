@@ -55,7 +55,6 @@ public final class ExceptionUtil {
                 Main.pref.get("osm-server.url", OsmApi.DEFAULT_API_URL));
     }
 
-
     public static String explainMissingOAuthAccessTokenException(MissingOAuthAccessTokenException e) {
         Main.error(e);
         return tr(
@@ -104,7 +103,8 @@ public final class ExceptionUtil {
             }
             return Pair.create(n, refs);
         }
-        m = Pattern.compile(".*Way (\\d+) requires the nodes with id in " + ids + ".*").matcher(msg); // ... ", which either do not exist, or are not visible"
+        m = Pattern.compile(".*Way (\\d+) requires the nodes with id in " + ids + ".*").matcher(msg);
+        // ... ", which either do not exist, or are not visible"
         if (m.matches()) {
             OsmPrimitive n = new Way(Long.parseLong(m.group(1)));
             for (String s : m.group(2).split(",")) {
@@ -127,7 +127,7 @@ public final class ExceptionUtil {
         if (conflict != null) {
             OsmPrimitive firstRefs = conflict.b.iterator().next();
             String objId = Long.toString(conflict.a.getId());
-            Collection<Long> refIds= Utils.transform(conflict.b, new Utils.Function<OsmPrimitive, Long>() {
+            Collection<Long> refIds = Utils.transform(conflict.b, new Utils.Function<OsmPrimitive, Long>() {
 
                 @Override
                 public Long apply(OsmPrimitive x) {
@@ -441,6 +441,9 @@ public final class ExceptionUtil {
             host = new URL(apiUrl).getHost();
         } catch (MalformedURLException ex) {
             // shouldn't happen
+            if (Main.isTraceEnabled()) {
+                Main.trace(e.getMessage());
+            }
         }
 
         return tr("<html>Failed to open a connection to the remote server<br>" + "''{0}''<br>"
@@ -601,6 +604,9 @@ public final class ExceptionUtil {
             host = new URL(apiUrl).getHost();
         } catch (MalformedURLException ex) {
             // shouldn't happen
+            if (Main.isTraceEnabled()) {
+                Main.trace(e.getMessage());
+            }
         }
 
         Main.error(e);
@@ -613,13 +619,14 @@ public final class ExceptionUtil {
      * Replies the first nested exception of type <code>nestedClass</code> (including
      * the root exception <code>e</code>) or null, if no such exception is found.
      *
-     * @param <T>
+     * @param <T> nested exception type
      * @param e the root exception
      * @param nestedClass the type of the nested exception
      * @return the first nested exception of type <code>nestedClass</code> (including
      * the root exception <code>e</code>) or null, if no such exception is found.
+     * @since 8470
      */
-    protected static <T> T getNestedException(Exception e, Class<T> nestedClass) {
+    public static <T> T getNestedException(Exception e, Class<T> nestedClass) {
         Throwable t = e;
         while (t != null && !(nestedClass.isInstance(t))) {
             t = t.getCause();
@@ -650,7 +657,7 @@ public final class ExceptionUtil {
             return explainOsmApiInitializationException((OsmApiInitializationException) e);
 
         if (e instanceof ChangesetClosedException)
-            return explainChangesetClosedException((ChangesetClosedException)e);
+            return explainChangesetClosedException((ChangesetClosedException) e);
 
         if (e instanceof OsmApiException) {
             OsmApiException oae = (OsmApiException) e;

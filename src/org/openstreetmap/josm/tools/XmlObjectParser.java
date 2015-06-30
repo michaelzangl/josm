@@ -132,7 +132,8 @@ public class XmlObjectParser implements Iterable<Object> {
 
         private void setValue(Entry entry, String fieldName, String value) throws SAXException {
             CheckParameterUtil.ensureParameterNotNull(entry, "entry");
-            if ("class".equals(fieldName) || "default".equals(fieldName) || "throw".equals(fieldName) || "new".equals(fieldName) || "null".equals(fieldName)) {
+            if ("class".equals(fieldName) || "default".equals(fieldName) || "throw".equals(fieldName) ||
+                    "new".equals(fieldName) || "null".equals(fieldName)) {
                 fieldName += "_";
             }
             try {
@@ -298,21 +299,21 @@ public class XmlObjectParser implements Iterable<Object> {
             AddNamespaceFilter filter = new AddNamespaceFilter(namespace);
             filter.setContentHandler(validator);
             return start(in, filter);
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new SAXException(tr("Failed to load XML schema."), e);
         }
     }
 
     public void map(String tagName, Class<?> klass) {
-        mapping.put(tagName, new Entry(klass,false,false));
+        mapping.put(tagName, new Entry(klass, false, false));
     }
 
     public void mapOnStart(String tagName, Class<?> klass) {
-        mapping.put(tagName, new Entry(klass,true,false));
+        mapping.put(tagName, new Entry(klass, true, false));
     }
 
     public void mapBoth(String tagName, Class<?> klass) {
-        mapping.put(tagName, new Entry(klass,false,true));
+        mapping.put(tagName, new Entry(klass, false, true));
     }
 
     public Object next() {

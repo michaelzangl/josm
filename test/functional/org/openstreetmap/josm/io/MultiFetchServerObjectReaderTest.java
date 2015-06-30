@@ -56,22 +56,21 @@ public class MultiFetchServerObjectReaderTest {
 
         // create a set of nodes
         //
-        for (int i=0; i< numNodes; i++) {
+        for (int i = 0; i < numNodes; i++) {
             Node n = new Node();
-            n.setCoor(new LatLon(-36.6,47.6));
+            n.setCoor(new LatLon(-36.6, 47.6));
             n.put("name", "node-"+i);
             ds.addPrimitive(n);
             nodes.add(n);
         }
 
-        // create a set of ways, each with a random number of
-        // nodes
+        // create a set of ways, each with a random number of nodes
         //
-        for (int i=0; i< numWays; i++) {
+        for (int i = 0; i < numWays; i++) {
             Way w = new Way();
-            int numNodesInWay = 2 + (int)Math.round(Math.random() * 5);
-            int start = (int)Math.round(Math.random() * numNodes);
-            for (int j = 0; j < numNodesInWay;j++) {
+            int numNodesInWay = 2 + (int) Math.round(Math.random() * 5);
+            int start = (int) Math.round(Math.random() * numNodes);
+            for (int j = 0; j < numNodesInWay; j++) {
                 int idx = (start + j) % numNodes;
                 Node n = nodes.get(idx);
                 w.addNode(n);
@@ -81,22 +80,21 @@ public class MultiFetchServerObjectReaderTest {
             ways.add(w);
         }
 
-        // create a set of relations each with a random number of nodes,
-        // and ways
+        // create a set of relations each with a random number of nodes, and ways
         //
-        for (int i=0; i< numRelations; i++) {
+        for (int i = 0; i < numRelations; i++) {
             Relation r = new Relation();
             r.put("name", "relation-" +i);
-            int numNodesInRelation = (int)Math.round(Math.random() * 10);
-            int start = (int)Math.round(Math.random() * numNodes);
-            for (int j = 0; j < numNodesInRelation;j++) {
+            int numNodesInRelation = (int) Math.round(Math.random() * 10);
+            int start = (int) Math.round(Math.random() * numNodes);
+            for (int j = 0; j < numNodesInRelation; j++) {
                 int idx = (start + j) % 500;
                 Node n = nodes.get(idx);
                 r.addMember(new RelationMember("role-" + j, n));
             }
-            int numWaysInRelation = (int)Math.round(Math.random() * 10);
-            start = (int)Math.round(Math.random() * numWays);
-            for (int j = 0; j < numWaysInRelation;j++) {
+            int numWaysInRelation = (int) Math.round(Math.random() * 10);
+            start = (int) Math.round(Math.random() * numWays);
+            for (int j = 0; j < numWaysInRelation; j++) {
                 int idx = (start + j) % 500;
                 Way w = ways.get(idx);
                 r.addMember(new RelationMember("role-" + j, w));
@@ -113,7 +111,7 @@ public class MultiFetchServerObjectReaderTest {
      * creates the dataset on the server.
      *
      * @param ds the data set
-     * @throws OsmTransferException
+     * @throws OsmTransferException if something goes wrong
      */
     public static void createDataSetOnServer(DataSet ds) throws OsmTransferException {
         logger.info("creating data set on the server ...");
@@ -124,7 +122,8 @@ public class MultiFetchServerObjectReaderTest {
 
         OsmServerWriter writer = new OsmServerWriter();
         Changeset cs = new Changeset();
-        writer.uploadOsm(new UploadStrategySpecification().setStrategy(UploadStrategy.SINGLE_REQUEST_STRATEGY), primitives,cs,NullProgressMonitor.INSTANCE);
+        writer.uploadOsm(new UploadStrategySpecification().setStrategy(UploadStrategy.SINGLE_REQUEST_STRATEGY),
+                primitives, cs, NullProgressMonitor.INSTANCE);
         OsmApi.getOsmApi().closeChangeset(cs, NullProgressMonitor.INSTANCE);
     }
 
@@ -134,10 +133,10 @@ public class MultiFetchServerObjectReaderTest {
         JOSMFixture.createFunctionalTestFixture().init();
 
         // don't use atomic upload, the test API server can't cope with large diff uploads
-        //
         Main.pref.put("osm-server.atomic-upload", false);
 
-        File dataSetCacheOutputFile = new File(System.getProperty("java.io.tmpdir"), MultiFetchServerObjectReaderTest.class.getName() + ".dataset");
+        File dataSetCacheOutputFile = new File(System.getProperty("java.io.tmpdir"),
+                MultiFetchServerObjectReaderTest.class.getName() + ".dataset");
 
         String p = System.getProperties().getProperty("useCachedDataset");
         if (p != null && Boolean.parseBoolean(p.trim().toLowerCase())) {
@@ -145,10 +144,10 @@ public class MultiFetchServerObjectReaderTest {
             return;
         }
 
-        logger.info(MessageFormat.format("property ''{0}'' not set to true, creating test dataset on the server. property is ''{1}''", "useCachedDataset", p));
+        logger.info(MessageFormat.format(
+                "property ''{0}'' not set to true, creating test dataset on the server. property is ''{1}''", "useCachedDataset", p));
 
         // build and upload the test data set
-        //
         logger.info("creating test data set ....");
         testDataSet = buildTestDataSet();
         logger.info("uploading test data set ...");
@@ -165,7 +164,7 @@ public class MultiFetchServerObjectReaderTest {
                 w.writeContent(testDataSet);
                 w.footer();
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             fail(MessageFormat.format("failed to open file ''{0}'' for writing", dataSetCacheOutputFile.toString()));
         }
     }
@@ -189,15 +188,15 @@ public class MultiFetchServerObjectReaderTest {
     public void testMultiGet10Nodes() throws OsmTransferException {
         MultiFetchServerObjectReader reader = new MultiFetchServerObjectReader();
         ArrayList<Node> nodes = new ArrayList<>(ds.getNodes());
-        for (int i =0; i< 10; i++) {
+        for (int i = 0; i < 10; i++) {
             reader.append(nodes.get(i));
         }
         DataSet out = reader.parseOsm(NullProgressMonitor.INSTANCE);
         assertEquals(10, out.getNodes().size());
         for (Node n1:out.getNodes()) {
-            Node n2 = (Node)ds.getPrimitiveById(n1);
+            Node n2 = (Node) ds.getPrimitiveById(n1);
             assertNotNull(n2);
-            assertEquals(n2.get("name"),n2.get("name"));
+            assertEquals(n2.get("name"), n2.get("name"));
         }
         assertTrue(reader.getMissingPrimitives().isEmpty());
     }
@@ -205,17 +204,17 @@ public class MultiFetchServerObjectReaderTest {
     @Test
     public void testMultiGet10Ways() throws OsmTransferException {
         MultiFetchServerObjectReader reader = new MultiFetchServerObjectReader();
-        ArrayList<Way> ways= new ArrayList<>(ds.getWays());
-        for (int i =0; i< 10; i++) {
+        ArrayList<Way> ways = new ArrayList<>(ds.getWays());
+        for (int i = 0; i < 10; i++) {
             reader.append(ways.get(i));
         }
         DataSet out = reader.parseOsm(NullProgressMonitor.INSTANCE);
         assertEquals(10, out.getWays().size());
         for (Way w1: out.getWays()) {
-            Way w2 = (Way)ds.getPrimitiveById(w1);
+            Way w2 = (Way) ds.getPrimitiveById(w1);
             assertNotNull(w2);
             assertEquals(w2.getNodesCount(), w1.getNodesCount());
-            assertEquals(w2.get("name"),w1.get("name"));
+            assertEquals(w2.get("name"), w1.get("name"));
         }
         assertTrue(reader.getMissingPrimitives().isEmpty());
     }
@@ -223,17 +222,17 @@ public class MultiFetchServerObjectReaderTest {
     @Test
     public void testMultiGet10Relations() throws OsmTransferException {
         MultiFetchServerObjectReader reader = new MultiFetchServerObjectReader();
-        ArrayList<Relation> relations= new ArrayList<>(ds.getRelations());
-        for (int i =0; i< 10; i++) {
+        ArrayList<Relation> relations = new ArrayList<>(ds.getRelations());
+        for (int i = 0; i < 10; i++) {
             reader.append(relations.get(i));
         }
         DataSet out = reader.parseOsm(NullProgressMonitor.INSTANCE);
         assertEquals(10, out.getRelations().size());
         for (Relation r1: out.getRelations()) {
-            Relation r2 = (Relation)ds.getPrimitiveById(r1);
+            Relation r2 = (Relation) ds.getPrimitiveById(r1);
             assertNotNull(r2);
             assertEquals(r2.getMembersCount(), r1.getMembersCount());
-            assertEquals(r2.get("name"),r2.get("name"));
+            assertEquals(r2.get("name"), r2.get("name"));
         }
         assertTrue(reader.getMissingPrimitives().isEmpty());
     }
@@ -242,15 +241,15 @@ public class MultiFetchServerObjectReaderTest {
     public void testMultiGet800Nodes() throws OsmTransferException {
         MultiFetchServerObjectReader reader = new MultiFetchServerObjectReader();
         ArrayList<Node> nodes = new ArrayList<>(ds.getNodes());
-        for (int i =0; i< 812; i++) {
+        for (int i = 0; i < 812; i++) {
             reader.append(nodes.get(i));
         }
         DataSet out = reader.parseOsm(NullProgressMonitor.INSTANCE);
         assertEquals(812, out.getNodes().size());
         for (Node n1:out.getNodes()) {
-            Node n2 = (Node)ds.getPrimitiveById(n1);
+            Node n2 = (Node) ds.getPrimitiveById(n1);
             assertNotNull(n2);
-            assertEquals(n2.get("name"),n2.get("name"));
+            assertEquals(n2.get("name"), n2.get("name"));
         }
         assertTrue(reader.getMissingPrimitives().isEmpty());
     }
@@ -259,7 +258,7 @@ public class MultiFetchServerObjectReaderTest {
     public void multiGetWithNonExistingNode() throws OsmTransferException {
         MultiFetchServerObjectReader reader = new MultiFetchServerObjectReader();
         ArrayList<Node> nodes = new ArrayList<>(ds.getNodes());
-        for (int i =0; i< 10; i++) {
+        for (int i = 0; i < 10; i++) {
             reader.append(nodes.get(i));
         }
         Node n = new Node(9999999);
@@ -267,9 +266,9 @@ public class MultiFetchServerObjectReaderTest {
         DataSet out = reader.parseOsm(NullProgressMonitor.INSTANCE);
         assertEquals(10, out.getNodes().size());
         for (Node n1:out.getNodes()) {
-            Node n2 = (Node)ds.getPrimitiveById(n1);
+            Node n2 = (Node) ds.getPrimitiveById(n1);
             assertNotNull(n2);
-            assertEquals(n2.get("name"),n2.get("name"));
+            assertEquals(n2.get("name"), n2.get("name"));
         }
         assertFalse(reader.getMissingPrimitives().isEmpty());
         assertEquals(1, reader.getMissingPrimitives().size());

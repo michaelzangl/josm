@@ -24,7 +24,7 @@ import org.openstreetmap.josm.gui.conflict.pair.properties.PropertiesMergeModel;
 
 public class PropertiesMergeModelTest {
 
-    public static abstract class TestObserver implements Observer {
+    public abstract static class TestObserver implements Observer {
         public int numInvocations;
 
         public void update(Observable o, Object arg) {
@@ -93,18 +93,18 @@ public class PropertiesMergeModelTest {
         populate(n1, n2);
         assertFalse(model.hasCoordConflict());
 
-        n1.setCoor(new LatLon(1,1));
+        n1.setCoor(new LatLon(1, 1));
         populate(n1, n2);
         assertTrue(model.hasCoordConflict());
 
 
         n1.cloneFrom(new Node(1));
-        n2.setCoor(new LatLon(2,2));
+        n2.setCoor(new LatLon(2, 2));
         populate(n1, n2);
         assertTrue(model.hasCoordConflict());
 
-        n1.setCoor(new LatLon(1,1));
-        n2.setCoor(new LatLon(2,2));
+        n1.setCoor(new LatLon(1, 1));
+        n2.setCoor(new LatLon(2, 2));
         populate(n1, n2);
         assertTrue(model.hasCoordConflict());
 

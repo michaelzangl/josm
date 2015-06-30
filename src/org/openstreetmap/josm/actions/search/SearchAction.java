@@ -98,7 +98,7 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
     }
 
     public static void saveToHistory(SearchSetting s) {
-        if(searchHistory.isEmpty() || !s.equals(searchHistory.getFirst())) {
+        if (searchHistory.isEmpty() || !s.equals(searchHistory.getFirst())) {
             searchHistory.addFirst(new SearchSetting(s));
         } else if (searchHistory.contains(s)) {
             // move existing entry to front, fixes #8032 - search history loses entries when re-using queries
@@ -260,7 +260,7 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
         left.add(remove, GBC.eol());
         left.add(in_selection, GBC.eop());
         left.add(caseSensitive, GBC.eol());
-        if(Main.pref.getBoolean("expert", false)) {
+        if (Main.pref.getBoolean("expert", false)) {
             left.add(allElements, GBC.eol());
             left.add(regexSearch, GBC.eol());
             left.add(addOnToolbar, GBC.eol());
@@ -305,7 +305,7 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
         dialog.showDialog();
         int result = dialog.getValue();
 
-        if(result != 1) return null;
+        if (result != 1) return null;
 
         // User pressed OK - let's perform the search
         SearchMode mode = replace.isSelected() ? SearchAction.SearchMode.replace
@@ -321,7 +321,8 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
             ToolbarPreferences.ActionDefinition aDef =
                     new ToolbarPreferences.ActionDefinition(Main.main.menu.search);
             aDef.getParameters().put(SEARCH_EXPRESSION, initialValues);
-            aDef.setName(Utils.shortenString(initialValues.text, MAX_LENGTH_SEARCH_EXPRESSION_DISPLAY)); // Display search expression as tooltip instead of generic one
+            // Display search expression as tooltip instead of generic one
+            aDef.setName(Utils.shortenString(initialValues.text, MAX_LENGTH_SEARCH_EXPRESSION_DISPLAY));
             // parametrized action definition is now composed
             ActionParser actionParser = new ToolbarPreferences.ActionParser(null);
             String res = actionParser.saveAction(aDef);
@@ -340,14 +341,18 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
                 , GBC.eol());
         right.add(new SearchKeywordRow(hcbSearchString)
                 .addTitle(tr("basics"))
-                .addKeyword("<i>key</i>:<i>valuefragment</i>", null, tr("''valuefragment'' anywhere in ''key''"), "name:str matches name=Bakerstreet")
+                .addKeyword("<i>key</i>:<i>valuefragment</i>", null,
+                        tr("''valuefragment'' anywhere in ''key''"), "name:str matches name=Bakerstreet")
                 .addKeyword("-<i>key</i>:<i>valuefragment</i>", null, tr("''valuefragment'' nowhere in ''key''"))
                 .addKeyword("<i>key</i>=<i>value</i>", null, tr("''key'' with exactly ''value''"))
                 .addKeyword("<i>key</i>=*", null, tr("''key'' with any value"))
                 .addKeyword("*=<i>value</i>", null, tr("''value'' in any key"))
                 .addKeyword("<i>key</i>=", null, tr("matches if ''key'' exists"))
                 .addKeyword("<i>key</i>><i>value</i>", null, tr("matches if ''key'' is greater than ''value'' (analogously, less than)"))
-                .addKeyword("\"key\"=\"value\"", "\"\"=\"\"", tr("to quote operators.<br>Within quoted strings the <b>\"</b> and <b>\\</b> characters need to be escaped by a preceding <b>\\</b> (e.g. <b>\\\"</b> and <b>\\\\</b>)."), "\"addr:street\"")
+                .addKeyword("\"key\"=\"value\"", "\"\"=\"\"",
+                        tr("to quote operators.<br>Within quoted strings the <b>\"</b> and <b>\\</b> characters need to be escaped " +
+                           "by a preceding <b>\\</b> (e.g. <b>\\\"</b> and <b>\\\\</b>)."),
+                        "\"addr:street\"")
                 , GBC.eol());
         right.add(new SearchKeywordRow(hcbSearchString)
                 .addTitle(tr("combinators"))
@@ -372,8 +377,10 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
                 .addKeyword("user:", "user:", tr("objects changed by user", "user:anonymous"))
                 .addKeyword("id:", "id:", tr("objects with given ID"), "id:0 (new objects)")
                 .addKeyword("version:", "version:", tr("objects with given version"), "version:0 (objects without an assigned version)")
-                .addKeyword("changeset:", "changeset:", tr("objects with given changeset ID"), "changeset:0 (objects without an assigned changeset)")
-                .addKeyword("timestamp:", "timestamp:", tr("objects with last modification timestamp within range"), "timestamp:2012/", "timestamp:2008/2011-02-04T12")
+                .addKeyword("changeset:", "changeset:", tr("objects with given changeset ID"),
+                        "changeset:0 (objects without an assigned changeset)")
+                .addKeyword("timestamp:", "timestamp:", tr("objects with last modification timestamp within range"), "timestamp:2012/",
+                        "timestamp:2008/2011-02-04T12")
                 , GBC.eol());
             right.add(new SearchKeywordRow(hcbSearchString)
                 .addTitle(tr("properties"))
@@ -395,26 +402,28 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
                 .addTitle(tr("related objects"))
                 .addKeyword("child <i>expr</i>", "child ", tr("all children of objects matching the expression"), "child building")
                 .addKeyword("parent <i>expr</i>", "parent ", tr("all parents of objects matching the expression"), "parent bus_stop")
-                .addKeyword("nth:<i>7</i>", "nth: ", tr("n-th member of relation and/or n-th node of way"), "nth:5 (child type:relation)", "nth:-1")
-                .addKeyword("nth%:<i>7</i>", "nth%: ", tr("every n-th member of relation and/or every n-th node of way"), "nth%:100 (child waterway)")
+                .addKeyword("nth:<i>7</i>", "nth: ",
+                        tr("n-th member of relation and/or n-th node of way"), "nth:5 (child type:relation)", "nth:-1")
+                .addKeyword("nth%:<i>7</i>", "nth%: ",
+                        tr("every n-th member of relation and/or every n-th node of way"), "nth%:100 (child waterway)")
                 , GBC.eol());
             right.add(new SearchKeywordRow(hcbSearchString)
                 .addTitle(tr("view"))
                 .addKeyword("inview", "inview ", tr("objects in current view"))
                 .addKeyword("allinview", "allinview ", tr("objects (and all its way nodes / relation members) in current view"))
                 .addKeyword("indownloadedarea", "indownloadedarea ", tr("objects in downloaded area"))
-                .addKeyword("allindownloadedarea", "allindownloadedarea ", tr("objects (and all its way nodes / relation members) in downloaded area"))
+                .addKeyword("allindownloadedarea", "allindownloadedarea ",
+                        tr("objects (and all its way nodes / relation members) in downloaded area"))
                 , GBC.eol());
         }
     }
 
     /**
-     * Launches the dialog for specifying search criteria and runs
-     * a search
+     * Launches the dialog for specifying search criteria and runs a search
      */
     public static void search() {
         SearchSetting se = showSearchDialog(lastSearch);
-        if(se != null) {
+        if (se != null) {
             searchWithHistory(se);
         }
     }
@@ -423,7 +432,7 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
      * Adds the search specified by the settings in <code>s</code> to the
      * search history and performs the search.
      *
-     * @param s
+     * @param s search settings
      */
     public static void searchWithHistory(SearchSetting s) {
         saveToHistory(s);
@@ -431,6 +440,11 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
         search(s);
     }
 
+    /**
+     * Performs the search specified by the settings in <code>s</code> without saving it to search history.
+     *
+     * @param s search settings
+     */
     public static void searchWithoutHistory(SearchSetting s) {
         lastSearch = new SearchSetting(s);
         search(s);
@@ -449,7 +463,7 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
             }
 
             Collection<OsmPrimitive> all;
-            if(s.allElements) {
+            if (s.allElements) {
                 all = Main.main.getCurrentDataSet().allPrimitives();
             } else {
                 all = Main.main.getCurrentDataSet().allNonDeletedCompletePrimitives();
@@ -485,8 +499,7 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
     }
 
     /**
-     * Version of getSelection that is customized for filter, but should
-     * also work in other context.
+     * Version of getSelection that is customized for filter, but should also work in other context.
      *
      * @param s the search settings
      * @param all the collection of all the primitives that should be considered
@@ -495,7 +508,7 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
     public static void getSelection(SearchSetting s, Collection<OsmPrimitive> all, Property<OsmPrimitive, Boolean> p) {
         try {
             String searchText = s.text;
-            if (s instanceof Filter && ((Filter)s).inverted) {
+            if (s instanceof Filter && ((Filter) s).inverted) {
                 searchText = String.format("-(%s)", searchText);
             }
             SearchCompiler.Match matcher = SearchCompiler.compile(searchText, s.caseSensitive, s.regexSearch);
@@ -533,9 +546,9 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
 
         final DataSet ds = Main.main.getCurrentDataSet();
         Collection<OsmPrimitive> sel = new HashSet<>(ds.getAllSelected());
-        int foundMatches = getSelection(s, sel, new Predicate<OsmPrimitive>(){
+        int foundMatches = getSelection(s, sel, new Predicate<OsmPrimitive>() {
             @Override
-            public boolean evaluate(OsmPrimitive o){
+            public boolean evaluate(OsmPrimitive o) {
                 return ds.isSelected(o);
             }
         });
@@ -607,7 +620,7 @@ public class SearchAction extends JosmAction implements ParameterizedAction {
 
         @Override
         public boolean equals(Object other) {
-            if(!(other instanceof SearchSetting))
+            if (!(other instanceof SearchSetting))
                 return false;
             SearchSetting o = (SearchSetting) other;
             return o.caseSensitive == this.caseSensitive

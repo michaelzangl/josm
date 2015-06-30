@@ -58,7 +58,7 @@ import org.openstreetmap.josm.io.OsmImporter;
  */
 public class AutosaveTask extends TimerTask implements LayerChangeListener, Listener {
 
-    private static final char[] ILLEGAL_CHARACTERS = { '/', '\n', '\r', '\t', '\0', '\f', '`', '?', '*', '\\', '<', '>', '|', '\"', ':' };
+    private static final char[] ILLEGAL_CHARACTERS = {'/', '\n', '\r', '\t', '\0', '\f', '`', '?', '*', '\\', '<', '>', '|', '\"', ':'};
     private static final String AUTOSAVE_DIR = "autosave";
     private static final String DELETED_LAYERS_DIR = "autosave/deleted_layers";
 
@@ -289,7 +289,7 @@ public class AutosaveTask extends TimerTask implements LayerChangeListener, List
         changedDatasets.add(event.getDataset());
     }
 
-    private final File getPidFile(File osmFile) {
+    private File getPidFile(File osmFile) {
         return new File(autosaveDir, osmFile.getName().replaceFirst("[.][^.]+$", ".pid"));
     }
 

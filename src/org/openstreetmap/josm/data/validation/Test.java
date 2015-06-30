@@ -182,7 +182,8 @@ public class Test extends AbstractVisitor {
         progressMonitor.finishTask();
         progressMonitor = null;
         if (startTime > 0) {
-            long elapsedTime = System.currentTimeMillis() - startTime;
+            // fix #11567 where elapsedTime is < 0
+            long elapsedTime = Math.max(0, System.currentTimeMillis() - startTime);
             Main.debug(tr("Test ''{0}'' completed in {1}", getName(), Utils.getDurationString(elapsedTime)));
         }
     }
@@ -250,7 +251,7 @@ public class Test extends AbstractVisitor {
     /**
      * Fixes the error with the appropriate command
      *
-     * @param testError
+     * @param testError error to fix
      * @return The command to fix the error
      */
     public Command fixError(TestError testError) {

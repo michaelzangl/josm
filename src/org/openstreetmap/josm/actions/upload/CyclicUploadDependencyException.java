@@ -33,8 +33,8 @@ public class CyclicUploadDependencyException extends Exception {
         StringBuilder sb = new StringBuilder();
         sb.append(tr("Cyclic dependency between relations:"))
           .append('[');
-        for (int i=0; i< cycle.size(); i++) {
-            if (i >0 ) {
+        for (int i = 0; i < cycle.size(); i++) {
+            if (i > 0) {
                 sb.append(',');
             }
             sb.append(formatRelation(cycle.get(i)));

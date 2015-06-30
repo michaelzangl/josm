@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
@@ -52,7 +53,6 @@ import org.openstreetmap.josm.data.imagery.ImageryInfo;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.visitor.paint.PaintColors;
-import org.openstreetmap.josm.data.osm.visitor.paint.Rendering;
 import org.openstreetmap.josm.data.osm.visitor.paint.relations.MultipolygonCache;
 import org.openstreetmap.josm.gui.layer.GpxLayer;
 import org.openstreetmap.josm.gui.layer.ImageryLayer;
@@ -82,7 +82,8 @@ import org.openstreetmap.josm.tools.Utils;
  *
  * @author imi
  */
-public class MapView extends NavigatableComponent implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.LayerStateChangeListener {
+public class MapView extends NavigatableComponent
+implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.LayerStateChangeListener {
 
     /**
      * Interface to notify listeners of a layer change.
@@ -283,7 +284,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     private transient Layer changedLayer;
     private boolean paintPreferencesChanged = true;
     private Rectangle lastClipBounds = new Rectangle();
-    public transient MapMover mapMover;
+    private transient MapMover mapMover;
 
     /**
      * Constructs a new {@code MapView}.
@@ -295,8 +296,9 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     public MapView(final JPanel contentPane, final ViewportData viewportData) {
         initialViewport = viewportData;
         Main.pref.addPreferenceChangeListener(this);
+        final boolean unregisterTab = Shortcut.findShortcut(KeyEvent.VK_TAB, 0) != null;
 
-        addComponentListener(new ComponentAdapter(){
+        addComponentListener(new ComponentAdapter() {
             @Override public void componentResized(ComponentEvent e) {
                 removeComponentListener(this);
 
@@ -316,10 +318,13 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
         //store the last mouse action
         this.addMouseMotionListener(new MouseMotionListener() {
-            @Override public void mouseDragged(MouseEvent e) {
+            @Override
+            public void mouseDragged(MouseEvent e) {
                 mouseMoved(e);
             }
-            @Override public void mouseMoved(MouseEvent e) {
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
                 lastMEvent = e;
             }
         });
@@ -434,6 +439,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
             } finally {
                 layerLock.writeLock().unlock();
             }
+
             fireLayerAdded(layer);
             if (isOsmDataLayer) {
                 ((OsmDataLayer)layer).addLayerStateChangeListener(this);
@@ -580,14 +586,8 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
     private boolean virtualNodesEnabled = false;
 
-    /**
-     * Sets the global virtual nodes enabled flag that is used by the {@link OsmDataLayer} renderer.
-     * A redraw is triggered when this property is changed.
-     * @param enabled If the virtual nodes should be enabled.
-     * @see Rendering#render(DataSet, boolean, Bounds)
-     */
     public void setVirtualNodesEnabled(boolean enabled) {
-        if(virtualNodesEnabled != enabled) {
+        if (virtualNodesEnabled != enabled) {
             virtualNodesEnabled = enabled;
             repaint();
         }
@@ -700,7 +700,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
     private void paintLayer(Layer layer, Graphics2D g, Bounds box) {
         if (layer.getOpacity() < 1) {
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,(float)layer.getOpacity()));
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) layer.getOpacity()));
         }
         layer.paint(g, this, box);
         g.setPaintMode();
@@ -734,7 +734,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         }
         canUseBuffer = canUseBuffer && nonChangedLayers.size() <= nonChangedLayersCount && lastClipBounds.contains(g.getClipBounds());
         if (canUseBuffer) {
-            for (int i=0; i<nonChangedLayers.size(); i++) {
+            for (int i = 0; i < nonChangedLayers.size(); i++) {
                 if (visibleLayers.get(i) != nonChangedLayers.get(i)) {
                     canUseBuffer = false;
                     break;
@@ -751,7 +751,8 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         Bounds box = getLatLonBounds(g.getClipBounds());
 
         if (!canUseBuffer || nonChangedLayersBuffer == null) {
-            if (null == nonChangedLayersBuffer || nonChangedLayersBuffer.getWidth() != getWidth() || nonChangedLayersBuffer.getHeight() != getHeight()) {
+            if (null == nonChangedLayersBuffer
+                    || nonChangedLayersBuffer.getWidth() != getWidth() || nonChangedLayersBuffer.getHeight() != getHeight()) {
                 nonChangedLayersBuffer = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_3BYTE_BGR);
             }
             Graphics2D g2 = nonChangedLayersBuffer.createGraphics();
@@ -759,31 +760,31 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
             g2.setColor(PaintColors.getBackgroundColor());
             g2.fillRect(0, 0, getWidth(), getHeight());
 
-            for (int i=0; i<nonChangedLayersCount; i++) {
-                paintLayer(visibleLayers.get(i),g2, box);
+            for (int i = 0; i < nonChangedLayersCount; i++) {
+                paintLayer(visibleLayers.get(i), g2, box);
             }
         } else {
             // Maybe there were more unchanged layers then last time - draw them to buffer
             if (nonChangedLayers.size() != nonChangedLayersCount) {
                 Graphics2D g2 = nonChangedLayersBuffer.createGraphics();
                 g2.setClip(g.getClip());
-                for (int i=nonChangedLayers.size(); i<nonChangedLayersCount; i++) {
-                    paintLayer(visibleLayers.get(i),g2, box);
+                for (int i = nonChangedLayers.size(); i < nonChangedLayersCount; i++) {
+                    paintLayer(visibleLayers.get(i), g2, box);
                 }
             }
         }
 
         nonChangedLayers.clear();
         changedLayer = null;
-        for (int i=0; i<nonChangedLayersCount; i++) {
+        for (int i = 0; i < nonChangedLayersCount; i++) {
             nonChangedLayers.add(visibleLayers.get(i));
         }
         lastClipBounds = g.getClipBounds();
 
         tempG.drawImage(nonChangedLayersBuffer, 0, 0, null);
 
-        for (int i=nonChangedLayersCount; i<visibleLayers.size(); i++) {
-            paintLayer(visibleLayers.get(i),tempG, box);
+        for (int i = nonChangedLayersCount; i < visibleLayers.size(); i++) {
+            paintLayer(visibleLayers.get(i), tempG, box);
         }
 
         synchronized (temporaryLayersMutex) {
@@ -965,7 +966,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
     private OsmDataLayer findNewEditLayer(List<Layer> layersList) {
         OsmDataLayer newEditLayer = layersList.contains(editLayer)?editLayer:null;
-
+        // Find new edit layer
         if (activeLayer != editLayer || !layersList.contains(editLayer)) {
             if (activeLayer instanceof OsmDataLayer && layersList.contains(activeLayer)) {
                 newEditLayer = (OsmDataLayer) activeLayer;
@@ -1128,11 +1129,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      */
     public List<MapViewPaintable> getTemporaryLayers() {
         synchronized (temporaryLayersMutex) {
-            List<MapViewPaintable> foundLayers = new ArrayList<>();
-            for (MapViewPaintable l : temporaryLayers) {
-                foundLayers.add(l);
-            }
-            return Collections.unmodifiableList(foundLayers);
+            return Collections.unmodifiableList(new ArrayList<>(temporaryLayers));
         }
     }
 
@@ -1191,7 +1188,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     /**
      * A selection listener that fires a repaint as soon as the selection changes.
      */
-    private transient SelectionChangedListener repaintSelectionChangedListener = new SelectionChangedListener(){
+    private transient SelectionChangedListener repaintSelectionChangedListener = new SelectionChangedListener() {
         @Override
         public void selectionChanged(Collection<? extends OsmPrimitive> newSelection) {
             repaint();
@@ -1293,5 +1290,4 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         }
         super.repaint(tm, x, y, width, height);
     }
-
 }

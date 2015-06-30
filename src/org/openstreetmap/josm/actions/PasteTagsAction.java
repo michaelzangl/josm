@@ -77,11 +77,10 @@ public final class PasteTagsAction extends JosmAction {
         /**
          * Replies all primitives of type <code>type</code> in the current selection.
          *
-         * @param <T>
          * @param type  the type
          * @return all primitives of type <code>type</code> in the current selection.
          */
-        protected <T extends PrimitiveData> Collection<? extends PrimitiveData> getSourcePrimitivesByType(OsmPrimitiveType type) {
+        protected Collection<? extends PrimitiveData> getSourcePrimitivesByType(OsmPrimitiveType type) {
             return PrimitiveData.getFilteredList(source, type);
         }
 
@@ -89,12 +88,11 @@ public final class PasteTagsAction extends JosmAction {
          * Replies the collection of tags for all primitives of type <code>type</code> in the current
          * selection
          *
-         * @param <T>
          * @param type  the type
          * @return the collection of tags for all primitives of type <code>type</code> in the current
          * selection
          */
-        protected <T extends OsmPrimitive> TagCollection getSourceTagsByType(OsmPrimitiveType type) {
+        protected TagCollection getSourceTagsByType(OsmPrimitiveType type) {
             return TagCollection.unionOfAllPrimitives(getSourcePrimitivesByType(type));
         }
 
@@ -102,13 +100,12 @@ public final class PasteTagsAction extends JosmAction {
          * Replies true if there is at least one tag in the current selection for primitives of
          * type <code>type</code>
          *
-         * @param <T>
          * @param type the type
          * @return true if there is at least one tag in the current selection for primitives of
          * type <code>type</code>
          */
-        protected <T extends OsmPrimitive> boolean hasSourceTagsByType(OsmPrimitiveType type) {
-            return ! getSourceTagsByType(type).isEmpty();
+        protected boolean hasSourceTagsByType(OsmPrimitiveType type) {
+            return !getSourceTagsByType(type).isEmpty();
         }
 
         protected void buildChangeCommand(Collection<? extends OsmPrimitive> selection, TagCollection tc) {
@@ -176,12 +173,11 @@ public final class PasteTagsAction extends JosmAction {
          * Replies true if there is at least one primitive of type <code>type</code>
          * is in the target collection
          *
-         * @param <T>
          * @param type  the type to look for
          * @return true if there is at least one primitive of type <code>type</code> in the collection
          * <code>selection</code>
          */
-        protected <T extends OsmPrimitive> boolean hasTargetPrimitives(Class<T> type) {
+        protected boolean hasTargetPrimitives(Class<? extends OsmPrimitive> type) {
             return !OsmPrimitive.getFilteredList(target, type).isEmpty();
         }
 
@@ -195,7 +191,7 @@ public final class PasteTagsAction extends JosmAction {
             for (OsmPrimitiveType type : OsmPrimitiveType.dataValues()) {
                 if (hasTargetPrimitives(type.getOsmClass())) {
                     TagCollection tc = TagCollection.unionOfAllPrimitives(getSourcePrimitivesByType(type));
-                    if (!tc.isEmpty() && ! tc.isApplicableToPrimitive())
+                    if (!tc.isEmpty() && !tc.isApplicableToPrimitive())
                         return false;
                 }
             }
@@ -266,7 +262,7 @@ public final class PasteTagsAction extends JosmAction {
      */
     public static boolean pasteTagsFromText(Collection<OsmPrimitive> selection, String text) {
         Map<String, String> tags = TextTagParser.readTagsFromText(text);
-        if (tags==null || tags.isEmpty()) {
+        if (tags == null || tags.isEmpty()) {
             TextTagParser.showBadBufferMessage(help);
             return false;
         }
@@ -275,7 +271,7 @@ public final class PasteTagsAction extends JosmAction {
         List<Command> commands = new ArrayList<>(tags.size());
         for (Entry<String, String> entry: tags.entrySet()) {
             String v = entry.getValue();
-            commands.add(new ChangePropertyCommand(selection, entry.getKey(), "".equals(v)?null:v));
+            commands.add(new ChangePropertyCommand(selection, entry.getKey(), "".equals(v) ? null : v));
         }
         commitCommands(selection, commands);
         return !commands.isEmpty();
@@ -287,7 +283,7 @@ public final class PasteTagsAction extends JosmAction {
      */
     public static boolean pasteTagsFromJOSMBuffer(Collection<OsmPrimitive> selection) {
         List<PrimitiveData> directlyAdded = Main.pasteBuffer.getDirectlyAdded();
-        if (directlyAdded==null || directlyAdded.isEmpty()) return false;
+        if (directlyAdded == null || directlyAdded.isEmpty()) return false;
 
         PasteTagsAction.TagPaster tagPaster = new PasteTagsAction.TagPaster(directlyAdded, selection);
         List<Command> commands = new ArrayList<>();
@@ -300,7 +296,7 @@ public final class PasteTagsAction extends JosmAction {
 
     /**
      * Create and execute SequenceCommand with descriptive title
-     * @param commands
+     * @param commands the commands to perform in a sequential command
      */
     private static void commitCommands(Collection<OsmPrimitive> selection, List<Command> commands) {
         if (!commands.isEmpty()) {
@@ -326,6 +322,6 @@ public final class PasteTagsAction extends JosmAction {
 
     @Override
     protected void updateEnabledState(Collection<? extends OsmPrimitive> selection) {
-        setEnabled(selection!= null && !selection.isEmpty());
+        setEnabled(selection != null && !selection.isEmpty());
     }
 }

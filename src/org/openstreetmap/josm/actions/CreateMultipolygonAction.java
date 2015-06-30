@@ -220,7 +220,8 @@ public class CreateMultipolygonAction extends JosmAction {
     /**
      * Returns a {@link Pair} of a multipolygon creating/modifying {@link Command} as well as the multipolygon {@link Relation}.
      */
-    public static Pair<SequenceCommand, Relation> createMultipolygonCommand(Collection<Way> selectedWays, Relation selectedMultipolygonRelation) {
+    public static Pair<SequenceCommand, Relation> createMultipolygonCommand(Collection<Way> selectedWays,
+            Relation selectedMultipolygonRelation) {
 
         final Pair<Relation, Relation> rr = selectedMultipolygonRelation == null
                 ? createMultipolygonRelation(selectedWays, true)
@@ -331,7 +332,7 @@ public class CreateMultipolygonAction extends JosmAction {
         }
     }
 
-    public static final List<String> DEFAULT_LINEAR_TAGS = Arrays.asList("barrier", "fence_type", "source");
+    private static final List<String> DEFAULT_LINEAR_TAGS = Arrays.asList("barrier", "fence_type", "source");
 
     /**
      * This method removes tags/value pairs from inner and outer ways and put them on relation if necessary
@@ -347,13 +348,13 @@ public class CreateMultipolygonAction extends JosmAction {
 
         Set<String> conflictingKeys = new TreeSet<>();
 
-        for( RelationMember m : relation.getMembers() ) {
+        for (RelationMember m : relation.getMembers()) {
 
-            if( m.hasRole() && "inner".equals(m.getRole()) && m.isWay() && m.getWay().hasKeys() ) {
+            if (m.hasRole() && "inner".equals(m.getRole()) && m.isWay() && m.getWay().hasKeys()) {
                 innerWays.add(m.getWay());
             }
 
-            if( m.hasRole() && "outer".equals(m.getRole()) && m.isWay() && m.getWay().hasKeys() ) {
+            if (m.hasRole() && "outer".equals(m.getRole()) && m.isWay() && m.getWay().hasKeys()) {
                 Way way = m.getWay();
                 outerWays.add(way);
 
@@ -368,18 +369,25 @@ public class CreateMultipolygonAction extends JosmAction {
         }
 
         // filter out empty key conflicts - we need second iteration
-        if (!Main.pref.getBoolean("multipoly.alltags", false))
-            for (RelationMember m : relation.getMembers())
-                if (m.hasRole() && "outer".equals(m.getRole()) && m.isWay())
-                    for (String key : values.keySet())
-                        if (!m.getWay().hasKey(key) && !relation.hasKey(key))
+        if (!Main.pref.getBoolean("multipoly.alltags", false)) {
+            for (RelationMember m : relation.getMembers()) {
+                if (m.hasRole() && "outer".equals(m.getRole()) && m.isWay()) {
+                    for (String key : values.keySet()) {
+                        if (!m.getWay().hasKey(key) && !relation.hasKey(key)) {
                             conflictingKeys.add(key);
+                        }
+                    }
+                }
+            }
+        }
 
-        for (String key : conflictingKeys)
+        for (String key : conflictingKeys) {
             values.remove(key);
+        }
 
-        for (String linearTag : Main.pref.getCollection("multipoly.lineartagstokeep", DEFAULT_LINEAR_TAGS))
+        for (String linearTag : Main.pref.getCollection("multipoly.lineartagstokeep", DEFAULT_LINEAR_TAGS)) {
             values.remove(linearTag);
+        }
 
         if ("coastline".equals(values.get("natural")))
             values.remove("natural");
@@ -402,8 +410,8 @@ public class CreateMultipolygonAction extends JosmAction {
 
             if (moveTags) {
                 // remove duplicated tags from outer ways
-                for( Way way : outerWays ) {
-                    if( way.hasKey(key) ) {
+                for (Way way : outerWays) {
+                    if (way.hasKey(key)) {
                         affectedWays.add(way);
                     }
                 }
@@ -421,7 +429,7 @@ public class CreateMultipolygonAction extends JosmAction {
             Relation r2 = new Relation(relation);
             for (Entry<String, String> entry : values.entrySet()) {
                 String key = entry.getKey();
-                if (!r2.hasKey(key) && !"area".equals(key) ) {
+                if (!r2.hasKey(key) && !"area".equals(key)) {
                     if (relation.isNew())
                         relation.put(key, entry.getValue());
                     else

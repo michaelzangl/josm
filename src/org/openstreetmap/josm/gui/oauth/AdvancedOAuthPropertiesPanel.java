@@ -52,13 +52,13 @@ public class AdvancedOAuthPropertiesPanel extends VerticallyScrollablePanel {
 
     protected final void build() {
         setLayout(new GridBagLayout());
-        setBorder(BorderFactory.createEmptyBorder(3,3,3,3));
+        setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
         GridBagConstraints gc = new GridBagConstraints();
 
         gc.anchor = GridBagConstraints.NORTHWEST;
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.weightx = 1.0;
-        gc.insets = new Insets(0,0, 3, 3);
+        gc.insets = new Insets(0, 0, 3, 3);
         gc.gridwidth = 2;
         cbUseDefaults = new JCheckBox(tr("Use default settings"));
         add(cbUseDefaults, gc);
@@ -125,11 +125,11 @@ public class AdvancedOAuthPropertiesPanel extends VerticallyScrollablePanel {
     protected boolean hasCustomSettings() {
         OAuthParameters params = OAuthParameters.createDefault(apiUrl);
         return
-           ! tfConsumerKey.getText().equals(params.getConsumerKey())
-        || ! tfConsumerSecret.getText().equals(params.getConsumerSecret())
-        || ! tfRequestTokenURL.getText().equals(params.getRequestTokenUrl())
-        || ! tfAccessTokenURL.getText().equals(params.getAccessTokenUrl())
-        || ! tfAuthoriseURL.getText().equals(params.getAuthoriseUrl());
+           !tfConsumerKey.getText().equals(params.getConsumerKey())
+        || !tfConsumerSecret.getText().equals(params.getConsumerSecret())
+        || !tfRequestTokenURL.getText().equals(params.getRequestTokenUrl())
+        || !tfAccessTokenURL.getText().equals(params.getAccessTokenUrl())
+        || !tfAuthoriseURL.getText().equals(params.getAuthoriseUrl());
     }
 
     protected boolean confirmOverwriteCustomSettings() {
@@ -176,7 +176,7 @@ public class AdvancedOAuthPropertiesPanel extends VerticallyScrollablePanel {
         setChildComponentsEnabled(false);
     }
 
-    protected void setChildComponentsEnabled(boolean enabled){
+    protected void setChildComponentsEnabled(boolean enabled) {
         for (Component c: getComponents()) {
             if (c instanceof JosmTextField || c instanceof JLabel) {
                 c.setEnabled(enabled);
@@ -215,8 +215,8 @@ public class AdvancedOAuthPropertiesPanel extends VerticallyScrollablePanel {
         } else {
             cbUseDefaults.setSelected(false);
             setChildComponentsEnabled(true);
-            tfConsumerKey.setText( parameters.getConsumerKey() == null ? "" : parameters.getConsumerKey());
-            tfConsumerSecret.setText( parameters.getConsumerSecret() == null ? "" : parameters.getConsumerSecret());
+            tfConsumerKey.setText(parameters.getConsumerKey() == null ? "" : parameters.getConsumerKey());
+            tfConsumerSecret.setText(parameters.getConsumerSecret() == null ? "" : parameters.getConsumerSecret());
             tfRequestTokenURL.setText(parameters.getRequestTokenUrl() == null ? "" : parameters.getRequestTokenUrl());
             tfAccessTokenURL.setText(parameters.getAccessTokenUrl() == null ? "" : parameters.getAccessTokenUrl());
             tfAuthoriseURL.setText(parameters.getAuthoriseUrl() == null ? "" : parameters.getAuthoriseUrl());

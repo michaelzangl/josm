@@ -57,8 +57,11 @@ public class ImportAudioAction extends AbstractAction {
     }
 
     private void warnCantImportIntoServerLayer(GpxLayer layer) {
-        String msg = tr("<html>The data in the GPX layer ''{0}'' has been downloaded from the server.<br>" + "Because its way points do not include a timestamp we cannot correlate them with audio data.</html>", layer.getName());
-        HelpAwareOptionPane.showOptionDialog(Main.parent, msg, tr("Import not possible"), JOptionPane.WARNING_MESSAGE, ht("/Action/ImportAudio#CantImportIntoGpxLayerFromServer"));
+        String msg = tr("<html>The data in the GPX layer ''{0}'' has been downloaded from the server.<br>" +
+                "Because its way points do not include a timestamp we cannot correlate them with audio data.</html>",
+                layer.getName());
+        HelpAwareOptionPane.showOptionDialog(Main.parent, msg, tr("Import not possible"),
+                JOptionPane.WARNING_MESSAGE, ht("/Action/ImportAudio#CantImportIntoGpxLayerFromServer"));
     }
 
     @Override
@@ -78,7 +81,8 @@ public class ImportAudioAction extends AbstractAction {
                 return tr("Wave Audio files (*.wav)");
             }
         };
-        AbstractFileChooser fc = DiskAccessAction.createAndOpenFileChooser(true, true, null, filter, JFileChooser.FILES_ONLY, "markers.lastaudiodirectory");
+        AbstractFileChooser fc = DiskAccessAction.createAndOpenFileChooser(true, true, null, filter,
+                JFileChooser.FILES_ONLY, "markers.lastaudiodirectory");
         if (fc != null) {
             File[] sel = fc.getSelectedFiles();
             // sort files in increasing order of timestamp (this is the end time, but so
@@ -105,7 +109,8 @@ public class ImportAudioAction extends AbstractAction {
             } else {
                 names = "";
             }
-            MarkerLayer ml = new MarkerLayer(new GpxData(), tr("Audio markers from {0}", layer.getName()) + names, layer.getAssociatedFile(), layer);
+            MarkerLayer ml = new MarkerLayer(new GpxData(),
+                    tr("Audio markers from {0}", layer.getName()) + names, layer.getAssociatedFile(), layer);
             double firstStartTime = sel[0].lastModified() / 1000.0 - AudioUtil.getCalibratedDuration(sel[0]);
             Markers m = new Markers();
             for (File file : sel) {
@@ -306,7 +311,9 @@ public class ImportAudioAction extends AbstractAction {
             JOptionPane
             .showMessageDialog(
                     Main.parent,
+                    // CHECKSTYLE.OFF: LineLength
                     tr("Some waypoints with timestamps from before the start of the track or after the end were omitted or moved to the start."));
+                    // CHECKSTYLE.ON: LineLength
             markers.timedMarkersOmitted = timedMarkersOmitted;
         }
         if (untimedMarkersOmitted && !markers.untimedMarkersOmitted) {

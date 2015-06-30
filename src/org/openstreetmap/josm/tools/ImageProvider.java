@@ -380,8 +380,8 @@ public class ImageProvider {
     /**
      * Set image width
      * @param width final width of the image
-     * @see #setSize
      * @return the current object, for convenience
+     * @see #setSize
      */
     public ImageProvider setWidth(int width) {
         this.width = width;
@@ -391,8 +391,8 @@ public class ImageProvider {
     /**
      * Set image height
      * @param height final height of the image
-     * @see #setSize
      * @return the current object, for convenience
+     * @see #setSize
      */
     public ImageProvider setHeight(int height) {
         this.height = height;
@@ -545,7 +545,9 @@ public class ImageProvider {
         if (ir == null) {
             if (!optional) {
                 String ext = name.indexOf('.') != -1 ? "" : ".???";
-                throw new RuntimeException(tr("Fatal: failed to locate image ''{0}''. This is a serious configuration problem. JOSM will stop working.", name + ext));
+                throw new RuntimeException(
+                        tr("Fatal: failed to locate image ''{0}''. This is a serious configuration problem. JOSM will stop working.",
+                                name + ext));
             } else {
                 if (!suppressWarnings) {
                     Main.error(tr("Failed to locate image ''{0}''", name));
@@ -720,12 +722,12 @@ public class ImageProvider {
             }
             String[] extensions;
             if (name.indexOf('.') != -1) {
-                extensions = new String[] { "" };
+                extensions = new String[] {""};
             } else {
-                extensions = new String[] { ".png", ".svg"};
+                extensions = new String[] {".png", ".svg"};
             }
             final int ARCHIVE = 0, LOCAL = 1;
-            for (int place : new Integer[] { ARCHIVE, LOCAL }) {
+            for (int place : new Integer[] {ARCHIVE, LOCAL}) {
                 for (String ext : extensions) {
 
                     if (".svg".equals(ext)) {
@@ -739,7 +741,7 @@ public class ImageProvider {
                     /* cache separately */
                     if (dirs != null && !dirs.isEmpty()) {
                         cacheName = "id:" + id + ":" + fullName;
-                        if(archive != null) {
+                        if (archive != null) {
                             cacheName += ":" + archive.getName();
                         }
                     }
@@ -854,7 +856,9 @@ public class ImageProvider {
                 try {
                     // See #10479: for PNG files, always enforce transparency to be sure tNRS chunk is used even not in paletted mode
                     // This can be removed if someday Oracle fixes https://bugs.openjdk.java.net/browse/JDK-6788458
+                    // CHECKSTYLE.OFF: LineLength
                     // hg.openjdk.java.net/jdk7u/jdk7u/jdk/file/828c4fedd29f/src/share/classes/com/sun/imageio/plugins/png/PNGImageReader.java#l656
+                    // CHECKSTYLE.ON: LineLength
                     Image img = read(new ByteArrayInputStream(bytes), false, true);
                     return img == null ? null : new ImageResource(img);
                 } catch (IOException e) {
@@ -892,7 +896,7 @@ public class ImageProvider {
                 }
             } else {
                 final String fn_md5 = Utils.md5Hex(fn);
-                url = b + fn_md5.substring(0,1) + "/" + fn_md5.substring(0,2) + "/" + fn;
+                url = b + fn_md5.substring(0, 1) + "/" + fn_md5.substring(0, 2) + "/" + fn;
             }
             result = getIfAvailableHttp(url, type);
             if (result != null) {
@@ -921,7 +925,7 @@ public class ImageProvider {
             String entryName = inArchiveDir + fullName;
             ZipEntry entry = zipFile.getEntry(entryName);
             if (entry != null) {
-                int size = (int)entry.getSize();
+                int size = (int) entry.getSize();
                 int offs = 0;
                 byte[] buf = new byte[size];
                 try (InputStream is = zipFile.getInputStream(entry)) {
@@ -934,7 +938,7 @@ public class ImageProvider {
                         }
                         return svg == null ? null : new ImageResource(svg);
                     case OTHER:
-                        while(size > 0) {
+                        while (size > 0) {
                             int l = is.read(buf, offs, size);
                             offs += l;
                             size -= l;
@@ -1352,8 +1356,8 @@ public class ImageProvider {
      *
      * @throws IllegalArgumentException if <code>input</code> is <code>null</code>.
      * @throws IOException if an error occurs during reading.
-     * @since 7132
      * @see BufferedImage#getProperty
+     * @since 7132
      */
     public static BufferedImage read(File input, boolean readMetadata, boolean enforceTransparency) throws IOException {
         CheckParameterUtil.ensureParameterNotNull(input, "input");
@@ -1538,6 +1542,8 @@ public class ImageProvider {
         return bi;
     }
 
+    // CHECKSTYLE.OFF: LineLength
+
     /**
      * Returns the {@code TransparentColor} defined in image reader metadata.
      * @param model The image color model
@@ -1548,6 +1554,7 @@ public class ImageProvider {
      * @since 7499
      */
     public static Color getTransparentColor(ColorModel model, ImageReader reader) throws IOException {
+        // CHECKSTYLE.ON: LineLength
         try {
             IIOMetadata metadata = reader.getImageMetadata(0);
             if (metadata != null) {
@@ -1557,12 +1564,12 @@ public class ImageProvider {
                         if ("javax_imageio_1.0".equals(f)) {
                             Node root = metadata.getAsTree(f);
                             if (root instanceof Element) {
-                                NodeList list = ((Element)root).getElementsByTagName("TransparentColor");
+                                NodeList list = ((Element) root).getElementsByTagName("TransparentColor");
                                 if (list.getLength() > 0) {
                                     Node item = list.item(0);
                                     if (item instanceof Element) {
                                         // Handle different color spaces (tested with RGB and grayscale)
-                                        String value = ((Element)item).getAttribute("value");
+                                        String value = ((Element) item).getAttribute("value");
                                         if (!value.isEmpty()) {
                                             String[] s = value.split(" ");
                                             if (s.length == 3) {
@@ -1572,7 +1579,7 @@ public class ImageProvider {
                                                 int r = model.getRed(pixel);
                                                 int g = model.getGreen(pixel);
                                                 int b = model.getBlue(pixel);
-                                                return new Color(r,g,b);
+                                                return new Color(r, g, b);
                                             } else {
                                                 Main.warn("Unable to translate TransparentColor '"+value+"' with color model "+model);
                                             }
@@ -1595,7 +1602,7 @@ public class ImageProvider {
     private static Color parseRGB(String[] s) {
         int[] rgb = new int[3];
         try {
-            for (int i = 0; i<3; i++) {
+            for (int i = 0; i < 3; i++) {
                 rgb[i] = Integer.parseInt(s[i]);
             }
             return new Color(rgb[0], rgb[1], rgb[2]);

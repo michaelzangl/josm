@@ -28,7 +28,6 @@ public abstract class TransformNodesCommand extends Command {
      */
     protected Collection<Node> nodes = new LinkedList<>();
 
-
     /**
      * List of all old states of the nodes.
      */
@@ -130,13 +129,44 @@ public abstract class TransformNodesCommand extends Command {
      * @see org.openstreetmap.josm.tools.Geometry#getCentroid(java.util.List)
      */
     public EastNorth getNodesCenter() {
-        EastNorth sum = new EastNorth(0,0);
+        EastNorth sum = new EastNorth(0, 0);
 
-        for (Node n : nodes ) {
+        for (Node n : nodes) {
             EastNorth en = n.getEastNorth();
             sum = sum.add(en.east(), en.north());
         }
         return new EastNorth(sum.east()/this.nodes.size(), sum.north()/this.nodes.size());
 
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((nodes == null) ? 0 : nodes.hashCode());
+        result = prime * result + ((oldStates == null) ? 0 : oldStates.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        TransformNodesCommand other = (TransformNodesCommand) obj;
+        if (nodes == null) {
+            if (other.nodes != null)
+                return false;
+        } else if (!nodes.equals(other.nodes))
+            return false;
+        if (oldStates == null) {
+            if (other.oldStates != null)
+                return false;
+        } else if (!oldStates.equals(other.oldStates))
+            return false;
+        return true;
     }
 }

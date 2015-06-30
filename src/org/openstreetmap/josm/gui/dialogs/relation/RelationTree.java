@@ -45,7 +45,7 @@ public class RelationTree extends JTree {
     /**
      * constructor
      */
-    public RelationTree(){
+    public RelationTree() {
         super();
         build();
     }
@@ -66,10 +66,10 @@ public class RelationTree extends JTree {
      */
     protected Dialog getParentDialog() {
         Component c = RelationTree.this;
-        while(c != null && ! (c instanceof Dialog)) {
+        while (c != null && !(c instanceof Dialog)) {
             c = c.getParent();
         }
-        return (Dialog)c;
+        return (Dialog) c;
     }
 
     /**
@@ -88,13 +88,12 @@ public class RelationTree extends JTree {
         @Override
         public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
             TreePath path  = event.getPath();
-            Relation parent = (Relation)event.getPath().getLastPathComponent();
-            if (! parent.isIncomplete() || parent.isNew())
+            Relation parent = (Relation) event.getPath().getLastPathComponent();
+            if (!parent.isIncomplete() || parent.isNew())
                 // we don't load complete  or new relations
                 return;
             // launch the download task
-            //
-            Main.worker.submit(new RelationLoader(getParentDialog(),parent, path));
+            Main.worker.submit(new RelationLoader(getParentDialog(), parent, path));
         }
     }
 
@@ -120,6 +119,7 @@ public class RelationTree extends JTree {
             this.relation = relation;
             this.path = path;
         }
+
         @Override
         protected void cancel() {
             OsmApi.getOsmApi().cancel();
@@ -136,10 +136,10 @@ public class RelationTree extends JTree {
             }
             DataSetMerger visitor = new DataSetMerger(Main.main.getEditLayer().data, ds);
             visitor.merge();
-            if (! visitor.getConflicts().isEmpty()) {
+            if (!visitor.getConflicts().isEmpty()) {
                 Main.main.getEditLayer().getConflicts().add(visitor.getConflicts());
             }
-            final RelationTreeModel model = (RelationTreeModel)getModel();
+            final RelationTreeModel model = (RelationTreeModel) getModel();
             SwingUtilities.invokeLater(
                     new Runnable() {
                         @Override
@@ -153,10 +153,10 @@ public class RelationTree extends JTree {
         @Override
         protected void realRun() throws SAXException, IOException, OsmTransferException {
             try {
-                OsmServerObjectReader reader = new OsmServerObjectReader(relation.getId(), OsmPrimitiveType.from(relation), true /* full load */);
+                OsmServerObjectReader reader = new OsmServerObjectReader(relation.getId(), OsmPrimitiveType.from(relation), true);
                 ds = reader.parseOsm(progressMonitor
                         .createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
-            } catch(Exception e) {
+            } catch (Exception e) {
                 if (canceled) {
                     Main.warn(tr("Ignoring exception because task was canceled. Exception: {0}", e.toString()));
                     return;

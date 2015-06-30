@@ -105,9 +105,11 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
         private SelectActionCursor(String main, String sub) {
             c = ImageProvider.getCursor(main, sub);
         }
+
         private SelectActionCursor(int systemCursor) {
             c = Cursor.getPredefinedCursor(systemCursor);
         }
+
         public Cursor cursor() {
             return c;
         }
@@ -217,8 +219,8 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
 
     @Override
     public void modifiersChanged(int modifiers) {
-        if (!Main.isDisplayingMapView() || oldEvent==null) return;
-        if(giveUserFeedback(oldEvent, modifiers)) {
+        if (!Main.isDisplayingMapView() || oldEvent == null) return;
+        if (giveUserFeedback(oldEvent, modifiers)) {
             mv.repaint();
         }
     }
@@ -250,7 +252,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
         Set<OsmPrimitive> newHighlights = new HashSet<>();
 
         virtualManager.clear();
-        if(mode == Mode.MOVE) {
+        if (mode == Mode.MOVE) {
             if (!dragInProgress() && virtualManager.activateVirtualNodeNearPoint(e.getPoint())) {
                 DataSet ds = getCurrentDataSet();
                 if (ds != null && drawTargetHighlight) {
@@ -265,16 +267,16 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
         mv.setNewCursor(getCursor(c), this);
 
         // return early if there can't be any highlights
-        if(!drawTargetHighlight || mode != Mode.MOVE || c.isEmpty())
+        if (!drawTargetHighlight || mode != Mode.MOVE || c.isEmpty())
             return repaintIfRequired(newHighlights);
 
         // CTRL toggles selection, but if while dragging CTRL means merge
         final boolean isToggleMode = ctrl && !dragInProgress();
-        for(OsmPrimitive x : c) {
+        for (OsmPrimitive x : c) {
             // only highlight primitives that will change the selection
             // when clicked. I.e. don't highlight selected elements unless
             // we are in toggle mode.
-            if(isToggleMode || !x.isSelected()) {
+            if (isToggleMode || !x.isSelected()) {
                 newHighlights.add(x);
             }
         }
@@ -292,17 +294,17 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
         String c = "rect";
         switch(mode) {
         case MOVE:
-            if(virtualManager.hasVirtualNode()) {
+            if (virtualManager.hasVirtualNode()) {
                 c = "virtual_node";
                 break;
             }
             final Iterator<OsmPrimitive> it = nearbyStuff.iterator();
             final OsmPrimitive osm = it.hasNext() ? it.next() : null;
 
-            if(dragInProgress()) {
+            if (dragInProgress()) {
                 // only consider merge if ctrl is pressed and there are nodes in
                 // the selection that could be merged
-                if(!ctrl || getCurrentDataSet().getSelectedNodes().isEmpty()) {
+                if (!ctrl || getCurrentDataSet().getSelectedNodes().isEmpty()) {
                     c = "move";
                     break;
                 }
@@ -315,9 +317,9 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
 
             c = (osm instanceof Node) ? "node" : c;
             c = (osm instanceof Way) ? "way" : c;
-            if(shift) {
+            if (shift) {
                 c += "_add";
-            } else if(ctrl) {
+            } else if (ctrl) {
                 c += osm == null || osm.isSelected() ? "_rm" : "_add";
             }
             break;
@@ -345,14 +347,14 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
     private boolean removeHighlighting() {
         boolean needsRepaint = false;
         DataSet ds = getCurrentDataSet();
-        if(ds != null && !ds.getHighlightedVirtualNodes().isEmpty()) {
+        if (ds != null && !ds.getHighlightedVirtualNodes().isEmpty()) {
             needsRepaint = true;
             ds.clearHighlightedVirtualNodes();
         }
-        if(oldHighlights.isEmpty())
+        if (oldHighlights.isEmpty())
             return needsRepaint;
 
-        for(OsmPrimitive prim : oldHighlights) {
+        for (OsmPrimitive prim : oldHighlights) {
             prim.setHighlighted(false);
         }
         oldHighlights = new HashSet<>();
@@ -360,19 +362,19 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
     }
 
     private boolean repaintIfRequired(Set<OsmPrimitive> newHighlights) {
-        if(!drawTargetHighlight)
+        if (!drawTargetHighlight)
             return false;
 
         boolean needsRepaint = false;
-        for(OsmPrimitive x : newHighlights) {
-            if(oldHighlights.contains(x)) {
+        for (OsmPrimitive x : newHighlights) {
+            if (oldHighlights.contains(x)) {
                 continue;
             }
             needsRepaint = true;
             x.setHighlighted(true);
         }
         oldHighlights.removeAll(newHighlights);
-        for(OsmPrimitive x : oldHighlights) {
+        for (OsmPrimitive x : oldHighlights) {
             x.setHighlighted(false);
             needsRepaint = true;
         }
@@ -411,13 +413,13 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
         initialMoveThresholdExceeded = false;
         mouseDownTime = System.currentTimeMillis();
         lastMousePos = e.getPoint();
-        startEN = mv.getEastNorth(lastMousePos.x,lastMousePos.y);
+        startEN = mv.getEastNorth(lastMousePos.x, lastMousePos.y);
 
         // primitives under cursor are stored in c collection
 
         OsmPrimitive nearestPrimitive = mv.getNearestNodeOrWay(e.getPoint(), mv.isSelectablePredicate, true);
 
-        determineMapMode(nearestPrimitive!=null);
+        determineMapMode(nearestPrimitive != null);
 
         switch(mode) {
         case ROTATE:
@@ -472,7 +474,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
             return;
         }
         oldEvent = e;
-        if(giveUserFeedback(e)) {
+        if (giveUserFeedback(e)) {
             mv.repaint();
         }
     }
@@ -519,7 +521,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
             final boolean canMerge = ctrl && !getCurrentDataSet().getSelectedNodes().isEmpty();
             final OsmPrimitive p = canMerge ? findNodeToMergeTo(e.getPoint()) : null;
             boolean needsRepaint = removeHighlighting();
-            if(p != null) {
+            if (p != null) {
                 p.setHighlighted(true);
                 oldHighlights.add(p);
                 needsRepaint = true;
@@ -528,7 +530,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
             // also update the stored mouse event, so we can display the correct cursor
             // when dragging a node onto another one and then press CTRL to merge
             oldEvent = e;
-            if(needsRepaint) {
+            if (needsRepaint) {
                 mv.repaint();
             }
         }
@@ -537,7 +539,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
             startingDraggingPos = new Point(e.getX(), e.getY());
         }
 
-        if( lastMousePos == null ) {
+        if (lastMousePos == null) {
             lastMousePos = e.getPoint();
             return;
         }
@@ -569,7 +571,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
 
     @Override
     public void mouseExited(MouseEvent e) {
-        if(removeHighlighting()) {
+        if (removeHighlighting()) {
             mv.repaint();
         }
     }
@@ -632,7 +634,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
         // the highlights don't depend on the cursor position there. If something was
         // selected beforehand this would put us into move mode as well, which breaks
         // the cycling through primitives on top of each other (see #6739).
-        if(e.getButton() == MouseEvent.BUTTON2) {
+        if (e.getButton() == MouseEvent.BUTTON2) {
             removeHighlighting();
         } else {
             giveUserFeedback(e);
@@ -650,6 +652,9 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
     public void doKeyPressed(KeyEvent e) {
         if (!Main.isDisplayingMapView() ||
                 !repeatedKeySwitchLassoOption || !getShortcut().isEvent(e)) return;
+        if (Main.isDebugEnabled()) {
+            Main.debug(getClass().getName()+" consuming event "+e);
+        }
         e.consume();
         if (!lassoMode) {
             Main.map.selectMapMode(Main.map.mapModeSelectLasso);
@@ -666,7 +671,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
      * sets the mapmode according to key modifiers and if there are any
      * selectables nearby. Everything has to be pre-determined for this
      * function; its main purpose is to centralize what the modifiers do.
-     * @param hasSelectionNearby
+     * @param hasSelectionNearby {@code true} if some primitves are selectable nearby
      */
     private void determineMapMode(boolean hasSelectionNearby) {
         if (shift && ctrl) {
@@ -684,7 +689,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
      * thresholds have been exceeded) and is still in progress (i.e. mouse button
      * still pressed)
      */
-    private final boolean dragInProgress() {
+    private boolean dragInProgress() {
         return didMouseDrag && startingDraggingPos != null;
     }
 
@@ -825,10 +830,9 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
             ed.setButtonIcons(new String[]{"reorder", "cancel"});
             ed.setContent(
                     /* for correct i18n of plural forms - see #9110 */
-                    trn(
-                            "You moved more than {0} element. " + "Moving a large number of elements is often an error.\n" + "Really move them?",
-                            "You moved more than {0} elements. " + "Moving a large number of elements is often an error.\n" + "Really move them?",
-                            max, max));
+                    trn("You moved more than {0} element. " + "Moving a large number of elements is often an error.\n" + "Really move them?",
+                        "You moved more than {0} elements. " + "Moving a large number of elements is often an error.\n" + "Really move them?",
+                        max, max));
             ed.setCancelButton(2);
             ed.toggleEnable("movedManyElements");
             ed.showDialog();
@@ -849,7 +853,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
      * key is pressed. If there is no such node, no action will be done and no error will be
      * reported. If there is, it will execute the merge and add it to the undo buffer.
      */
-    private final void mergePrims(Point p) {
+    private void mergePrims(Point p) {
         Collection<Node> selNodes = getCurrentDataSet().getSelectedNodes();
         if (selNodes.isEmpty())
             return;
@@ -897,7 +901,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
      * Tries to find a node to merge to when in move-merge mode for the current mouse
      * position. Either returns the node or null, if no suitable one is nearby.
      */
-    private final Node findNodeToMergeTo(Point p) {
+    private Node findNodeToMergeTo(Point p) {
         Collection<Node> target = mv.getNearestNodes(p,
                 getCurrentDataSet().getSelectedNodes(),
                 mv.isSelectablePredicate);
@@ -954,7 +958,7 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
             if (mode == Mode.SELECT)
                 return tr("Release the mouse button to select the objects in the rectangle.");
             else if (mode == Mode.MOVE && (System.currentTimeMillis() - mouseDownTime >= initialMoveDelay)) {
-                final boolean canMerge = getCurrentDataSet()!=null && !getCurrentDataSet().getSelectedNodes().isEmpty();
+                final boolean canMerge = getCurrentDataSet() != null && !getCurrentDataSet().getSelectedNodes().isEmpty();
                 final String mergeHelp = canMerge ? " " + tr("Ctrl to merge with nearest node.") : "";
                 return tr("Release the mouse button to stop moving.") + mergeHelp;
             } else if (mode == Mode.ROTATE)
@@ -962,7 +966,8 @@ public class SelectAction extends MapMode implements ModifierListener, KeyPressR
             else if (mode == Mode.SCALE)
                 return tr("Release the mouse button to stop scaling.");
         }
-        return tr("Move objects by dragging; Shift to add to selection (Ctrl to toggle); Shift-Ctrl to rotate selected; Alt-Ctrl to scale selected; or change selection");
+        return tr("Move objects by dragging; Shift to add to selection (Ctrl to toggle); Shift-Ctrl to rotate selected; " +
+                  "Alt-Ctrl to scale selected; or change selection");
     }
 
     @Override

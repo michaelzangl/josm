@@ -21,7 +21,7 @@ import org.openstreetmap.josm.Main;
  * <li>adds an optional "hint" displayed when no text has been entered</li>
  * <li>disables the global advanced key press detector when focused</li>
  * <li>implements a workaround to <a href="https://bugs.openjdk.java.net/browse/JDK-6322854">JDK bug 6322854</a></li>
- * <br>This class must be used everywhere in core and plugins instead of {@code JTextField}.
+ * </ul><br>This class must be used everywhere in core and plugins instead of {@code JTextField}.
  * @since 5886
  */
 public class JosmTextField extends JTextField implements FocusListener {
@@ -150,7 +150,7 @@ public class JosmTextField extends JTextField implements FocusListener {
         if (hint != null && !hint.isEmpty() && getText().isEmpty() && !isFocusOwner()) {
             // Taken from http://stackoverflow.com/a/24571681/2257172
             int h = getHeight();
-            ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
             Insets ins = getInsets();
             FontMetrics fm = g.getFontMetrics();
             int c0 = getBackground().getRGB();

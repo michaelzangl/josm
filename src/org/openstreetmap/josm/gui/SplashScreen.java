@@ -4,6 +4,7 @@ package org.openstreetmap.josm.gui;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -11,25 +12,34 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.Version;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
-import org.openstreetmap.josm.gui.progress.ProgressRenderer;
-import org.openstreetmap.josm.gui.progress.SwingRenderingProgressMonitor;
+import org.openstreetmap.josm.gui.progress.ProgressTaskId;
 import org.openstreetmap.josm.gui.util.GuiHelper;
+import org.openstreetmap.josm.gui.widgets.JosmEditorPane;
+import org.openstreetmap.josm.tools.GBC;
 import org.openstreetmap.josm.tools.ImageProvider;
+import org.openstreetmap.josm.tools.Predicates;
 import org.openstreetmap.josm.tools.Utils;
 import org.openstreetmap.josm.tools.WindowGeometry;
 
@@ -37,9 +47,10 @@ import org.openstreetmap.josm.tools.WindowGeometry;
  * Show a splash screen so the user knows what is happening during startup.
  * @since 976
  */
-public class SplashScreen extends JFrame {
+public class SplashScreen extends JFrame implements ChangeListener {
 
-    private final transient SwingRenderingProgressMonitor progressMonitor;
+    private final SplashProgressMonitor progressMonitor;
+    private final SplashScreenProgressRenderer progressRenderer;
 
     /**
      * Constructs a new {@code SplashScreen}.
@@ -48,7 +59,7 @@ public class SplashScreen extends JFrame {
         setUndecorated(true);
 
         // Add a nice border to the main splash screen
-        JPanel contentPane = (JPanel)this.getContentPane();
+        JPanel contentPane = (JPanel) this.getContentPane();
         Border margin = new EtchedBorder(1, Color.white, Color.gray);
         contentPane.setBorder(margin);
 
@@ -59,7 +70,7 @@ public class SplashScreen extends JFrame {
         innerContentPane.setLayout(new GridBagLayout());
 
         // Add the logo
-        JLabel logo = new JLabel(new ImageIcon(ImageProvider.get("logo.png").getImage().getScaledInstance(128, 129, Image.SCALE_SMOOTH)));
+        JLabel logo = new JLabel(new ImageIcon(ImageProvider.get("logo.svg").getImage().getScaledInstance(128, 129, Image.SCALE_SMOOTH)));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridheight = 2;
         gbc.insets = new Insets(0, 0, 0, 70);
@@ -89,11 +100,11 @@ public class SplashScreen extends JFrame {
         innerContentPane.add(separator, gbc);
 
         // Add a status message
-        SplashScreenProgressRenderer progressRenderer = new SplashScreenProgressRenderer();
+        progressRenderer = new SplashScreenProgressRenderer();
         gbc.gridy = 3;
         gbc.insets = new Insets(0, 0, 10, 0);
         innerContentPane.add(progressRenderer, gbc);
-        progressMonitor = new SwingRenderingProgressMonitor(progressRenderer);
+        progressMonitor = new SplashProgressMonitor(null, this);
 
         pack();
 
@@ -108,121 +119,277 @@ public class SplashScreen extends JFrame {
         });
     }
 
+    @Override
+    public void stateChanged(ChangeEvent ignore) {
+        GuiHelper.runInEDT(new Runnable() {
+            @Override
+            public void run() {
+                progressRenderer.setTasks(progressMonitor.toString());
+            }
+        });
+    }
+
+    /**
+     * A task (of a {@link ProgressMonitor}).
+     */
+    private abstract static class Task {
+
+        /**
+         * Returns a HTML representation for this task.
+         */
+        public abstract StringBuilder toHtml(StringBuilder sb);
+
+        @Override
+        public final String toString() {
+            return toHtml(new StringBuilder(1024)).toString();
+        }
+    }
+
+    /**
+     * A single task (of a {@link ProgressMonitor}) which keeps track of its execution duration
+     * (requires a call to {@link #finish()}).
+     */
+    private static class MeasurableTask extends Task {
+        private final String name;
+        private final long start;
+        private String duration = "";
+
+        public MeasurableTask(String name) {
+            this.name = name;
+            this.start = System.currentTimeMillis();
+        }
+
+        public void finish() {
+            if (!"".equals(duration)) {
+                throw new IllegalStateException("This tasks has already been finished");
+            }
+            duration = tr(" ({0})", Utils.getDurationString(System.currentTimeMillis() - start));
+        }
+
+        @Override
+        public StringBuilder toHtml(StringBuilder sb) {
+            return sb.append(name).append("<i style='color: #666666;'>").append(duration).append("</i>");
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            MeasurableTask that = (MeasurableTask) o;
+            return Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(name);
+        }
+    }
+
+    /**
+     * A {@link ProgressMonitor} which stores the (sub)tasks in a tree.
+     */
+    public static class SplashProgressMonitor extends Task implements ProgressMonitor {
+
+        private final String name;
+        private final ChangeListener listener;
+        private final List<Task> tasks = new CopyOnWriteArrayList<>();
+        private SplashProgressMonitor latestSubtask;
+
+        public SplashProgressMonitor(String name, ChangeListener listener) {
+            this.name = name;
+            this.listener = listener;
+        }
+
+        @Override
+        public StringBuilder toHtml(StringBuilder sb) {
+            sb.append(Utils.firstNonNull(name, ""));
+            if (!tasks.isEmpty()) {
+                sb.append("<ul>");
+                for (Task i : tasks) {
+                    sb.append("<li>");
+                    i.toHtml(sb);
+                    sb.append("</li>");
+                }
+                sb.append("</ul>");
+            }
+            return sb;
+        }
+
+        @Override
+        public void beginTask(String title) {
+            if (title != null) {
+                final MeasurableTask task = new MeasurableTask(title);
+                tasks.add(task);
+                listener.stateChanged(null);
+            }
+        }
+
+        @Override
+        public void beginTask(String title, int ticks) {
+            this.beginTask(title);
+        }
+
+        @Override
+        public void setCustomText(String text) {
+            this.beginTask(text);
+        }
+
+        @Override
+        public void setExtraText(String text) {
+            this.beginTask(text);
+        }
+
+        @Override
+        public void indeterminateSubTask(String title) {
+            this.subTask(title);
+        }
+
+        @Override
+        public void subTask(String title) {
+            latestSubtask = new SplashProgressMonitor(title, listener);
+            tasks.add(latestSubtask);
+            listener.stateChanged(null);
+        }
+
+        @Override
+        public ProgressMonitor createSubTaskMonitor(int ticks, boolean internal) {
+            return latestSubtask;
+        }
+
+        /**
+         * @deprecated Use {@link #finishTask(String)} instead.
+         */
+        @Override
+        @Deprecated
+        public void finishTask() {
+            // Not used
+        }
+
+        /**
+         * Displays the given task as finished.
+         * @param title the task title
+         */
+        public void finishTask(String title) {
+            final Task task = Utils.find(tasks, Predicates.<Task>equalTo(new MeasurableTask(title)));
+            if (task instanceof MeasurableTask) {
+                ((MeasurableTask) task).finish();
+                Main.debug(tr("{0} completed in {1}", title, ((MeasurableTask) task).duration));
+                listener.stateChanged(null);
+            }
+        }
+
+        @Override
+        public void invalidate() {
+            // Not used
+        }
+
+        @Override
+        public void setTicksCount(int ticks) {
+            // Not used
+        }
+
+        @Override
+        public int getTicksCount() {
+            return 0;
+        }
+
+        @Override
+        public void setTicks(int ticks) {
+        }
+
+        @Override
+        public int getTicks() {
+            return 0;
+        }
+
+        @Override
+        public void worked(int ticks) {
+            // Not used
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return false;
+        }
+
+        @Override
+        public void cancel() {
+            // Not used
+        }
+
+        @Override
+        public void addCancelListener(CancelListener listener) {
+            // Not used
+        }
+
+        @Override
+        public void removeCancelListener(CancelListener listener) {
+            // Not used
+        }
+
+        @Override
+        public void appendLogMessage(String message) {
+            // Not used
+        }
+
+        @Override
+        public void setProgressTaskId(ProgressTaskId taskId) {
+            // Not used
+        }
+
+        @Override
+        public ProgressTaskId getProgressTaskId() {
+            return null;
+        }
+
+        @Override
+        public Component getWindowParent() {
+            return Main.parent;
+        }
+    }
+
     /**
      * Returns the progress monitor.
      * @return The progress monitor
      */
-    public ProgressMonitor getProgressMonitor() {
+    public SplashProgressMonitor getProgressMonitor() {
         return progressMonitor;
     }
 
-    private static class SplashScreenProgressRenderer extends JPanel implements ProgressRenderer {
-        private JLabel lblTaskTitle;
-        private JLabel lblCustomText;
-        private JProgressBar progressBar;
+    private static class SplashScreenProgressRenderer extends JPanel {
+        private final JosmEditorPane lblTaskTitle = new JosmEditorPane();
+        private final JProgressBar progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
+        private static final String LABEL_HTML = "<html>"
+                + "<style>ul {margin-top: 0; margin-bottom: 0; padding: 0;} li {margin: 0; padding: 0;}</style>";
 
         protected void build() {
             setLayout(new GridBagLayout());
-            GridBagConstraints gc = new GridBagConstraints();
-            gc.gridx = 0;
-            gc.gridy = 0;
-            gc.fill = GridBagConstraints.HORIZONTAL;
-            gc.weightx = 1.0;
-            gc.weighty = 0.0;
-            gc.insets = new Insets(5,0,0,0);
-            add(lblTaskTitle = new JLabel(" "), gc);
 
-            gc.gridx = 0;
-            gc.gridy = 1;
-            gc.fill = GridBagConstraints.HORIZONTAL;
-            gc.weightx = 1.0;
-            gc.weighty = 0.0;
-            gc.insets = new Insets(5,0,0,0);
-            add(lblCustomText = new JLabel(" ") {
-                @Override
-                public Dimension getPreferredSize() {
-                    Dimension d = super.getPreferredSize();
-                    if(d.width < 600) d.width = 600;
-                    d.height *= MAX_NUMBER_OF_MESSAGES;
-                    return d;
-                }
-            }, gc);
+            JosmEditorPane.makeJLabelLike(lblTaskTitle, false);
+            lblTaskTitle.setText(LABEL_HTML);
+            final JScrollPane scrollPane = new JScrollPane(lblTaskTitle,
+                    ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+            scrollPane.setPreferredSize(new Dimension(0, 320));
+            scrollPane.setBorder(BorderFactory.createEmptyBorder());
+            add(scrollPane, GBC.eol().insets(5, 5, 0, 0).fill(GridBagConstraints.HORIZONTAL));
 
-            gc.gridx = 0;
-            gc.gridy = 2;
-            gc.fill = GridBagConstraints.HORIZONTAL;
-            gc.weightx = 1.0;
-            gc.weighty = 0.0;
-            gc.insets = new Insets(5,0,0,0);
-            add(progressBar = new JProgressBar(JProgressBar.HORIZONTAL), gc);
+            progressBar.setIndeterminate(true);
+            add(progressBar, GBC.eol().insets(5, 15, 0, 0).fill(GridBagConstraints.HORIZONTAL));
         }
 
+        /**
+         * Constructs a new {@code SplashScreenProgressRenderer}.
+         */
         public SplashScreenProgressRenderer() {
             build();
         }
 
-        @Override
-        public void setCustomText(String message) {
-            if(message.isEmpty())
-                message = " "; // prevent killing of additional line
-            lblCustomText.setText(message);
-            repaint();
-        }
-
-        @Override
-        public void setIndeterminate(boolean indeterminate) {
-            progressBar.setIndeterminate(indeterminate);
-            repaint();
-        }
-
-        @Override
-        public void setMaximum(int maximum) {
-            progressBar.setMaximum(maximum);
-            repaint();
-        }
-
-        private static final int MAX_NUMBER_OF_MESSAGES = 3;
-        private LinkedList<String> messages = new LinkedList<>(Arrays.asList("", "", "")); //update when changing MAX_NUMBER_OF_MESSAGES
-        private long time = System.currentTimeMillis();
-
         /**
-         * Stores and displays the {@code MAX_NUMBER_OF_MESSAGES} most recent
-         * task titles together with their execution time.
+         * Sets the tasks to displayed. A HTML formatted list is expected.
          */
-        @Override
-        public void setTaskTitle(String taskTitle) {
-
-            while (messages.size() >= MAX_NUMBER_OF_MESSAGES) {
-                messages.removeFirst();
-            }
-            long now = System.currentTimeMillis();
-            String prevMessageTitle = messages.getLast();
-            // now should always be >= time but if can be inferior sometimes, see #10287
-            if (!prevMessageTitle.isEmpty() && now >= time) {
-                messages.removeLast();
-                messages.add(tr("{0} ({1})", prevMessageTitle, Utils.getDurationString(now - time)));
-            }
-            time = now;
-            if (!taskTitle.isEmpty()) {
-                messages.add(taskTitle);
-            }
-            StringBuilder html = new StringBuilder();
-            int i = 0;
-            for (String m : messages) {
-                html.append("<p class=\"entry").append(++i).append("\">").append(m).append("</p>");
-            }
-
-            lblTaskTitle.setText("<html><style>"
-                    + ".entry1{color:#CCCCCC;}"
-                    + ".entry2{color:#999999;}"
-                    + ".entry3{color:#000000;}</style>" + html + "</html>");  //update when changing MAX_NUMBER_OF_MESSAGES
-            repaint();
-        }
-
-        @Override
-        public void setValue(int value) {
-            progressBar.setValue(value);
-            repaint();
+        public void setTasks(String tasks) {
+            lblTaskTitle.setText(LABEL_HTML + tasks);
+            lblTaskTitle.setCaretPosition(lblTaskTitle.getDocument().getLength());
         }
     }
 }

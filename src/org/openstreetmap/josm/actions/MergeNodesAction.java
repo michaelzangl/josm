@@ -197,7 +197,7 @@ public class MergeNodesAction extends JosmAction {
         for (Way w: OsmPrimitive.getFilteredList(OsmPrimitive.getReferrer(nodesToDelete), Way.class)) {
             List<Node> newNodes = new ArrayList<>(w.getNodesCount());
             for (Node n: w.getNodes()) {
-                if (! nodesToDelete.contains(n) && !n.equals(targetNode)) {
+                if (!nodesToDelete.contains(n) && !n.equals(targetNode)) {
                     newNodes.add(n);
                 } else if (newNodes.isEmpty()) {
                     newNodes.add(targetNode);
@@ -205,9 +205,8 @@ public class MergeNodesAction extends JosmAction {
                     // make sure we collapse a sequence of deleted nodes
                     // to exactly one occurrence of the merged target node
                     newNodes.add(targetNode);
-                } else {
-                    // drop the node
                 }
+                // else: drop the node
             }
             if (newNodes.size() < 2) {
                 if (w.getReferrers().isEmpty()) {
@@ -235,7 +234,7 @@ public class MergeNodesAction extends JosmAction {
                     );
                     return null;
                 }
-            } else if(newNodes.size() < 2 && w.getReferrers().isEmpty()) {
+            } else if (newNodes.size() < 2 && w.getReferrers().isEmpty()) {
                 waysToDelete.add(w);
             } else {
                 cmds.add(new ChangeNodesCommand(w, newNodes));

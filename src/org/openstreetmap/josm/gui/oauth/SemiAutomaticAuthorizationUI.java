@@ -52,7 +52,7 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
      */
     protected final void build() {
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         pnlRetrieveRequestToken = new RetrieveRequestTokenPanel();
         pnlRetrieveAccessToken = new RetrieveAccessTokenPanel();
         pnlShowAccessToken = new ShowAccessTokenPanel();
@@ -112,7 +112,6 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
      * This is the panel displayed in the first step of the semi-automatic authorisation process.
      */
     private class RetrieveRequestTokenPanel extends JPanel {
-        private JCheckBox cbShowAdvancedParameters;
 
         /**
          * Constructs a new {@code RetrieveRequestTokenPanel}.
@@ -123,13 +122,14 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
 
         protected JPanel buildAdvancedParametersPanel() {
             JPanel pnl = new JPanel(new GridBagLayout());
-            GridBagConstraints gc= new GridBagConstraints();
+            GridBagConstraints gc = new GridBagConstraints();
 
             gc.anchor = GridBagConstraints.NORTHWEST;
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
-            gc.insets = new Insets(0,0,0,3);
-            pnl.add(cbShowAdvancedParameters = new JCheckBox(), gc);
+            gc.insets = new Insets(0, 0, 0, 3);
+            JCheckBox cbShowAdvancedParameters = new JCheckBox();
+            pnl.add(cbShowAdvancedParameters, gc);
             cbShowAdvancedParameters.setSelected(false);
             cbShowAdvancedParameters.addItemListener(
                     new ItemListener() {
@@ -148,7 +148,7 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
 
             gc.gridy = 1;
             gc.gridx = 1;
-            gc.insets = new Insets(3,0,3,0);
+            gc.insets = new Insets(3, 0, 3, 0);
             gc.fill = GridBagConstraints.BOTH;
             gc.weightx = 1.0;
             gc.weighty = 1.0;
@@ -156,7 +156,7 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
             getAdvancedPropertiesPanel().setBorder(
                     BorderFactory.createCompoundBorder(
                             BorderFactory.createLineBorder(Color.GRAY, 1),
-                            BorderFactory.createEmptyBorder(3,3,3,3)
+                            BorderFactory.createEmptyBorder(3, 3, 3, 3)
                     )
             );
             getAdvancedPropertiesPanel().setVisible(false);
@@ -165,13 +165,13 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
 
         protected JPanel buildCommandPanel() {
             JPanel pnl = new JPanel(new GridBagLayout());
-            GridBagConstraints gc= new GridBagConstraints();
+            GridBagConstraints gc = new GridBagConstraints();
 
             gc.anchor = GridBagConstraints.NORTHWEST;
             gc.fill = GridBagConstraints.BOTH;
             gc.weightx = 1.0;
             gc.weighty = 1.0;
-            gc.insets = new Insets(0,0,0,3);
+            gc.insets = new Insets(0, 0, 0, 3);
 
 
             HtmlPanel h = new HtmlPanel();
@@ -192,8 +192,9 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
             return pnl;
 
         }
+
         protected final void build() {
-            setLayout(new BorderLayout(0,5));
+            setLayout(new BorderLayout(0, 5));
             JLabel lbl = new JLabel(tr("<html>Step 1/3: Retrieve an OAuth Request Token</html>"));
             lbl.setFont(lbl.getFont().deriveFont(16f));
             add(lbl, BorderLayout.NORTH);
@@ -228,7 +229,7 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
             JPanel pnl = new JPanel(new GridBagLayout());
             GridBagConstraints gc = new GridBagConstraints();
 
-            gc.anchor= GridBagConstraints.NORTHWEST;
+            gc.anchor = GridBagConstraints.NORTHWEST;
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
             gc.gridwidth = 2;
@@ -319,7 +320,7 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
             JPanel pnl = new JPanel(new GridBagLayout());
             GridBagConstraints gc = new GridBagConstraints();
 
-            gc.anchor= GridBagConstraints.NORTHWEST;
+            gc.anchor = GridBagConstraints.NORTHWEST;
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
             HtmlPanel html = new HtmlPanel();
@@ -384,7 +385,7 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
 
         public RetrieveRequestTokenAction() {
             putValue(NAME, tr("Retrieve Request Token"));
-            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth"));
+            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth-small"));
             putValue(SHORT_DESCRIPTION, tr("Click to retrieve a Request Token"));
         }
 
@@ -420,7 +421,7 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
 
         public RetrieveAccessTokenAction() {
             putValue(NAME, tr("Retrieve Access Token"));
-            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth"));
+            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth-small"));
             putValue(SHORT_DESCRIPTION, tr("Click to retrieve an Access Token"));
         }
 
@@ -457,7 +458,7 @@ public class SemiAutomaticAuthorizationUI extends AbstractAuthorizationUI {
 
         public TestAccessTokenAction() {
             putValue(NAME, tr("Test Access Token"));
-            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth"));
+            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth-small"));
             putValue(SHORT_DESCRIPTION, tr("Click to test the Access Token"));
         }
 

@@ -20,7 +20,7 @@ import org.openstreetmap.josm.tools.CheckParameterUtil;
  * The model for merging two lists of relation members
  *
  */
-public class RelationMemberListMergeModel extends ListMergeModel<RelationMember>{
+public class RelationMemberListMergeModel extends ListMergeModel<RelationMember> {
 
     @Override
     public boolean isEqualEntry(RelationMember e1, RelationMember e2) {
@@ -47,9 +47,9 @@ public class RelationMemberListMergeModel extends ListMergeModel<RelationMember>
     protected void setValueAt(DefaultTableModel model, Object value, int row, int col) {
         if (model == getMergedTableModel() && col == 1) {
             RelationMember memberOld = getMergedEntries().get(row);
-            RelationMember memberNew = new RelationMember((String)value,memberOld.getMember());
+            RelationMember memberNew = new RelationMember((String) value, memberOld.getMember());
             getMergedEntries().remove(row);
-            getMergedEntries().add(row,memberNew);
+            getMergedEntries().add(row, memberNew);
             fireModelDataChanged();
         }
     }
@@ -108,7 +108,7 @@ public class RelationMemberListMergeModel extends ListMergeModel<RelationMember>
     public RelationMemberConflictResolverCommand buildResolveCommand(Relation my, Relation their) {
         CheckParameterUtil.ensureParameterNotNull(my, "my");
         CheckParameterUtil.ensureParameterNotNull(their, "their");
-        if (! isFrozen())
+        if (!isFrozen())
             throw new IllegalArgumentException(tr("Merged nodes not frozen yet. Cannot build resolution command"));
         List<RelationMember> entries = getMergedEntries();
         return new RelationMemberConflictResolverCommand(my, their, entries);

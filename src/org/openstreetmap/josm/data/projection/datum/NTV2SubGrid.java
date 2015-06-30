@@ -68,7 +68,7 @@ public class NTV2SubGrid implements Cloneable, Serializable {
      * @param in GridShiftFile InputStream
      * @param bigEndian is the file bigEndian?
      * @param loadAccuracy is the node Accuracy data to be loaded?
-     * @throws IOException
+     * @throws IOException if any I/O error occurs
      */
     public NTV2SubGrid(InputStream in, boolean bigEndian, boolean loadAccuracy) throws IOException {
         byte[] b8 = new byte[8];
@@ -104,8 +104,8 @@ public class NTV2SubGrid implements Cloneable, Serializable {
         readBytes(in, b8);
         readBytes(in, b8);
         lonInterval = NTV2Util.getDouble(b8, bigEndian);
-        lonColumnCount = 1 + (int)((maxLon - minLon) / lonInterval);
-        latRowCount = 1 + (int)((maxLat - minLat) / latInterval);
+        lonColumnCount = 1 + (int) ((maxLon - minLon) / lonInterval);
+        latRowCount = 1 + (int) ((maxLat - minLat) / latInterval);
         readBytes(in, b8);
         readBytes(in, b8);
         nodeCount = NTV2Util.getInt(b8, bigEndian);
@@ -120,8 +120,7 @@ public class NTV2SubGrid implements Cloneable, Serializable {
 
         for (int i = 0; i < nodeCount; i++) {
             // Read the grid file byte after byte. This is a workaround about a bug in
-            // certain VM which are not able to read byte blocks when the resource file is
-            // in a .jar file (Pieren)
+            // certain VM which are not able to read byte blocks when the resource file is in a .jar file (Pieren)
             readBytes(in, b1); b4[0] = b1[0];
             readBytes(in, b1); b4[1] = b1[0];
             readBytes(in, b1); b4[2] = b1[0];
@@ -209,9 +208,9 @@ public class NTV2SubGrid implements Cloneable, Serializable {
      * @param y Latitude factor
      * @return interpolated value
      */
-    private final double interpolate(float a, float b, float c, float d, double x, double y) {
-        return a + (((double)b - (double)a) * x) + (((double)c - (double)a) * y) +
-        (((double)a + (double)d - b - c) * x * y);
+    private double interpolate(float a, float b, float c, float d, double x, double y) {
+        return a + (((double) b - (double) a) * x) + (((double) c - (double) a) * y) +
+        (((double) a + (double) d - b - c) * x * y);
     }
 
     /**
@@ -224,8 +223,8 @@ public class NTV2SubGrid implements Cloneable, Serializable {
      * @param gs GridShift object containing the coordinate to shift and the shift values
      */
     public void interpolateGridShift(NTV2GridShift gs) {
-        int lonIndex = (int)((gs.getLonPositiveWestSeconds() - minLon) / lonInterval);
-        int latIndex = (int)((gs.getLatSeconds() - minLat) / latInterval);
+        int lonIndex = (int) ((gs.getLonPositiveWestSeconds() - minLon) / lonInterval);
+        int latIndex = (int) ((gs.getLatSeconds() - minLat) / latInterval);
 
         double x = (gs.getLonPositiveWestSeconds() - (minLon + (lonInterval * lonIndex))) / lonInterval;
         double y = (gs.getLatSeconds() - (minLat + (latInterval * latIndex))) / latInterval;
@@ -282,7 +281,7 @@ public class NTV2SubGrid implements Cloneable, Serializable {
 
     /**
      * Set an array of Sub Grids of this sub grid
-     * @param subGrid
+     * @param subGrid subgrids
      */
     public void setSubGridArray(NTV2SubGrid[] subGrid) {
         this.subGrid = Utils.copyArray(subGrid);
@@ -330,12 +329,12 @@ public class NTV2SubGrid implements Cloneable, Serializable {
     public Object clone() {
         NTV2SubGrid clone = null;
         try {
-            clone = (NTV2SubGrid)super.clone();
+            clone = (NTV2SubGrid) super.clone();
             // Do a deep clone of the sub grids
             if (subGrid != null) {
                 clone.subGrid = new NTV2SubGrid[subGrid.length];
                 for (int i = 0; i < subGrid.length; i++) {
-                    clone.subGrid[i] = (NTV2SubGrid)subGrid[i].clone();
+                    clone.subGrid[i] = (NTV2SubGrid) subGrid[i].clone();
                 }
             }
         } catch (CloneNotSupportedException cnse) {
@@ -343,6 +342,7 @@ public class NTV2SubGrid implements Cloneable, Serializable {
         }
         return clone;
     }
+
     /**
      * Get maximum latitude value
      * @return maximum latitude

@@ -35,6 +35,7 @@ import org.openstreetmap.josm.gui.mappaint.mapcss.Selector.LinkSelector;
 import org.openstreetmap.josm.gui.mappaint.mapcss.Subpart;
 import org.openstreetmap.josm.tools.ColorHelper;
 import org.openstreetmap.josm.tools.Pair;
+import org.openstreetmap.josm.tools.Utils;
 
 /**
  * MapCSS parser.
@@ -85,7 +86,7 @@ public class MapCSSParser {
         SimpleCharStream scs;
         try {
             scs = new SimpleCharStream(in, encoding, 1, 1);
-        } catch(java.io.UnsupportedEncodingException e) {
+        } catch (java.io.UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
         return new MapCSSParserTokenManager(scs, initState.idx);
@@ -154,7 +155,7 @@ TOKEN:
 |   < UINT: ["1"-"9"] ( ["0"-"9"] )* >
 |   < STRING: "\"" ( [" ","!","#"-"[","]"-"~","\u0080"-"\uFFFF"] | "\\\"" | "\\\\" )*  "\"" >
 |   < #PREDEFINED: "\\" ["d","D","s","S","w","W","b","B","A","G","Z","z"] >
-|   < #REGEX_CHAR_WITHOUT_STAR: [" "-")","+"-".","0"-"[","]"-"~","\u0080"-"\uFFFF"] | "\\/" | "\\\\" | "\\[" | "\\]" | "\\+" | "\\." | "\\'" | "\\\"" |  "\\(" | "\\)" |<PREDEFINED> >
+|   < #REGEX_CHAR_WITHOUT_STAR: [" "-")","+"-".","0"-"[","]"-"~","\u0080"-"\uFFFF"] | "\\/" | "\\\\" | "\\[" | "\\]" | "\\+" | "\\." | "\\'" | "\\\"" |  "\\(" | "\\)" | "\\{" | "\\}" | "\\?" | "\\*" | "\\^" | "\\$" |<PREDEFINED> >
 |   < REGEX: "/" <REGEX_CHAR_WITHOUT_STAR> ( <REGEX_CHAR_WITHOUT_STAR> | "*" )*  "/" >
 |   < LBRACE: "{" >
 |   < RBRACE: "}" >
@@ -589,6 +590,7 @@ void sheet(MapCSSStyleSource sheet):
         try {
             rule() w()
         } catch (MapCSSException mex) {
+            Main.error(mex);
             error_skipto(RBRACE, mex);
             w();
         } catch (ParseException ex) {
@@ -1144,8 +1146,9 @@ void error_skipto(int kind, MapCSSException me) {
     ParseException pe = generateParseException();
 
     if (me != null) {
-        me.setLine(pe.currentToken.next.beginLine);
-        me.setColumn(pe.currentToken.next.beginColumn);
+        final Token token = Utils.firstNonNull(pe.currentToken.next, pe.currentToken);
+        me.setLine(token.beginLine);
+        me.setColumn(token.beginColumn);
         e = me;
     } else {
         e = new ParseException(pe.getMessage()); // prevent memory leak

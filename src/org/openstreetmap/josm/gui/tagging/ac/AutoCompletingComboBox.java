@@ -45,7 +45,7 @@ public class AutoCompletingComboBox extends JosmComboBox<AutoCompletionListItem>
      * Inspired by <a href="http://www.orbital-computer.de/JComboBox">Thomas Bierhance example</a>.
      */
     class AutoCompletingComboBoxDocument extends PlainDocument {
-        private JosmComboBox<AutoCompletionListItem> comboBox;
+        private final JosmComboBox<AutoCompletionListItem> comboBox;
         private boolean selecting = false;
 
         /**
@@ -87,8 +87,7 @@ public class AutoCompletingComboBox extends JosmComboBox<AutoCompletionListItem>
 
             // if the current offset isn't at the end of the document we don't autocomplete.
             // If a highlighted autocompleted suffix was present and we get here Swing has
-            // already removed it from the document. getLength() therefore doesn't include the
-            // autocompleted suffix.
+            // already removed it from the document. getLength() therefore doesn't include the autocompleted suffix.
             if (offs + str.length() < getLength()) {
                 return;
             }
@@ -104,12 +103,11 @@ public class AutoCompletingComboBox extends JosmComboBox<AutoCompletionListItem>
             if (Main.pref.getBoolean("autocomplete.dont_complete_numbers", true)) {
                 try {
                     Long.parseLong(str);
-                    if (curText.length() != 0)
+                    if (!curText.isEmpty())
                         Long.parseLong(curText);
                     item = lookupItem(curText, true);
                 } catch (NumberFormatException e) {
-                    // either the new text or the current text isn't a number. We continue with
-                    // autocompletion
+                    // either the new text or the current text isn't a number. We continue with autocompletion
                     item = lookupItem(curText, false);
                 }
             } else {
@@ -131,7 +129,7 @@ public class AutoCompletingComboBox extends JosmComboBox<AutoCompletionListItem>
                     end = getLength();
                 }
             }
-            JTextComponent editorComponent = (JTextComponent)comboBox.getEditor().getEditorComponent();
+            JTextComponent editorComponent = (JTextComponent) comboBox.getEditor().getEditorComponent();
             // save unix system selection (middle mouse paste)
             Clipboard sysSel = Toolkit.getDefaultToolkit().getSystemSelection();
             if (sysSel != null) {
@@ -191,6 +189,7 @@ public class AutoCompletingComboBox extends JosmComboBox<AutoCompletionListItem>
                             Main.map.keyDetector.setEnabled(true);
                         }
                     }
+
                     @Override
                     public void focusGained(FocusEvent e) {
                         if (Main.map != null) {
@@ -231,7 +230,7 @@ public class AutoCompletingComboBox extends JosmComboBox<AutoCompletionListItem>
         } else if (item instanceof String) {
             cbEditor.setItem(item);
         } else if (item instanceof AutoCompletionListItem) {
-            cbEditor.setItem(((AutoCompletionListItem)item).getValue());
+            cbEditor.setItem(((AutoCompletionListItem) item).getValue());
         } else
             throw new IllegalArgumentException("Unsupported item: "+item);
     }
@@ -249,7 +248,7 @@ public class AutoCompletingComboBox extends JosmComboBox<AutoCompletionListItem>
         } else if (item instanceof String) {
             String s = (String) item;
             // find the string in the model or create a new item
-            for (int i=0; i< getModel().getSize(); i++) {
+            for (int i = 0; i < getModel().getSize(); i++) {
                 AutoCompletionListItem acItem = getModel().getElementAt(i);
                 if (s.equals(acItem.getValue())) {
                     super.setSelectedItem(acItem);
@@ -267,7 +266,7 @@ public class AutoCompletingComboBox extends JosmComboBox<AutoCompletionListItem>
      * @param elems String items
      */
     public void setPossibleItems(Collection<String> elems) {
-        DefaultComboBoxModel<AutoCompletionListItem> model = (DefaultComboBoxModel<AutoCompletionListItem>)this.getModel();
+        DefaultComboBoxModel<AutoCompletionListItem> model = (DefaultComboBoxModel<AutoCompletionListItem>) this.getModel();
         Object oldValue = this.getEditor().getItem(); // Do not use getSelectedItem(); (fix #8013)
         model.removeAllElements();
         for (String elem : elems) {
@@ -284,7 +283,7 @@ public class AutoCompletingComboBox extends JosmComboBox<AutoCompletionListItem>
      * @param elems AutoCompletionListItem items
      */
     public void setPossibleACItems(Collection<AutoCompletionListItem> elems) {
-        DefaultComboBoxModel<AutoCompletionListItem> model = (DefaultComboBoxModel<AutoCompletionListItem>)this.getModel();
+        DefaultComboBoxModel<AutoCompletionListItem> model = (DefaultComboBoxModel<AutoCompletionListItem>) this.getModel();
         Object oldValue = getSelectedItem();
         Object editorOldValue = this.getEditor().getItem();
         model.removeAllElements();
@@ -315,11 +314,23 @@ public class AutoCompletingComboBox extends JosmComboBox<AutoCompletionListItem>
     public void setFixedLocale(boolean f) {
         useFixedLocale = f;
         if (useFixedLocale) {
-            privateInputContext.selectInputMethod(new Locale("en", "US"));
+            Locale oldLocale = privateInputContext.getLocale();
+            Main.info("Using English input method");
+            if (!privateInputContext.selectInputMethod(new Locale("en", "US"))) {
+                // Unable to use English keyboard layout, disable the feature
+                Main.warn("Unable to use English input method");
+                useFixedLocale = false;
+                if (oldLocale != null) {
+                    Main.info("Restoring input method to " + oldLocale);
+                    if (!privateInputContext.selectInputMethod(oldLocale)) {
+                        Main.warn("Unable to restore input method to " + oldLocale);
+                    }
+                }
+            }
         }
     }
 
-    private static InputContext privateInputContext = InputContext.getInstance();
+    private final InputContext privateInputContext = InputContext.getInstance();
 
     @Override
     public InputContext getInputContext() {

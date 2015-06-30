@@ -62,7 +62,7 @@ public class OpeningHourTest extends Test.TagTest {
                         "    var r= new opening_hours(value, nominatimJSON, mode);" +
                         "    r.getErrors = function() {return [];};" +
                         "    return r;" +
-                        "  } catch(err) {" +
+                        "  } catch (err) {" +
                         "    return {" +
                         "      getWarnings: function() {return [];}," +
                         "      getErrors: function() {return [err.toString()]}" +
@@ -191,7 +191,8 @@ public class OpeningHourTest extends Test.TagTest {
      * @param ignoreOtherSeverity whether to ignore errors with {@link Severity#OTHER}.
      * @return a list of {@link TestError} or an empty list
      */
-    public List<OpeningHoursTestError> checkOpeningHourSyntax(final String key, final String value, CheckMode mode, boolean ignoreOtherSeverity) {
+    public List<OpeningHoursTestError> checkOpeningHourSyntax(final String key, final String value, CheckMode mode,
+            boolean ignoreOtherSeverity) {
         if (ENGINE == null || value == null || value.trim().isEmpty()) {
             return Collections.emptyList();
         }

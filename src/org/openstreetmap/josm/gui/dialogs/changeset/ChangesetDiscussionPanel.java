@@ -104,7 +104,7 @@ public class ChangesetDiscussionPanel extends JPanel implements PropertyChangeLi
 
     protected final void build() {
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createEmptyBorder(3,3,3,3));
+        setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
         add(buildActionButtonPanel(), BorderLayout.WEST);
         add(buildDiscussionPanel(), BorderLayout.CENTER);
     }
@@ -154,8 +154,8 @@ public class ChangesetDiscussionPanel extends JPanel implements PropertyChangeLi
     /* ---------------------------------------------------------------------------- */
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (! evt.getPropertyName().equals(ChangesetCacheManagerModel.CHANGESET_IN_DETAIL_VIEW_PROP))
+        if (!evt.getPropertyName().equals(ChangesetCacheManagerModel.CHANGESET_IN_DETAIL_VIEW_PROP))
             return;
-        setCurrentChangeset((Changeset)evt.getNewValue());
+        setCurrentChangeset((Changeset) evt.getNewValue());
     }
 }

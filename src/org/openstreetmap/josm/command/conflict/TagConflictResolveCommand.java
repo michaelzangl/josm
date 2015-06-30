@@ -57,13 +57,16 @@ public class TagConflictResolveCommand extends ConflictResolveCommand {
         switch (OsmPrimitiveType.from(conflict.getMy())) {
             case NODE:
                 /* for correct i18n of plural forms - see #9110 */
-                return trn("Resolve {0} tag conflict in node {1}", "Resolve {0} tag conflicts in node {1}", getNumDecidedConflicts(), getNumDecidedConflicts(), conflict.getMy().getId());
+                return trn("Resolve {0} tag conflict in node {1}", "Resolve {0} tag conflicts in node {1}",
+                        getNumDecidedConflicts(), getNumDecidedConflicts(), conflict.getMy().getId());
             case WAY:
                 /* for correct i18n of plural forms - see #9110 */
-                return trn("Resolve {0} tag conflict in way {1}", "Resolve {0} tag conflicts in way {1}", getNumDecidedConflicts(), getNumDecidedConflicts(), conflict.getMy().getId());
+                return trn("Resolve {0} tag conflict in way {1}", "Resolve {0} tag conflicts in way {1}",
+                        getNumDecidedConflicts(), getNumDecidedConflicts(), conflict.getMy().getId());
             case RELATION:
                 /* for correct i18n of plural forms - see #9110 */
-                return trn("Resolve {0} tag conflict in relation {1}", "Resolve {0} tag conflicts in relation {1}", getNumDecidedConflicts(), getNumDecidedConflicts(), conflict.getMy().getId());
+                return trn("Resolve {0} tag conflict in relation {1}", "Resolve {0} tag conflicts in relation {1}",
+                        getNumDecidedConflicts(), getNumDecidedConflicts(), conflict.getMy().getId());
         }
         return "";
     }
@@ -83,7 +86,7 @@ public class TagConflictResolveCommand extends ConflictResolveCommand {
         // apply the merge decisions to OSM primitive 'my'
         //
         for (TagMergeItem item: mergeItems) {
-            if (! item.getMergeDecision().equals(MergeDecisionType.UNDECIDED)) {
+            if (!item.getMergeDecision().equals(MergeDecisionType.UNDECIDED)) {
                 item.applyToMyPrimitive(conflict.getMy());
             }
         }
@@ -95,5 +98,36 @@ public class TagConflictResolveCommand extends ConflictResolveCommand {
     public void fillModifiedData(Collection<OsmPrimitive> modified, Collection<OsmPrimitive> deleted,
             Collection<OsmPrimitive> added) {
         modified.add(conflict.getMy());
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((conflict == null) ? 0 : conflict.hashCode());
+        result = prime * result + ((mergeItems == null) ? 0 : mergeItems.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        TagConflictResolveCommand other = (TagConflictResolveCommand) obj;
+        if (conflict == null) {
+            if (other.conflict != null)
+                return false;
+        } else if (!conflict.equals(other.conflict))
+            return false;
+        if (mergeItems == null) {
+            if (other.mergeItems != null)
+                return false;
+        } else if (!mergeItems.equals(other.mergeItems))
+            return false;
+        return true;
     }
 }

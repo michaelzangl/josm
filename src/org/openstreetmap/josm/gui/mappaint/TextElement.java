@@ -38,11 +38,11 @@ public class TextElement implements StyleKeys {
      * @param strategy the strategy indicating how the text is composed for a specific {@link OsmPrimitive} to be rendered.
      * If null, no label is rendered.
      * @param font the font to be used. Must not be null.
-     * @param xOffset
-     * @param yOffset
+     * @param xOffset x offset
+     * @param yOffset y offset
      * @param color the color to be used. Must not be null
-     * @param haloRadius
-     * @param haloColor
+     * @param haloRadius halo radius
+     * @param haloColor halo color
      */
     public TextElement(LabelCompositionStrategy strategy, Font font, int xOffset, int yOffset, Color color, Float haloRadius, Color haloColor) {
         CheckParameterUtil.ensureParameterNotNull(font);
@@ -77,7 +77,7 @@ public class TextElement implements StyleKeys {
      * @param c the style properties
      * @return the label composition strategy
      */
-    protected static LabelCompositionStrategy buildLabelCompositionStrategy(Cascade c, boolean defaultAnnotate){
+    protected static LabelCompositionStrategy buildLabelCompositionStrategy(Cascade c, boolean defaultAnnotate) {
         /*
          * If the cascade includes a TagKeyReference we will lookup the rendered label
          * from a tag value.
@@ -155,7 +155,7 @@ public class TextElement implements StyleKeys {
                     haloColor.getBlue(), Utils.color_float2int(haloAlpha));
         }
 
-        return new TextElement(strategy, font, (int) xOffset, - (int) yOffset, color, haloRadius, haloColor);
+        return new TextElement(strategy, font, (int) xOffset, -(int) yOffset, color, haloRadius, haloColor);
     }
 
     /**

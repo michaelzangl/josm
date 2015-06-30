@@ -57,7 +57,7 @@ public class MenuScroller {
         int result = 15;
         if (menu != null) {
             // Compute max height of current screen
-            int maxHeight = WindowGeometry.getMaxDimensionOnScreen(menu).height - ((JFrame)Main.parent).getInsets().top;
+            int maxHeight = WindowGeometry.getMaxDimensionOnScreen(menu).height - ((JFrame) Main.parent).getInsets().top;
 
             // Remove top fixed part height
             if (topFixedCount > 0) {
@@ -86,7 +86,7 @@ public class MenuScroller {
             } else {
                 // Increase scroll count to take into account upper items that will be displayed
                 // after firstIndex is updated
-                for (int i=startIndex-1; i >= 0 && height <= maxHeight; i--, result++) {
+                for (int i = startIndex-1; i >= 0 && height <= maxHeight; i--, result++) {
                     height += menuItems[i].getPreferredSize().height;
                 }
                 if (height > maxHeight) {
@@ -150,9 +150,9 @@ public class MenuScroller {
      * @param menu the menu
      * @param interval the scroll interval, in milliseconds
      * @param topFixedCount the number of items to fix at the top.  May be 0.
+     * @return the MenuScroller
      * @throws IllegalArgumentException if scrollCount or interval is 0 or
      * negative or if topFixedCount is negative
-     * @return the MenuScroller
      * @since 7463
      */
     public static MenuScroller setScrollerFor(JMenu menu, int interval, int topFixedCount) {
@@ -166,9 +166,9 @@ public class MenuScroller {
      * @param menu the popup menu
      * @param interval the scroll interval, in milliseconds
      * @param topFixedCount the number of items to fix at the top. May be 0
+     * @return the MenuScroller
      * @throws IllegalArgumentException if scrollCount or interval is 0 or
      * negative or if topFixedCount is negative
-     * @return the MenuScroller
      * @since 7463
      */
     public static MenuScroller setScrollerFor(JPopupMenu menu, int interval, int topFixedCount) {
@@ -350,7 +350,7 @@ public class MenuScroller {
                 allItemsHeight += item.getPreferredSize().height;
             }
 
-            int allowedHeight = WindowGeometry.getMaxDimensionOnScreen(menu).height - ((JFrame)Main.parent).getInsets().top;
+            int allowedHeight = WindowGeometry.getMaxDimensionOnScreen(menu).height - ((JFrame) Main.parent).getInsets().top;
 
             boolean mustSCroll = allItemsHeight > allowedHeight;
 
@@ -506,6 +506,9 @@ public class MenuScroller {
         public void mouseWheelMoved(MouseWheelEvent mwe) {
             firstIndex += mwe.getWheelRotation();
             refreshMenu();
+            if (Main.isDebugEnabled()) {
+                Main.debug(getClass().getName()+" consuming event "+mwe);
+            }
             mwe.consume();
         }
     }

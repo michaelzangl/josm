@@ -83,7 +83,7 @@ public final class ImageViewerDialog extends ToggleDialog implements LayerChange
 
         content.add(imgDisplay, BorderLayout.CENTER);
 
-        Dimension buttonDim = new Dimension(26,26);
+        Dimension buttonDim = new Dimension(26, 26);
 
         ImageAction prevAction = new ImageAction(COMMAND_PREVIOUS, ImageProvider.get("dialogs", "previous"), tr("Previous"));
         btnPrevious = new JButton(prevAction);
@@ -106,7 +106,8 @@ public final class ImageViewerDialog extends ToggleDialog implements LayerChange
         btnDelete.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(scDelete.getKeyStroke(), DELETE_TEXT);
         btnDelete.getActionMap().put(DELETE_TEXT, delAction);
 
-        ImageAction delFromDiskAction = new ImageAction(COMMAND_REMOVE_FROM_DISK, ImageProvider.get("dialogs", "geoimage/deletefromdisk"), tr("Delete image file from disk"));
+        ImageAction delFromDiskAction = new ImageAction(COMMAND_REMOVE_FROM_DISK,
+                ImageProvider.get("dialogs", "geoimage/deletefromdisk"), tr("Delete image file from disk"));
         JButton btnDeleteFromDisk = new JButton(delFromDiskAction);
         btnDeleteFromDisk.setPreferredSize(buttonDim);
         Shortcut scDeleteFromDisk = Shortcut.registerShortcut(
@@ -148,14 +149,17 @@ public final class ImageViewerDialog extends ToggleDialog implements LayerChange
                         "geoimage:last", tr("Geoimage: {0}", tr("Show last Image")), KeyEvent.VK_END, Shortcut.DIRECT)
         );
 
-        JToggleButton tbCentre = new JToggleButton(new ImageAction(COMMAND_CENTERVIEW, ImageProvider.get("dialogs", "centreview"), tr("Center view")));
+        JToggleButton tbCentre = new JToggleButton(new ImageAction(COMMAND_CENTERVIEW,
+                ImageProvider.get("dialogs", "centreview"), tr("Center view")));
         tbCentre.setPreferredSize(buttonDim);
 
-        JButton btnZoomBestFit = new JButton(new ImageAction(COMMAND_ZOOM, ImageProvider.get("dialogs", "zoom-best-fit"), tr("Zoom best fit and 1:1")));
+        JButton btnZoomBestFit = new JButton(new ImageAction(COMMAND_ZOOM,
+                ImageProvider.get("dialogs", "zoom-best-fit"), tr("Zoom best fit and 1:1")));
         btnZoomBestFit.setPreferredSize(buttonDim);
 
-        btnCollapse = new JButton(new ImageAction(COMMAND_COLLAPSE, ImageProvider.get("dialogs", "collapse"), tr("Move dialog to the side pane")));
-        btnCollapse.setPreferredSize(new Dimension(20,20));
+        btnCollapse = new JButton(new ImageAction(COMMAND_COLLAPSE,
+                ImageProvider.get("dialogs", "collapse"), tr("Move dialog to the side pane")));
+        btnCollapse.setPreferredSize(new Dimension(20, 20));
         btnCollapse.setAlignmentY(Component.TOP_ALIGNMENT);
 
         JPanel buttons = new JPanel();
@@ -198,6 +202,7 @@ public final class ImageViewerDialog extends ToggleDialog implements LayerChange
 
     class ImageAction extends AbstractAction {
         private final String action;
+
         public ImageAction(String action, ImageIcon icon, String toolTipText) {
             this.action = action;
             putValue(SHORT_DESCRIPTION, toolTipText);
@@ -218,16 +223,13 @@ public final class ImageViewerDialog extends ToggleDialog implements LayerChange
                 currentLayer.showFirstPhoto();
             } else if (COMMAND_LAST.equals(action) && currentLayer != null) {
                 currentLayer.showLastPhoto();
-
             } else if (COMMAND_CENTERVIEW.equals(action)) {
                 centerView = ((JToggleButton) e.getSource()).isSelected();
                 if (centerView && currentEntry != null && currentEntry.getPos() != null) {
                     Main.map.mapView.zoomTo(currentEntry.getPos());
                 }
-
             } else if (COMMAND_ZOOM.equals(action)) {
                 imgDisplay.zoomBestFitOrOne();
-
             } else if (COMMAND_REMOVE.equals(action)) {
                 if (currentLayer != null) {
                     currentLayer.removeCurrentPhoto();
@@ -279,7 +281,7 @@ public final class ImageViewerDialog extends ToggleDialog implements LayerChange
     public void displayImage(GeoImageLayer layer, ImageEntry entry) {
         boolean imageChanged;
 
-        synchronized(this) {
+        synchronized (this) {
             // TODO: pop up image dialog but don't load image again
 
             imageChanged = currentEntry != entry;
@@ -326,7 +328,7 @@ public final class ImageViewerDialog extends ToggleDialog implements LayerChange
             imgDisplay.setOsdText("");
             return;
         }
-        if (! isDialogShowing()) {
+        if (!isDialogShowing()) {
             setIsDocked(false);     // always open a detached window when an image is clicked and dialog is closed
             showDialog();
         } else {
@@ -387,14 +389,14 @@ public final class ImageViewerDialog extends ToggleDialog implements LayerChange
     @Override
     public void activeLayerChange(Layer oldLayer, Layer newLayer) {
         if (currentLayer == null && newLayer instanceof GeoImageLayer) {
-            ((GeoImageLayer)newLayer).showFirstPhoto();
+            ((GeoImageLayer) newLayer).showFirstPhoto();
         }
     }
 
     @Override
     public void layerAdded(Layer newLayer) {
         if (currentLayer == null && newLayer instanceof GeoImageLayer) {
-            ((GeoImageLayer)newLayer).showFirstPhoto();
+            ((GeoImageLayer) newLayer).showFirstPhoto();
         }
     }
 

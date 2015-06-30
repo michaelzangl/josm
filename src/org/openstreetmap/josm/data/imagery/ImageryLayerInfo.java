@@ -108,7 +108,9 @@ public class ImageryLayerInfo {
                 Main.error(ex);
             }
         }
-        while (defaultLayers.remove(null));
+        while (defaultLayers.remove(null)) {
+            // Do nothing
+        }
         Collections.sort(defaultLayers);
         buildIdMap(defaultLayers, defaultLayerIds);
         updateEntriesFromDefaults();
@@ -149,7 +151,7 @@ public class ImageryLayerInfo {
         Collection<String> newKnownDefaults = new TreeSet<>(knownDefaults);
         for (ImageryInfo def : defaultLayers) {
             // temporary migration code, so all user preferences will get updated with new settings from JOSM site (can be removed ~Dez. 2015)
-            if (def.getNoTileHeaders() != null || def.getTileSize() > 0 || def.getMetadataHeaders() != null ) {
+            if (def.getNoTileHeaders() != null || def.getTileSize() > 0 || def.getMetadataHeaders() != null) {
                 for (ImageryInfo i: layers) {
                     if (isSimilar(def,  i)) {
                         if (def.getNoTileHeaders() != null) {
@@ -217,7 +219,7 @@ public class ImageryLayerInfo {
         Main.pref.putCollection("imagery.layers.addedIds", newAddedIds);
 
         // automatically update user entries with same id as a default entry
-        for (int i=0; i<layers.size(); i++) {
+        for (int i = 0; i < layers.size(); i++) {
             ImageryInfo info = layers.get(i);
             if (info.getId() == null) {
                 continue;

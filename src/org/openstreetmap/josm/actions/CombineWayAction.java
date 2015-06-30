@@ -95,9 +95,8 @@ public class CombineWayAction extends JosmAction {
     /**
      * Combine multiple ways into one.
      * @param ways the way to combine to one way
-     * @return null if ways cannot be combined. Otherwise returns the combined
-     *              ways and the commands to combine
-     * @throws UserCancelException
+     * @return null if ways cannot be combined. Otherwise returns the combined ways and the commands to combine
+     * @throws UserCancelException if the user cancelled a dialog.
      */
     public static Pair<Way, Command> combineWaysWorker(Collection<Way> ways) throws UserCancelException {
 
@@ -110,8 +109,7 @@ public class CombineWayAction extends JosmAction {
         // remove duplicates, preserving order
         ways = new LinkedHashSet<>(ways);
 
-        // try to build a new way which includes all the combined
-        // ways
+        // try to build a new way which includes all the combined ways
         //
         NodeGraph graph = NodeGraph.createNearlyUndirectedGraphFromNodeWays(ways);
         List<Node> path = graph.buildSpanningPath();
@@ -221,7 +219,7 @@ public class CombineWayAction extends JosmAction {
             return;
         final Way selectedWay = combineResult.a;
         Main.main.undoRedo.add(combineResult.b);
-        if(selectedWay != null) {
+        if (selectedWay != null) {
             Runnable guiTask = new Runnable() {
                 @Override
                 public void run() {
@@ -245,10 +243,11 @@ public class CombineWayAction extends JosmAction {
     @Override
     protected void updateEnabledState(Collection<? extends OsmPrimitive> selection) {
         int numWays = 0;
-        for (OsmPrimitive osm : selection)
+        for (OsmPrimitive osm : selection) {
             if (osm instanceof Way) {
                 numWays++;
             }
+        }
         setEnabled(numWays >= 2);
     }
 
@@ -273,7 +272,7 @@ public class CombineWayAction extends JosmAction {
          * Constructs a new {@code NodePair}.
          * @param pair An existing {@code Pair} of nodes
          */
-        public NodePair(Pair<Node,Node> pair) {
+        public NodePair(Pair<Node, Node> pair) {
             this(pair.a, pair.b);
         }
 
@@ -318,7 +317,7 @@ public class CombineWayAction extends JosmAction {
         }
 
         public NodePair swap() {
-            return new NodePair(b,a);
+            return new NodePair(b, a);
         }
 
         @Override
@@ -376,7 +375,7 @@ public class CombineWayAction extends JosmAction {
     public static class NodeGraph {
         public static List<NodePair> buildNodePairs(Way way, boolean directed) {
             List<NodePair> pairs = new ArrayList<>();
-            for (Pair<Node,Node> pair: way.getNodePairs(false /* don't sort */)) {
+            for (Pair<Node, Node> pair: way.getNodePairs(false /* don't sort */)) {
                 pairs.add(new NodePair(pair));
                 if (!directed) {
                     pairs.add(new NodePair(pair).swap());
@@ -395,7 +394,7 @@ public class CombineWayAction extends JosmAction {
 
         public static List<NodePair> eliminateDuplicateNodePairs(List<NodePair> pairs) {
             List<NodePair> cleaned = new ArrayList<>();
-            for(NodePair p: pairs) {
+            for (NodePair p: pairs) {
                 if (!cleaned.contains(p) && !cleaned.contains(p.swap())) {
                     cleaned.add(p);
                 }
@@ -420,8 +419,8 @@ public class CombineWayAction extends JosmAction {
         }
 
         /**
-         * Create an undirected graph from the given ways.
-         * @param ways Ways to build the graph from
+         * Create an undirected graph from the given node pairs.
+         * @param pairs Node pairs to build the graph from
          * @return node graph structure
          */
         public static NodeGraph createUndirectedGraphFromNodeList(List<NodePair> pairs) {
@@ -452,7 +451,7 @@ public class CombineWayAction extends JosmAction {
             boolean dir = true;
             NodeGraph graph = new NodeGraph();
             for (Way w: ways) {
-                if(!w.isNew()) {
+                if (!w.isNew()) {
                     /* let the first non-new way give the direction (see #5880) */
                     graph.add(buildNodePairs(w, dir));
                     dir = false;
@@ -510,7 +509,7 @@ public class CombineWayAction extends JosmAction {
             predecessors = new LinkedHashMap<>();
 
             for (NodePair pair: edges) {
-                if (!undirectedEdges.contains(pair) && ! undirectedEdges.contains(pair.swap())) {
+                if (!undirectedEdges.contains(pair) && !undirectedEdges.contains(pair.swap())) {
                     undirectedEdges.add(pair);
                 }
                 rememberSuccessor(pair);
@@ -541,7 +540,7 @@ public class CombineWayAction extends JosmAction {
         protected Node getStartNode() {
             Set<Node> nodes = getNodes();
             for (Node n: nodes) {
-                if (successors.get(n) != null && successors.get(n).size() ==1)
+                if (successors.get(n) != null && successors.get(n).size() == 1)
                     return n;
             }
             return null;
@@ -613,10 +612,10 @@ public class CombineWayAction extends JosmAction {
             Stack<NodePair> path = new Stack<>();
             Stack<NodePair> nextPairs  = new Stack<>();
             nextPairs.addAll(getOutboundPairs(startNode));
-            while(!nextPairs.isEmpty()) {
-                NodePair cur= nextPairs.pop();
-                if (! path.contains(cur) && ! path.contains(cur.swap())) {
-                    while(!path.isEmpty() && !path.peek().isPredecessorOf(cur)) {
+            while (!nextPairs.isEmpty()) {
+                NodePair cur = nextPairs.pop();
+                if (!path.contains(cur) && !path.contains(cur.swap())) {
+                    while (!path.isEmpty() && !path.peek().isPredecessorOf(cur)) {
                         path.pop();
                     }
                     path.push(cur);
@@ -640,8 +639,7 @@ public class CombineWayAction extends JosmAction {
             // two directed edges in opposite direction) to the graph. A
             // graph built up from way segments is likely to include such
             // nodes, unless all ways are closed.
-            // In the worst case this loops over all nodes which is
-            // very slow for large ways.
+            // In the worst case this loops over all nodes which is very slow for large ways.
             //
             Set<Node> nodes = getTerminalNodes();
             nodes = nodes.isEmpty() ? getNodes() : nodes;

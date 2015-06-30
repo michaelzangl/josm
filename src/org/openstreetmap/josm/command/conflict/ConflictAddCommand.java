@@ -51,7 +51,7 @@ public class ConflictAddCommand extends Command {
     public boolean executeCommand() {
         try {
             getLayer().getConflicts().add(conflict);
-        } catch(IllegalStateException e) {
+        } catch (IllegalStateException e) {
             Main.error(e);
             warnBecauseOfDoubleConflict();
         }
@@ -60,7 +60,7 @@ public class ConflictAddCommand extends Command {
 
     @Override
     public void undoCommand() {
-        if (! Main.map.mapView.hasLayer(getLayer())) {
+        if (!Main.map.mapView.hasLayer(getLayer())) {
             Main.warn(tr("Layer ''{0}'' does not exist any more. Cannot remove conflict for object ''{1}''.",
                     getLayer().getName(),
                     conflict.getMy().getDisplayName(DefaultNameFormatter.getInstance())
@@ -84,5 +84,30 @@ public class ConflictAddCommand extends Command {
     @Override
     public Icon getDescriptionIcon() {
         return ImageProvider.get(conflict.getMy().getDisplayType());
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((conflict == null) ? 0 : conflict.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ConflictAddCommand other = (ConflictAddCommand) obj;
+        if (conflict == null) {
+            if (other.conflict != null)
+                return false;
+        } else if (!conflict.equals(other.conflict))
+            return false;
+        return true;
     }
 }

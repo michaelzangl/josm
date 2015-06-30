@@ -155,7 +155,7 @@ public class ParallelWayAction extends MapMode implements ModifierListener, MapV
         mv.addMouseMotionListener(this);
         mv.addTemporaryLayer(this);
 
-        helpLineStroke = GuiHelper.getCustomizedStroke(getStringPref("stroke.hepler-line", "1" ));
+        helpLineStroke = GuiHelper.getCustomizedStroke(getStringPref("stroke.hepler-line", "1"));
         refLineStroke = GuiHelper.getCustomizedStroke(getStringPref("stroke.ref-line", "1 2 2"));
         mainColor = Main.pref.getColor(marktr("make parallel helper line"), null);
         if (mainColor == null) mainColor = PaintColors.SELECTED.get();
@@ -191,7 +191,9 @@ public class ParallelWayAction extends MapMode implements ModifierListener, MapV
         // TODO: dynamic messages based on preferences. (Could be problematic translation wise)
         switch (mode) {
         case normal:
+            // CHECKSTYLE.OFF: LineLength
             return tr("Select ways as in Select mode. Drag selected ways or a single way to create a parallel copy (Alt toggles tag preservation)");
+            // CHECKSTYLE.ON: LineLength
         case dragging:
             return tr("Hold Ctrl to toggle snapping");
         }
@@ -257,8 +259,9 @@ public class ParallelWayAction extends MapMode implements ModifierListener, MapV
                 newCursor = ImageProvider.getCursor("normal", "parallel"); // FIXME
             } else if (matchesCurrentModifiers(toggleSelectedModifierCombo)) {
                 newCursor = ImageProvider.getCursor("normal", "parallel"); // FIXME
-            } else {
+            } else if (Main.isDebugEnabled()) {
                 // TODO: set to a cursor indicating an error
+                Main.debug("TODO: set an error cursor");
             }
             break;
         case dragging:

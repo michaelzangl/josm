@@ -42,37 +42,7 @@ import org.xml.sax.SAXParseException;
  */
 public final class TaggingPresetPreference implements SubPreferenceSetting {
 
-    /**
-     * Factory used to create a new {@code TaggingPresetPreference}.
-     */
-    public static class Factory implements PreferenceSettingFactory {
-        @Override
-        public PreferenceSetting createPreferenceSetting() {
-            return new TaggingPresetPreference();
-        }
-    }
-
-    private TaggingPresetPreference() {
-        super();
-    }
-
-    private static final List<SourceProvider> presetSourceProviders = new ArrayList<>();
-
-    private SourceEditor sources;
-    private JCheckBox sortMenu;
-
-    /**
-     * Registers a new additional preset source provider.
-     * @param provider The preset source provider
-     * @return {@code true}, if the provider has been added, {@code false} otherwise
-     */
-    public static boolean registerSourceProvider(SourceProvider provider) {
-        if (provider != null)
-            return presetSourceProviders.add(provider);
-        return false;
-    }
-
-    private ValidationListener validationListener = new ValidationListener() {
+    private final class TaggingPresetValidationListener implements ValidationListener {
         @Override
         public boolean validatePreferences() {
             if (sources.hasActiveSourcesChanged()) {
@@ -101,6 +71,9 @@ public final class TaggingPresetPreference implements SubPreferenceSetting {
                             }
                         } catch (SAXException e) {
                             // We will handle this in step with validation
+                            if (Main.isTraceEnabled()) {
+                                Main.trace(e.getMessage());
+                            }
                         }
 
                         String errorMessage = null;
@@ -133,7 +106,6 @@ public final class TaggingPresetPreference implements SubPreferenceSetting {
                                         "Do you really want to use it?<br><br><table width=600>Error is: {1}</table></html>",
                                         source, e.getMessage());
                             }
-
                         }
 
                         if (errorMessage != null) {
@@ -154,10 +126,43 @@ public final class TaggingPresetPreference implements SubPreferenceSetting {
                     }
                 sources.removeSources(sourcesToRemove);
                 return true;
-            }  else
+            }  else {
                 return true;
+            }
         }
-    };
+    }
+
+    /**
+     * Factory used to create a new {@code TaggingPresetPreference}.
+     */
+    public static class Factory implements PreferenceSettingFactory {
+        @Override
+        public PreferenceSetting createPreferenceSetting() {
+            return new TaggingPresetPreference();
+        }
+    }
+
+    private TaggingPresetPreference() {
+        super();
+    }
+
+    private static final List<SourceProvider> presetSourceProviders = new ArrayList<>();
+
+    private SourceEditor sources;
+    private JCheckBox sortMenu;
+
+    /**
+     * Registers a new additional preset source provider.
+     * @param provider The preset source provider
+     * @return {@code true}, if the provider has been added, {@code false} otherwise
+     */
+    public static boolean registerSourceProvider(SourceProvider provider) {
+        if (provider != null)
+            return presetSourceProviders.add(provider);
+        return false;
+    }
+
+    private final ValidationListener validationListener = new TaggingPresetValidationListener();
 
     @Override
     public void addGui(PreferenceTabbedPane gui) {
@@ -165,8 +170,8 @@ public final class TaggingPresetPreference implements SubPreferenceSetting {
                 Main.pref.getBoolean("taggingpreset.sortmenu", false));
 
         final JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder( 0, 0, 0, 0 ));
-        panel.add(sortMenu, GBC.eol().insets(5,5,5,0));
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        panel.add(sortMenu, GBC.eol().insets(5, 5, 5, 0));
         sources = new TaggingPresetSourceEditor();
         panel.add(sources, GBC.eol().fill(GBC.BOTH));
         final MapPreference mapPref = gui.getMapPreference();

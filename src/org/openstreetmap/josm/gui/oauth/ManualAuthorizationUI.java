@@ -49,7 +49,7 @@ public class ManualAuthorizationUI extends AbstractAuthorizationUI{
 
     protected JPanel buildAccessTokenPanel() {
         JPanel pnl = new JPanel(new GridBagLayout());
-        pnl.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        pnl.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         GridBagConstraints gc = new GridBagConstraints();
         AccessTokenBuilder accessTokenBuilder = new AccessTokenBuilder();
 
@@ -58,7 +58,7 @@ public class ManualAuthorizationUI extends AbstractAuthorizationUI{
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.weightx = 0.0;
         gc.gridwidth = 2;
-        gc.insets = new Insets(0,0,5,0);
+        gc.insets = new Insets(0, 0, 5, 0);
         pnlMessage = new HtmlPanel();
         pnlMessage.setText("<html><body>"
                 + tr("Please enter an OAuth Access Token which is authorized to access the OSM server "
@@ -70,7 +70,7 @@ public class ManualAuthorizationUI extends AbstractAuthorizationUI{
         gc.gridy = 1;
         gc.weightx = 0.0;
         gc.gridwidth = 1;
-        gc.insets = new Insets(0,0,0,3);
+        gc.insets = new Insets(0, 0, 0, 3);
         pnl.add(new JLabel(tr("Access Token Key:")), gc);
 
         gc.gridx = 1;
@@ -98,7 +98,7 @@ public class ManualAuthorizationUI extends AbstractAuthorizationUI{
         // the checkbox for saving to preferences
         gc.gridy = 3;
         gc.gridx = 0;
-        gc.gridwidth =2;
+        gc.gridwidth = 2;
         gc.weightx = 1.0;
         pnl.add(cbSaveToPreferences = new JCheckBox(tr("Save Access Token in preferences")), gc);
         cbSaveToPreferences.setSelected(OAuthAccessTokenHolder.getInstance().isSaveToPreferences());
@@ -106,7 +106,7 @@ public class ManualAuthorizationUI extends AbstractAuthorizationUI{
         // filler - grab remaining space
         gc.gridy = 3;
         gc.gridx = 0;
-        gc.gridwidth =2;
+        gc.gridwidth = 2;
         gc.weightx = 1.0;
         gc.weighty = 1.0;
         gc.fill = GridBagConstraints.BOTH;
@@ -154,7 +154,7 @@ public class ManualAuthorizationUI extends AbstractAuthorizationUI{
 
     protected final void build() {
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         add(buildTabbedPreferencesPanel(), BorderLayout.CENTER);
         add(buildActionsPanel(), BorderLayout.SOUTH);
     }
@@ -218,12 +218,13 @@ public class ManualAuthorizationUI extends AbstractAuthorizationUI{
     class AccessTokenBuilder implements DocumentListener {
 
         public void build() {
-            if (! valAccessTokenKey.isValid() || !valAccessTokenSecret.isValid()) {
+            if (!valAccessTokenKey.isValid() || !valAccessTokenSecret.isValid()) {
                 setAccessToken(null);
             } else {
                 setAccessToken(new OAuthToken(tfAccessTokenKey.getText().trim(), tfAccessTokenSecret.getText().trim()));
             }
         }
+
         @Override
         public void changedUpdate(DocumentEvent e) {
             build();
@@ -246,7 +247,7 @@ public class ManualAuthorizationUI extends AbstractAuthorizationUI{
     class TestAccessTokenAction extends AbstractAction implements PropertyChangeListener {
         public TestAccessTokenAction() {
             putValue(NAME, tr("Test Access Token"));
-            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth"));
+            putValue(SMALL_ICON, ImageProvider.get("oauth", "oauth-small"));
             putValue(SHORT_DESCRIPTION, tr("Click to test the Access Token"));
             updateEnabledState();
         }
@@ -268,7 +269,7 @@ public class ManualAuthorizationUI extends AbstractAuthorizationUI{
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            if (! evt.getPropertyName().equals(AbstractAuthorizationUI.ACCESS_TOKEN_PROP))
+            if (!evt.getPropertyName().equals(AbstractAuthorizationUI.ACCESS_TOKEN_PROP))
                 return;
             updateEnabledState();
         }

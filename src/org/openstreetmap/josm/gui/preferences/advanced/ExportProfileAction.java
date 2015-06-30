@@ -56,7 +56,7 @@ public class ExportProfileAction extends AbstractAction {
             return;
         }
         File f = askUserForCustomSettingsFile();
-        if (f!=null)
+        if (f != null)
            CustomConfigurator.exportPreferencesKeysToFile(f.getAbsolutePath(), false, keys);
     }
 
@@ -68,15 +68,17 @@ public class ExportProfileAction extends AbstractAction {
             public boolean accept(File f) {
                 return f.isDirectory() || Utils.hasExtension(f, "xml") && f.getName().toLowerCase(Locale.ENGLISH).startsWith(schemaKey);
             }
+
             @Override
             public String getDescription() {
                 return tr("JOSM custom settings files (*.xml)");
             }
         };
-        AbstractFileChooser fc = DiskAccessAction.createAndOpenFileChooser(false, false, title, filter, JFileChooser.FILES_ONLY, "customsettings.lastDirectory");
+        AbstractFileChooser fc = DiskAccessAction.createAndOpenFileChooser(false, false, title, filter,
+                JFileChooser.FILES_ONLY, "customsettings.lastDirectory");
         if (fc != null) {
             File sel = fc.getSelectedFile();
-            if (!sel.getName().endsWith(".xml")) sel=new File(sel.getAbsolutePath()+".xml");
+            if (!sel.getName().endsWith(".xml")) sel = new File(sel.getAbsolutePath()+".xml");
             if (!sel.getName().startsWith(schemaKey)) {
                 sel = new File(sel.getParentFile().getAbsolutePath()+"/"+schemaKey+"_"+sel.getName());
             }

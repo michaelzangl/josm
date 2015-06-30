@@ -16,6 +16,7 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Locale;
 
+import org.openstreetmap.gui.jmapviewer.interfaces.ICoordinate;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.tools.Utils;
@@ -29,7 +30,7 @@ import org.openstreetmap.josm.tools.Utils;
  * <b>Longitude</b> specifies the east-west position in degrees
  * where valid values are in the [-180,180] and positive values specify positions east of the prime meridian.
  * <br>
- * <img alt="lat/lon" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Latitude_and_Longitude_of_the_Earth.svg/500px-Latitude_and_Longitude_of_the_Earth.svg.png">
+ * <img alt="lat/lon" src="https://upload.wikimedia.org/wikipedia/commons/6/62/Latitude_and_Longitude_of_the_Earth.svg">
  * <br>
  * This class is immutable.
  *
@@ -68,9 +69,9 @@ public class LatLon extends Coordinate {
     }
 
     private static final String cDms60 = cDmsSecondFormatter.format(60.0);
-    private static final String cDms00 = cDmsSecondFormatter.format( 0.0);
+    private static final String cDms00 = cDmsSecondFormatter.format(0.0);
     private static final String cDm60 = cDmMinuteFormatter.format(60.0);
-    private static final String cDm00 = cDmMinuteFormatter.format( 0.0);
+    private static final String cDm00 = cDmMinuteFormatter.format(0.0);
 
     /**
      * Replies true if lat is in the range [-90,90]
@@ -187,6 +188,11 @@ public class LatLon extends Coordinate {
         super(coor.lon(), coor.lat());
     }
 
+    public LatLon(ICoordinate coor) {
+        this(coor.getLat(), coor.getLon());
+    }
+
+
     /**
      * Returns the latitude, i.e., the north-south position in degrees.
      * @return the latitude
@@ -197,6 +203,7 @@ public class LatLon extends Coordinate {
 
     public static final String SOUTH = trc("compass", "S");
     public static final String NORTH = trc("compass", "N");
+
     public String latToString(CoordinateFormat d) {
         switch(d) {
         case DECIMAL_DEGREES: return cDdFormatter.format(y);
@@ -217,6 +224,7 @@ public class LatLon extends Coordinate {
 
     public static final String WEST = trc("compass", "W");
     public static final String EAST = trc("compass", "E");
+
     public String lonToString(CoordinateFormat d) {
         switch(d) {
         case DECIMAL_DEGREES: return cDdFormatter.format(x);
@@ -430,5 +438,9 @@ public class LatLon extends Coordinate {
         if (java.lang.Double.doubleToLongBits(y) != java.lang.Double.doubleToLongBits(other.y))
             return false;
         return true;
+    }
+
+    public ICoordinate toCoordinate() {
+        return new org.openstreetmap.gui.jmapviewer.Coordinate(lat(), lon());
     }
 }

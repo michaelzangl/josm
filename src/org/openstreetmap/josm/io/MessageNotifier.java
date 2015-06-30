@@ -58,15 +58,18 @@ public final class MessageNotifier {
         @Override
         public void run() {
             try {
-                final UserInfo userInfo = new OsmServerUserInfoReader().fetchUserInfo(NullProgressMonitor.INSTANCE, tr("get number of unread messages"));
+                final UserInfo userInfo = new OsmServerUserInfoReader().fetchUserInfo(NullProgressMonitor.INSTANCE,
+                        tr("get number of unread messages"));
                 final int unread = userInfo.getUnreadMessages();
                 if (unread > 0 && unread != lastUnreadCount) {
                     GuiHelper.runInEDT(new Runnable() {
                         @Override
                         public void run() {
                             JPanel panel = new JPanel(new GridBagLayout());
-                            panel.add(new JLabel(trn("You have {0} unread message.", "You have {0} unread messages.", unread, unread)), GBC.eol());
-                            panel.add(new UrlLabel(Main.getBaseUserUrl() + "/"+userInfo.getDisplayName()+"/inbox", tr("Click here to see your inbox.")), GBC.eol());
+                            panel.add(new JLabel(trn("You have {0} unread message.", "You have {0} unread messages.", unread, unread)),
+                                    GBC.eol());
+                            panel.add(new UrlLabel(Main.getBaseUserUrl() + "/" + userInfo.getDisplayName() + "/inbox",
+                                    tr("Click here to see your inbox.")), GBC.eol());
                             panel.setOpaque(false);
                             new Notification().setContent(panel)
                                 .setIcon(JOptionPane.INFORMATION_MESSAGE)
@@ -91,7 +94,7 @@ public final class MessageNotifier {
             Main.info(tr("{0} not available (offline mode)", tr("Message notifier")));
         } else if (!isRunning() && interval > 0 && isUserEnoughIdentified()) {
             task = EXECUTOR.scheduleAtFixedRate(WORKER, 0, interval * 60, TimeUnit.SECONDS);
-            Main.info("Message notifier active (checks every "+interval+" minute"+(interval>1?"s":"")+")");
+            Main.info("Message notifier active (checks every "+interval+" minute"+(interval > 1 ? "s" : "")+")");
         }
     }
 

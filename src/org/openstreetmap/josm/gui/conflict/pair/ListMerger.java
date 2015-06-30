@@ -81,7 +81,9 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
     private JLabel lblFrozenState;
 
     protected abstract JScrollPane buildMyElementsTable();
+
     protected abstract JScrollPane buildMergedElementsTable();
+
     protected abstract JScrollPane buildTheirElementsTable();
 
     protected JScrollPane embeddInScrollPane(JTable table) {
@@ -267,7 +269,7 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
         gc.anchor = GridBagConstraints.CENTER;
         gc.weightx = 0.0;
         gc.weighty = 0.0;
-        gc.insets = new Insets(10,0,0,0);
+        gc.insets = new Insets(10, 0, 0, 0);
         lblMyVersion = new JLabel(tr("My version"));
         lblMyVersion.setToolTipText(tr("List of elements in my dataset, i.e. the local dataset"));
         add(lblMyVersion, gc);
@@ -275,7 +277,8 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
         gc.gridx = 2;
         gc.gridy = 0;
         lblMergedVersion = new JLabel(tr("Merged version"));
-        lblMergedVersion.setToolTipText(tr("List of merged elements. They will replace the list of my elements when the merge decisions are applied."));
+        lblMergedVersion.setToolTipText(
+                tr("List of merged elements. They will replace the list of my elements when the merge decisions are applied."));
         add(lblMergedVersion, gc);
 
         gc.gridx = 4;
@@ -293,7 +296,7 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
         gc.anchor = GridBagConstraints.FIRST_LINE_START;
         gc.weightx = 0.33;
         gc.weighty = 0.0;
-        gc.insets = new Insets(0,0,0,0);
+        gc.insets = new Insets(0, 0, 0, 0);
         JCheckBox cbLockMyScrolling = new JCheckBox();
         cbLockMyScrolling.setName("checkbox.lockmyscrolling");
         add(buildAdjustmentLockControlPanel(cbLockMyScrolling), gc);
@@ -319,7 +322,7 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
         gc.anchor = GridBagConstraints.FIRST_LINE_START;
         gc.weightx = 0.33;
         gc.weighty = 1.0;
-        gc.insets = new Insets(0,0,0,0);
+        gc.insets = new Insets(0, 0, 0, 0);
         JScrollPane pane = buildMyElementsTable();
         lblMyVersion.setLabelFor(pane);
         adjustmentSynchronizer.adapt(cbLockMyScrolling, pane.getVerticalScrollBar());
@@ -400,7 +403,7 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
 
     /**
      * Constructs a new {@code ListMerger}.
-     * @param model
+     * @param model list merger model
      */
     public ListMerger(ListMergeModel<T> model) {
         this.model = model;
@@ -482,10 +485,10 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            int [] mergedRows = mergedEntriesTable.getSelectedRows();
+            int[] mergedRows = mergedEntriesTable.getSelectedRows();
             if (mergedRows == null || mergedRows.length == 0)
                 return;
-            int [] myRows = myEntriesTable.getSelectedRows();
+            int[] myRows = myEntriesTable.getSelectedRows();
             int current = mergedRows[0];
             model.copyMyBeforeCurrent(myRows, current);
         }
@@ -512,10 +515,10 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            int [] mergedRows = mergedEntriesTable.getSelectedRows();
+            int[] mergedRows = mergedEntriesTable.getSelectedRows();
             if (mergedRows == null || mergedRows.length == 0)
                 return;
-            int [] myRows = myEntriesTable.getSelectedRows();
+            int[] myRows = myEntriesTable.getSelectedRows();
             int current = mergedRows[0];
             model.copyMyAfterCurrent(myRows, current);
         }
@@ -574,10 +577,10 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            int [] mergedRows = mergedEntriesTable.getSelectedRows();
+            int[] mergedRows = mergedEntriesTable.getSelectedRows();
             if (mergedRows == null || mergedRows.length == 0)
                 return;
-            int [] myRows = theirEntriesTable.getSelectedRows();
+            int[] myRows = theirEntriesTable.getSelectedRows();
             int current = mergedRows[0];
             model.copyTheirBeforeCurrent(myRows, current);
         }
@@ -600,10 +603,10 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            int [] mergedRows = mergedEntriesTable.getSelectedRows();
+            int[] mergedRows = mergedEntriesTable.getSelectedRows();
             if (mergedRows == null || mergedRows.length == 0)
                 return;
-            int [] myRows = theirEntriesTable.getSelectedRows();
+            int[] myRows = theirEntriesTable.getSelectedRows();
             int current = mergedRows[0];
             model.copyTheirAfterCurrent(myRows, current);
         }
@@ -689,13 +692,13 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            int [] rows = mergedEntriesTable.getSelectedRows();
+            int[] rows = mergedEntriesTable.getSelectedRows();
             model.moveUpMerged(rows);
         }
 
         @Override
         public void valueChanged(ListSelectionEvent e) {
-            int [] rows = mergedEntriesTable.getSelectedRows();
+            int[] rows = mergedEntriesTable.getSelectedRows();
             setEnabled(
                     rows != null
                     && rows.length > 0
@@ -723,13 +726,13 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            int [] rows = mergedEntriesTable.getSelectedRows();
+            int[] rows = mergedEntriesTable.getSelectedRows();
             model.moveDownMerged(rows);
         }
 
         @Override
         public void valueChanged(ListSelectionEvent e) {
-            int [] rows = mergedEntriesTable.getSelectedRows();
+            int[] rows = mergedEntriesTable.getSelectedRows();
             setEnabled(
                     rows != null
                     && rows.length > 0
@@ -757,13 +760,13 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            int [] rows = mergedEntriesTable.getSelectedRows();
+            int[] rows = mergedEntriesTable.getSelectedRows();
             model.removeMerged(rows);
         }
 
         @Override
         public void valueChanged(ListSelectionEvent e) {
-            int [] rows = mergedEntriesTable.getSelectedRows();
+            int[] rows = mergedEntriesTable.getSelectedRows();
             setEnabled(
                     rows != null
                     && rows.length > 0
@@ -771,7 +774,7 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
         }
     }
 
-    private static interface FreezeActionProperties {
+    private interface FreezeActionProperties {
         String PROP_SELECTED = FreezeActionProperties.class.getName() + ".selected";
     }
 
@@ -807,7 +810,7 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
                         @Override
                         public void propertyChange(PropertyChangeEvent evt) {
                             if (evt.getPropertyName().equals(PROP_SELECTED)) {
-                                btn.setSelected((Boolean)evt.getNewValue());
+                                btn.setSelected((Boolean) evt.getNewValue());
                             }
                         }
                     }
@@ -826,7 +829,7 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
                 putValue(Action.SHORT_DESCRIPTION, tr("Freeze the current list of merged elements."));
                 model.setFrozen(false);
             }
-            boolean isSelected = (Boolean)getValue(PROP_SELECTED);
+            boolean isSelected = (Boolean) getValue(PROP_SELECTED);
             if (isSelected != (e.getStateChange() == ItemEvent.SELECTED)) {
                 putValue(PROP_SELECTED, e.getStateChange() == ItemEvent.SELECTED);
             }
@@ -858,7 +861,7 @@ public abstract class ListMerger<T extends PrimitiveId> extends JPanel implement
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals(ListMergeModel.FROZEN_PROP)) {
-            handlePropertyChangeFrozen((Boolean)evt.getOldValue(), (Boolean)evt.getNewValue());
+            handlePropertyChangeFrozen((Boolean) evt.getOldValue(), (Boolean) evt.getNewValue());
         }
     }
 

@@ -28,7 +28,7 @@ public final class User {
     /**
      * the map of known users
      */
-    private static Map<Long,User> userMap = new HashMap<>();
+    private static Map<Long, User> userMap = new HashMap<>();
 
     /**
      * The anonymous user is a local user used in places where no user is known.
@@ -48,9 +48,9 @@ public final class User {
      * @return a new local user with the given name
      */
     public static synchronized User createLocalUser(String name) {
-        for(long i = -1; i >= uidCounter; --i) {
+        for (long i = -1; i >= uidCounter; --i) {
             User olduser = getById(i);
-            if(olduser != null && olduser.hasName(name))
+            if (olduser != null && olduser.hasName(name))
                 return olduser;
         }
         User user = new User(getNextLocalUid(), name);
@@ -147,7 +147,7 @@ public final class User {
     /**
      * Adds a user name to the list if it is not there, yet.
      *
-     * @param name
+     * @param name User name
      */
     public void addName(String name) {
         names.add(name);
@@ -156,7 +156,7 @@ public final class User {
     /**
      * Returns true if the name is in the names list
      *
-     * @param name
+     * @param name User name
      * @return <code>true</code> if the name is in the names list
      */
     public boolean hasName(String name) {
@@ -212,7 +212,7 @@ public final class User {
 
     @Override
     public boolean equals(Object obj) {
-        if (! (obj instanceof User))
+        if (!(obj instanceof User))
             return false;
         User other = (User) obj;
         if (uid != other.uid)

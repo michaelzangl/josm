@@ -59,7 +59,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
     protected JPanel buildQueryPanel() {
         ItemListener stateChangeHandler = new RestrictionGroupStateChangeHandler();
         JPanel pnl  = new VerticallyScrollablePanel();
-        pnl.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        pnl.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         pnl.setLayout(new GridBagLayout());
         GridBagConstraints gc = new GridBagConstraints();
 
@@ -73,7 +73,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
 
         gc.gridx = 1;
         gc.weightx = 1.0;
-        pnl.add(new JMultilineLabel(tr("Select changesets owned by specific users")),gc);
+        pnl.add(new JMultilineLabel(tr("Select changesets owned by specific users")), gc);
 
         gc.gridy = 1;
         gc.gridx = 1;
@@ -92,7 +92,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
 
         gc.gridx = 1;
         gc.weightx = 1.0;
-        pnl.add(new JMultilineLabel(tr("Select changesets depending on whether they are open or closed")),gc);
+        pnl.add(new JMultilineLabel(tr("Select changesets depending on whether they are open or closed")), gc);
 
         gc.gridy = 3;
         gc.gridx = 1;
@@ -111,7 +111,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
 
         gc.gridx = 1;
         gc.weightx = 1.0;
-        pnl.add(new JMultilineLabel(tr("Select changesets based on the date/time they have been created or closed")),gc);
+        pnl.add(new JMultilineLabel(tr("Select changesets based on the date/time they have been created or closed")), gc);
 
         gc.gridy = 5;
         gc.gridx = 1;
@@ -131,7 +131,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
 
         gc.gridx = 1;
         gc.weightx = 1.0;
-        pnl.add(new JMultilineLabel(tr("Select only changesets related to a specific bounding box")),gc);
+        pnl.add(new JMultilineLabel(tr("Select only changesets related to a specific bounding box")), gc);
 
         gc.gridy = 7;
         gc.gridx = 1;
@@ -142,7 +142,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
         gc.gridy = 8;
         gc.gridx = 0;
         gc.gridwidth = 2;
-        gc.fill  =GridBagConstraints.BOTH;
+        gc.fill = GridBagConstraints.BOTH;
         gc.weightx = 1.0;
         gc.weighty = 1.0;
         pnl.add(new JPanel(), gc);
@@ -176,7 +176,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
 
     public void displayMessageIfInvalid() {
         if (cbUserRestriction.isSelected()) {
-            if (! pnlUserRestriction.isValidChangesetQuery()) {
+            if (!pnlUserRestriction.isValidChangesetQuery()) {
                 pnlUserRestriction.displayMessageIfInvalid();
             }
         } else if (cbTimeRestrictions.isSelected()) {
@@ -199,7 +199,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
     public ChangesetQuery buildChangesetQuery() {
         ChangesetQuery query = new ChangesetQuery();
         if (cbUserRestriction.isSelected()) {
-            if (! pnlUserRestriction.isValidChangesetQuery())
+            if (!pnlUserRestriction.isValidChangesetQuery())
                 return null;
             pnlUserRestriction.fillInQuery(query);
         }
@@ -288,10 +288,10 @@ public class AdvancedChangesetQueryPanel extends JPanel {
         protected void build() {
             setLayout(new GridBagLayout());
             setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createEmptyBorder(3,3,3,3),
+                    BorderFactory.createEmptyBorder(3, 3, 3, 3),
                     BorderFactory.createCompoundBorder(
                             BorderFactory.createLineBorder(Color.GRAY),
-                            BorderFactory.createEmptyBorder(5,5,5,5)
+                            BorderFactory.createEmptyBorder(5, 5, 5, 5)
                     )
             ));
             GridBagConstraints gc = new GridBagConstraints();
@@ -388,11 +388,11 @@ public class AdvancedChangesetQueryPanel extends JPanel {
             GridBagConstraints gc = new GridBagConstraints();
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
-            gc.insets = new Insets(0,0,0,3);
+            gc.insets = new Insets(0, 0, 0, 3);
             pnl.add(new JLabel(tr("User ID:")), gc);
 
             gc.gridx = 1;
-            pnl.add(tfUid = new JosmTextField(10),gc);
+            pnl.add(tfUid = new JosmTextField(10), gc);
             SelectAllOnFocusGainedDecorator.decorate(tfUid);
             valUid = UidInputFieldValidator.decorate(tfUid);
 
@@ -408,11 +408,11 @@ public class AdvancedChangesetQueryPanel extends JPanel {
             GridBagConstraints gc = new GridBagConstraints();
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
-            gc.insets = new Insets(0,0,0,3);
+            gc.insets = new Insets(0, 0, 0, 3);
             pnl.add(new JLabel(tr("User name:")), gc);
 
             gc.gridx = 1;
-            pnl.add(tfUserName = new JosmTextField(10),gc);
+            pnl.add(tfUserName = new JosmTextField(10), gc);
             SelectAllOnFocusGainedDecorator.decorate(tfUserName);
             valUserName = UserNameInputValidator.decorate(tfUserName);
 
@@ -426,10 +426,10 @@ public class AdvancedChangesetQueryPanel extends JPanel {
         protected void build() {
             setLayout(new GridBagLayout());
             setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createEmptyBorder(3,3,3,3),
+                    BorderFactory.createEmptyBorder(3, 3, 3, 3),
                     BorderFactory.createCompoundBorder(
                             BorderFactory.createLineBorder(Color.GRAY),
-                            BorderFactory.createEmptyBorder(5,5,5,5)
+                            BorderFactory.createEmptyBorder(5, 5, 5, 5)
                     )
             ));
 
@@ -437,7 +437,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
             GridBagConstraints gc = new GridBagConstraints();
             gc.anchor = GridBagConstraints.NORTHWEST;
             gc.gridx = 0;
-            gc.fill= GridBagConstraints.HORIZONTAL;
+            gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
             add(rbRestrictToMyself = new JRadioButton(), gc);
             rbRestrictToMyself.addItemListener(userRestrictionChangeHandler);
@@ -449,7 +449,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
 
             gc.gridx = 0;
             gc.gridy = 1;
-            gc.fill= GridBagConstraints.HORIZONTAL;
+            gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
             add(rbRestrictToUid = new JRadioButton(), gc);
             rbRestrictToUid.addItemListener(userRestrictionChangeHandler);
@@ -457,31 +457,31 @@ public class AdvancedChangesetQueryPanel extends JPanel {
             gc.gridx = 1;
             gc.fill =  GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
-            add(new JMultilineLabel(tr("Only changesets owned by the user with the following user ID")),gc);
+            add(new JMultilineLabel(tr("Only changesets owned by the user with the following user ID")), gc);
 
             gc.gridx = 1;
             gc.gridy = 2;
             gc.fill =  GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
-            add(buildUidInputPanel(),gc);
+            add(buildUidInputPanel(), gc);
 
             gc.gridx = 0;
             gc.gridy = 3;
-            gc.fill= GridBagConstraints.HORIZONTAL;
+            gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
             add(rbRestrictToUserName = new JRadioButton(), gc);
             rbRestrictToUserName.addItemListener(userRestrictionChangeHandler);
 
             gc.gridx = 1;
-            gc.fill =  GridBagConstraints.HORIZONTAL;
+            gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
-            add(new JMultilineLabel(tr("Only changesets owned by the user with the following user name")),gc);
+            add(new JMultilineLabel(tr("Only changesets owned by the user with the following user name")), gc);
 
             gc.gridx = 1;
             gc.gridy = 4;
-            gc.fill =  GridBagConstraints.HORIZONTAL;
+            gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
-            add(buildUserNameInputPanel(),gc);
+            add(buildUserNameInputPanel(), gc);
 
             bgUserRestrictions = new ButtonGroup();
             bgUserRestrictions.add(rbRestrictToMyself);
@@ -526,7 +526,8 @@ public class AdvancedChangesetQueryPanel extends JPanel {
                 } else if (im.isFullyIdentified()) {
                     query.forUser(im.getUserId());
                 } else
-                    throw new IllegalStateException(tr("Cannot restrict changeset query to the current user because the current user is anonymous"));
+                    throw new IllegalStateException(
+                            tr("Cannot restrict changeset query to the current user because the current user is anonymous"));
             } else if (rbRestrictToUid.isSelected()) {
                 int uid  = valUid.getUid();
                 if (uid > 0) {
@@ -534,12 +535,12 @@ public class AdvancedChangesetQueryPanel extends JPanel {
                 } else
                     throw new IllegalStateException(tr("Current value ''{0}'' for user ID is not valid", tfUid.getText()));
             } else if (rbRestrictToUserName.isSelected()) {
-                if (! valUserName.isValid())
-                    throw new IllegalStateException(tr("Cannot restrict the changeset query to the user name ''{0}''", tfUserName.getText()));
+                if (!valUserName.isValid())
+                    throw new IllegalStateException(
+                            tr("Cannot restrict the changeset query to the user name ''{0}''", tfUserName.getText()));
                 query.forUser(tfUserName.getText());
             }
         }
-
 
         public boolean isValidChangesetQuery() {
             if (rbRestrictToUid.isSelected())
@@ -655,23 +656,23 @@ public class AdvancedChangesetQueryPanel extends JPanel {
             GridBagConstraints gc = new GridBagConstraints();
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
-            gc.insets = new Insets(0,0,0,3);
+            gc.insets = new Insets(0, 0, 0, 3);
             pnl.add(new JLabel(tr("Date: ")), gc);
 
             gc.gridx = 1;
             gc.weightx = 0.7;
-            pnl.add(tfClosedAfterDate1 = new JosmTextField(),gc);
+            pnl.add(tfClosedAfterDate1 = new JosmTextField(), gc);
             SelectAllOnFocusGainedDecorator.decorate(tfClosedAfterDate1);
             valClosedAfterDate1 = DateValidator.decorate(tfClosedAfterDate1);
             tfClosedAfterDate1.setToolTipText(valClosedAfterDate1.getStandardTooltipTextAsHtml());
 
             gc.gridx = 2;
             gc.weightx = 0.0;
-            pnl.add(new JLabel(tr("Time:")),gc);
+            pnl.add(new JLabel(tr("Time:")), gc);
 
             gc.gridx = 3;
             gc.weightx = 0.3;
-            pnl.add(tfClosedAfterTime1 = new JosmTextField(),gc);
+            pnl.add(tfClosedAfterTime1 = new JosmTextField(), gc);
             SelectAllOnFocusGainedDecorator.decorate(tfClosedAfterTime1);
             valClosedAfterTime1 = TimeValidator.decorate(tfClosedAfterTime1);
             tfClosedAfterTime1.setToolTipText(valClosedAfterTime1.getStandardTooltipTextAsHtml());
@@ -683,28 +684,28 @@ public class AdvancedChangesetQueryPanel extends JPanel {
             GridBagConstraints gc = new GridBagConstraints();
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
-            gc.insets = new Insets(0,0,0,3);
+            gc.insets = new Insets(0, 0, 0, 3);
             pnl.add(new JLabel(tr("Closed after - ")), gc);
 
             gc.gridx = 1;
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
-            gc.insets = new Insets(0,0,0,3);
+            gc.insets = new Insets(0, 0, 0, 3);
             pnl.add(new JLabel(tr("Date:")), gc);
 
             gc.gridx = 2;
             gc.weightx = 0.7;
-            pnl.add(tfClosedAfterDate2 = new JosmTextField(),gc);
+            pnl.add(tfClosedAfterDate2 = new JosmTextField(), gc);
             SelectAllOnFocusGainedDecorator.decorate(tfClosedAfterDate2);
             valClosedAfterDate2 = DateValidator.decorate(tfClosedAfterDate2);
             tfClosedAfterDate2.setToolTipText(valClosedAfterDate2.getStandardTooltipTextAsHtml());
             gc.gridx = 3;
             gc.weightx = 0.0;
-            pnl.add(new JLabel(tr("Time:")),gc);
+            pnl.add(new JLabel(tr("Time:")), gc);
 
             gc.gridx = 4;
             gc.weightx = 0.3;
-            pnl.add(tfClosedAfterTime2 = new JosmTextField(),gc);
+            pnl.add(tfClosedAfterTime2 = new JosmTextField(), gc);
             SelectAllOnFocusGainedDecorator.decorate(tfClosedAfterTime2);
             valClosedAfterTime2 = TimeValidator.decorate(tfClosedAfterTime2);
             tfClosedAfterTime2.setToolTipText(valClosedAfterTime2.getStandardTooltipTextAsHtml());
@@ -713,29 +714,29 @@ public class AdvancedChangesetQueryPanel extends JPanel {
             gc.gridx = 0;
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
-            gc.insets = new Insets(0,0,0,3);
+            gc.insets = new Insets(0, 0, 0, 3);
             pnl.add(new JLabel(tr("Created before - ")), gc);
 
             gc.gridx = 1;
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
-            gc.insets = new Insets(0,0,0,3);
+            gc.insets = new Insets(0, 0, 0, 3);
             pnl.add(new JLabel(tr("Date:")), gc);
 
             gc.gridx = 2;
             gc.weightx = 0.7;
-            pnl.add(tfCreatedBeforeDate = new JosmTextField(),gc);
+            pnl.add(tfCreatedBeforeDate = new JosmTextField(), gc);
             SelectAllOnFocusGainedDecorator.decorate(tfCreatedBeforeDate);
             valCreatedBeforeDate = DateValidator.decorate(tfCreatedBeforeDate);
             tfCreatedBeforeDate.setToolTipText(valCreatedBeforeDate.getStandardTooltipTextAsHtml());
 
             gc.gridx = 3;
             gc.weightx = 0.0;
-            pnl.add(new JLabel(tr("Time:")),gc);
+            pnl.add(new JLabel(tr("Time:")), gc);
 
             gc.gridx = 4;
             gc.weightx = 0.3;
-            pnl.add(tfCreatedBeforeTime = new JosmTextField(),gc);
+            pnl.add(tfCreatedBeforeTime = new JosmTextField(), gc);
             SelectAllOnFocusGainedDecorator.decorate(tfCreatedBeforeTime);
             valCreatedBeforeTime = TimeValidator.decorate(tfCreatedBeforeTime);
             tfCreatedBeforeTime.setToolTipText(valCreatedBeforeDate.getStandardTooltipTextAsHtml());
@@ -746,10 +747,10 @@ public class AdvancedChangesetQueryPanel extends JPanel {
         protected void build() {
             setLayout(new GridBagLayout());
             setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createEmptyBorder(3,3,3,3),
+                    BorderFactory.createEmptyBorder(3, 3, 3, 3),
                     BorderFactory.createCompoundBorder(
                             BorderFactory.createLineBorder(Color.GRAY),
-                            BorderFactory.createEmptyBorder(5,5,5,5)
+                            BorderFactory.createEmptyBorder(5, 5, 5, 5)
                     )
             ));
 
@@ -758,20 +759,20 @@ public class AdvancedChangesetQueryPanel extends JPanel {
             GridBagConstraints gc = new GridBagConstraints();
             gc.anchor = GridBagConstraints.NORTHWEST;
             gc.gridx = 0;
-            gc.fill= GridBagConstraints.HORIZONTAL;
+            gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
             add(rbClosedAfter = new JRadioButton(), gc);
 
             gc.gridx = 1;
-            gc.fill =  GridBagConstraints.HORIZONTAL;
+            gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
             add(new JMultilineLabel(tr("Only changesets closed after the following date/time")), gc);
 
             gc.gridx = 1;
             gc.gridy = 1;
-            gc.fill =  GridBagConstraints.HORIZONTAL;
+            gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
-            add(buildClosedAfterInputPanel(),gc);
+            add(buildClosedAfterInputPanel(), gc);
 
             // -- changesets closed after a specific date/time and created before a specific date time
             //
@@ -779,20 +780,20 @@ public class AdvancedChangesetQueryPanel extends JPanel {
             gc.anchor = GridBagConstraints.NORTHWEST;
             gc.gridy = 2;
             gc.gridx = 0;
-            gc.fill= GridBagConstraints.HORIZONTAL;
+            gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 0.0;
             add(rbClosedAfterAndCreatedBefore = new JRadioButton(), gc);
 
             gc.gridx = 1;
-            gc.fill =  GridBagConstraints.HORIZONTAL;
+            gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
             add(new JMultilineLabel(tr("Only changesets closed after and created before a specific date/time")), gc);
 
             gc.gridx = 1;
             gc.gridy = 3;
-            gc.fill =  GridBagConstraints.HORIZONTAL;
+            gc.fill = GridBagConstraints.HORIZONTAL;
             gc.weightx = 1.0;
-            add(buildClosedAfterAndCreatedBeforeInputPanel(),gc);
+            add(buildClosedAfterAndCreatedBeforeInputPanel(), gc);
 
             ButtonGroup bg = new ButtonGroup();
             bg.add(rbClosedAfter);
@@ -875,7 +876,6 @@ public class AdvancedChangesetQueryPanel extends JPanel {
             );
         }
 
-
         public void rememberSettings() {
             String prefRoot = "changeset-query.advanced.time-restrictions";
             if (rbClosedAfter.isSelected()) {
@@ -929,10 +929,10 @@ public class AdvancedChangesetQueryPanel extends JPanel {
     private static class BBoxRestrictionPanel extends BoundingBoxSelectionPanel {
         public BBoxRestrictionPanel() {
             setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createEmptyBorder(3,3,3,3),
+                    BorderFactory.createEmptyBorder(3, 3, 3, 3),
                     BorderFactory.createCompoundBorder(
                             BorderFactory.createLineBorder(Color.GRAY),
-                            BorderFactory.createEmptyBorder(5,5,5,5)
+                            BorderFactory.createEmptyBorder(5, 5, 5, 5)
                     )
             ));
         }
@@ -993,7 +993,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
                     feedbackInvalid(tr("The current value is not a valid user ID. Please enter an integer value > 0"));
                     return;
                 }
-            } catch(NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 feedbackInvalid(tr("The current value is not a valid user ID. Please enter an integer value > 0"));
                 return;
             }
@@ -1007,7 +1007,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
                 int uid = Integer.parseInt(value.trim());
                 if (uid > 0) return uid;
                 return 0;
-            } catch(NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 return 0;
             }
         }
@@ -1024,7 +1024,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
 
         @Override
         public boolean isValid() {
-            return getComponent().getText().trim().length() > 0;
+            return !getComponent().getText().trim().isEmpty();
         }
 
         @Override
@@ -1096,6 +1096,9 @@ public class AdvancedChangesetQueryPanel extends JPanel {
                     return df.parse(getComponent().getText());
                 } catch (ParseException e) {
                     // Try next format
+                    if (Main.isTraceEnabled()) {
+                        Main.trace(e.getMessage());
+                    }
                 }
             }
             return null;
@@ -1162,7 +1165,7 @@ public class AdvancedChangesetQueryPanel extends JPanel {
             for (int style : new int[]{DateFormat.SHORT, DateFormat.MEDIUM, DateFormat.LONG, DateFormat.FULL}) {
                 try {
                     return DateFormat.getTimeInstance(style, Locale.getDefault()).parse(getComponent().getText());
-                } catch(ParseException e) {
+                } catch (ParseException e) {
                     continue;
                 }
             }

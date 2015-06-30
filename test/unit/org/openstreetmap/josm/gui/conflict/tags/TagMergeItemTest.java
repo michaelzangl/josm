@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openstreetmap.josm.JOSMFixture;
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.gui.conflict.pair.MergeDecisionType;
 import org.openstreetmap.josm.gui.conflict.pair.tags.TagMergeItem;
@@ -67,10 +68,9 @@ public class TagMergeItemTest {
         TagMergeItem item = new TagMergeItem("key", n1, n2);
         assertEquals("key", item.getKey());
         assertNull(item.getMyTagValue());
-        assertEquals("theirvalue",item.getTheirTagValue());
+        assertEquals("theirvalue", item.getTheirTagValue());
         assertEquals(MergeDecisionType.UNDECIDED, item.getMergeDecision());
     }
-
 
     @Test
     public void test_decide() {
@@ -79,18 +79,21 @@ public class TagMergeItemTest {
         assertEquals(MergeDecisionType.KEEP_MINE, item.getMergeDecision());
     }
 
-    @Test()
+    @Test
     public void test_decide_1() {
         TagMergeItem item = new TagMergeItem("key", "myvalue", "theirvalue");
         try {
             item.decide(null);
             fail("expected IllegalArgumentException not thrown");
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             // OK
+            if (Main.isTraceEnabled()) {
+                Main.trace(e.getMessage());
+            }
         }
     }
 
-    @Test()
+    @Test
     public void test_applyToMyPrimitive() {
         TagMergeItem item = new TagMergeItem("key", "myvalue", "theirvalue");
         item.decide(MergeDecisionType.KEEP_MINE);
@@ -103,10 +106,9 @@ public class TagMergeItemTest {
         n1 = new Node(1);
         item.applyToMyPrimitive(n1);
         assertEquals("myvalue", n1.get("key"));
-
     }
 
-    @Test()
+    @Test
     public void test_applyToMyPrimitive_2() {
         TagMergeItem item = new TagMergeItem("key", "myvalue", "theirvalue");
         item.decide(MergeDecisionType.KEEP_THEIR);
@@ -121,7 +123,7 @@ public class TagMergeItemTest {
         assertEquals("theirvalue", n1.get("key"));
     }
 
-    @Test()
+    @Test
     public void test_applyToMyPrimitive_3() {
         TagMergeItem item = new TagMergeItem("key", "myvalue", "theirvalue");
         // item is undecided
@@ -132,20 +134,26 @@ public class TagMergeItemTest {
         try {
             item.applyToMyPrimitive(n1);
             fail("expected IllegalStateException");
-        } catch(IllegalStateException e) {
+        } catch (IllegalStateException e) {
             // OK
+            if (Main.isTraceEnabled()) {
+                Main.trace(e.getMessage());
+            }
         }
     }
 
-    @Test()
+    @Test
     public void test_applyToMyPrimitive_4() {
         TagMergeItem item = new TagMergeItem("key", "myvalue", "theirvalue");
 
         try {
             item.applyToMyPrimitive(null);
             fail("expected IllegalArgumentException");
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             // OK
+            if (Main.isTraceEnabled()) {
+                Main.trace(e.getMessage());
+            }
         }
     }
 }

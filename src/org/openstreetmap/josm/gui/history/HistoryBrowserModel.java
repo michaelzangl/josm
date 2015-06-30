@@ -137,6 +137,7 @@ public class HistoryBrowserModel extends Observable implements LayerChangeListen
         }
         return false;
     }
+
     protected boolean canShowAsLatest(OsmPrimitive primitive) {
         if (primitive == null) return false;
         if (primitive.isNew() || !primitive.isUsable()) return false;
@@ -223,21 +224,21 @@ public class HistoryBrowserModel extends Observable implements LayerChangeListen
      * TODO: Maybe rename to reflect this? eg. updateNodeListTableModels
      */
     protected void initNodeListTableModels() {
-        if(current.getType() != OsmPrimitiveType.WAY || reference.getType() != OsmPrimitiveType.WAY)
+        if (current.getType() != OsmPrimitiveType.WAY || reference.getType() != OsmPrimitiveType.WAY)
             return;
         TwoColumnDiff diff = new TwoColumnDiff(
-                ((HistoryWay)reference).getNodes().toArray(),
-                ((HistoryWay)current).getNodes().toArray());
+                ((HistoryWay) reference).getNodes().toArray(),
+                ((HistoryWay) current).getNodes().toArray());
         referenceNodeListTableModel.setRows(diff.referenceDiff, diff.referenceReversed);
         currentNodeListTableModel.setRows(diff.currentDiff, false);
     }
 
     protected void initMemberListTableModels() {
-        if(current.getType() != OsmPrimitiveType.RELATION || reference.getType() != OsmPrimitiveType.RELATION)
+        if (current.getType() != OsmPrimitiveType.RELATION || reference.getType() != OsmPrimitiveType.RELATION)
             return;
         TwoColumnDiff diff = new TwoColumnDiff(
-                ((HistoryRelation)reference).getMembers().toArray(),
-                ((HistoryRelation)current).getMembers().toArray());
+                ((HistoryRelation) reference).getMembers().toArray(),
+                ((HistoryRelation) current).getMembers().toArray());
         referenceRelationMemberTableModel.setRows(diff.referenceDiff, diff.referenceReversed);
         currentRelationMemberTableModel.setRows(diff.currentDiff, false);
     }
@@ -299,10 +300,12 @@ public class HistoryBrowserModel extends Observable implements LayerChangeListen
         if (history == null)
             throw new IllegalStateException(tr("History not initialized yet. Failed to set reference primitive."));
         if (reference.getId() != history.getId())
-            throw new IllegalArgumentException(tr("Failed to set reference. Reference ID {0} does not match history ID {1}.", reference.getId(),  history.getId()));
+            throw new IllegalArgumentException(
+                    tr("Failed to set reference. Reference ID {0} does not match history ID {1}.", reference.getId(),  history.getId()));
         HistoryOsmPrimitive primitive = history.getByVersion(reference.getVersion());
         if (primitive == null)
-            throw new IllegalArgumentException(tr("Failed to set reference. Reference version {0} not available in history.", reference.getVersion()));
+            throw new IllegalArgumentException(
+                    tr("Failed to set reference. Reference version {0} not available in history.", reference.getVersion()));
 
         this.reference = reference;
         initTagTableModels();
@@ -329,10 +332,12 @@ public class HistoryBrowserModel extends Observable implements LayerChangeListen
         if (history == null)
             throw new IllegalStateException(tr("History not initialized yet. Failed to set current primitive."));
         if (current.getId() != history.getId())
-            throw new IllegalArgumentException(tr("Failed to set reference. Reference ID {0} does not match history ID {1}.", current.getId(),  history.getId()));
+            throw new IllegalArgumentException(
+                    tr("Failed to set reference. Reference ID {0} does not match history ID {1}.", current.getId(),  history.getId()));
         HistoryOsmPrimitive primitive = history.getByVersion(current.getVersion());
         if (primitive == null)
-            throw new IllegalArgumentException(tr("Failed to set current primitive. Current version {0} not available in history.", current.getVersion()));
+            throw new IllegalArgumentException(
+                    tr("Failed to set current primitive. Current version {0} not available in history.", current.getVersion()));
         this.current = current;
         initTagTableModels();
         initNodeListTableModels();
@@ -730,7 +735,7 @@ public class HistoryBrowserModel extends Observable implements LayerChangeListen
     @Override
     public void activeLayerChange(Layer oldLayer, Layer newLayer) {
         if (oldLayer instanceof OsmDataLayer) {
-            OsmDataLayer l = (OsmDataLayer)oldLayer;
+            OsmDataLayer l = (OsmDataLayer) oldLayer;
             l.data.removeDataSetListener(this);
         }
         if (!(newLayer instanceof OsmDataLayer)) {
@@ -738,7 +743,7 @@ public class HistoryBrowserModel extends Observable implements LayerChangeListen
             fireModelChange();
             return;
         }
-        OsmDataLayer l = (OsmDataLayer)newLayer;
+        OsmDataLayer l = (OsmDataLayer) newLayer;
         l.data.addDataSetListener(this);
         OsmPrimitive primitive = l.data.getPrimitiveById(history.getId(), history.getType());
         HistoryOsmPrimitive latest;
@@ -753,6 +758,7 @@ public class HistoryBrowserModel extends Observable implements LayerChangeListen
 
     @Override
     public void layerAdded(Layer newLayer) {}
+
     @Override
     public void layerRemoved(Layer oldLayer) {}
 
@@ -773,7 +779,7 @@ public class HistoryBrowserModel extends Observable implements LayerChangeListen
         public void visit(Relation r) {
             clone = new HistoryRelation(r.getId(), r.getVersion(), r.isVisible(), getCurrentUser(), 0, null, false);
             clone.setTags(r.getKeys());
-            HistoryRelation hr = (HistoryRelation)clone;
+            HistoryRelation hr = (HistoryRelation) clone;
             for (RelationMember rm : r.getMembers()) {
                 hr.addMember(new RelationMemberData(rm.getRole(), rm.getType(), rm.getUniqueId()));
             }
@@ -784,7 +790,7 @@ public class HistoryBrowserModel extends Observable implements LayerChangeListen
             clone = new HistoryWay(w.getId(), w.getVersion(), w.isVisible(), getCurrentUser(), 0, null, false);
             clone.setTags(w.getKeys());
             for (Node n: w.getNodes()) {
-                ((HistoryWay)clone).addNode(n.getUniqueId());
+                ((HistoryWay) clone).addNode(n.getUniqueId());
             }
         }
 

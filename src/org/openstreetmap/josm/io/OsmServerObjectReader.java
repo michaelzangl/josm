@@ -105,7 +105,7 @@ public class OsmServerObjectReader extends OsmServerReader {
      *
      * @param progressMonitor the progress monitor. Set to {@link NullProgressMonitor#INSTANCE} if null
      * @return the downloaded data
-     * @throws OsmTransferException
+     * @throws OsmTransferException if any error occurs during dialog with OSM API
      */
     @Override
     public DataSet parseOsm(ProgressMonitor progressMonitor) throws OsmTransferException {
@@ -119,7 +119,7 @@ public class OsmServerObjectReader extends OsmServerReader {
             sb.append(id.getType().getAPIName())
               .append('/')
               .append(id.getUniqueId());
-            if (full && ! id.getType().equals(OsmPrimitiveType.NODE)) {
+            if (full && !id.getType().equals(OsmPrimitiveType.NODE)) {
                 sb.append("/full");
             } else if (version > 0) {
                 sb.append('/').append(version);
@@ -130,7 +130,7 @@ public class OsmServerObjectReader extends OsmServerReader {
                     return null;
                 return OsmReader.parseDataSet(in, progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
             }
-        } catch(OsmTransferException e) {
+        } catch (OsmTransferException e) {
             if (cancel) return null;
             throw e;
         } catch (Exception e) {

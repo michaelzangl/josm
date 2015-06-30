@@ -83,16 +83,17 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
             );
 
     public static ThreadFactory getNamedThreadFactory(final String name) {
-        return new ThreadFactory(){
+        return new ThreadFactory() {
+            @Override
             public Thread newThread(Runnable r) {
                 Thread t = Executors.defaultThreadFactory().newThread(r);
                 t.setName(name);
                 return t;
-                }
+            }
         };
     }
 
-    private static ConcurrentMap<String,Set<ICachedLoaderListener>> inProgress = new ConcurrentHashMap<>();
+    private static ConcurrentMap<String, Set<ICachedLoaderListener>> inProgress = new ConcurrentHashMap<>();
     private static ConcurrentMap<String, Boolean> useHead = new ConcurrentHashMap<>();
 
     protected long now; // when the job started
@@ -112,12 +113,12 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
 
     /**
      * @param cache cache instance that we will work on
-     * @param headers
-     * @param readTimeout
-     * @param connectTimeout
-     * @param downloadJobExecutor
+     * @param headers HTTP headers to be sent together with request
+     * @param readTimeout when connecting to remote resource
+     * @param connectTimeout when connecting to remote resource
+     * @param downloadJobExecutor that will be executing the jobs
      */
-    public JCSCachedTileLoaderJob(ICacheAccess<K,V> cache,
+    public JCSCachedTileLoaderJob(ICacheAccess<K, V> cache,
             int connectTimeout, int readTimeout,
             Map<String, String> headers,
             ThreadPoolExecutor downloadJobExecutor) {
@@ -132,9 +133,9 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
 
     /**
      * @param cache cache instance that we will work on
-     * @param headers
-     * @param readTimeout
-     * @param connectTimeout
+     * @param headers HTTP headers to be sent together with request
+     * @param readTimeout when connecting to remote resource
+     * @param connectTimeout when connecting to remote resource
      */
     public JCSCachedTileLoaderJob(ICacheAccess<K, V> cache,
             int connectTimeout, int readTimeout,
@@ -184,14 +185,14 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
 
         if (first || force) {
             ensureCacheElement();
-            if (!force && cacheElement != null && isCacheElementValid() && (isObjectLoadable())) {
+            if (!force && cacheElement != null && isCacheElementValid() && isObjectLoadable()) {
                 // we got something in cache, and it's valid, so lets return it
                 log.log(Level.FINE, "JCS - Returning object from cache: {0}", getCacheKey());
                 finishLoading(LoadResult.SUCCESS);
                 return;
             }
             // object not in cache, so submit work to separate thread
-            getDownloadExecutor().execute(this);
+            downloadJobExecutor.execute(this);
         }
     }
 
@@ -214,11 +215,13 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
     }
 
     /**
+     * Simple implementation. All errors should be cached as empty. Though some JDK (JDK8 on Windows for example)
+     * doesn't return 4xx error codes, instead they do throw an FileNotFoundException or IOException
      *
-     * @return cache object as empty, regardless of what remote resource has returned (ex. based on headers)
+     * @return true if we should put empty object into cache, regardless of what remote resource has returned
      */
-    protected boolean cacheAsEmpty(Map<String, List<String>> headers, int statusCode, byte[] content) {
-        return false;
+    protected boolean cacheAsEmpty() {
+        return attributes.getResponseCode() < 500;
     }
 
     /**
@@ -226,13 +229,6 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
      */
     protected String getServerKey() {
         return getUrl().getHost();
-    }
-
-    /**
-     * this needs to be non-static, so it can be overridden by subclasses
-     */
-    protected ThreadPoolExecutor getDownloadExecutor() {
-        return downloadJobExecutor;
     }
 
     @Override
@@ -261,7 +257,6 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
         }
     }
 
-
     private void finishLoading(LoadResult result) {
         Set<ICachedLoaderListener> listeners = null;
         synchronized (inProgress) {
@@ -271,19 +266,9 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
             log.log(Level.WARNING, "Listener not found for URL: {0}. Listener not notified!", getUrl());
             return;
         }
-        try {
-            for (ICachedLoaderListener l: listeners) {
-                l.loadingFinished(cacheData, attributes, result);
-            }
-        } catch (Exception e) {
-            log.log(Level.WARNING, "JCS - Error while loading object from cache: {0}; {1}", new Object[]{e.getMessage(), getUrl()});
-            Main.warn(e);
-            for (ICachedLoaderListener l: listeners) {
-                l.loadingFinished(cacheData, attributes, LoadResult.FAILURE);
-            }
-
+        for (ICachedLoaderListener l: listeners) {
+            l.loadingFinished(cacheData, attributes, result);
         }
-
     }
 
     private boolean isCacheElementValid() {
@@ -295,7 +280,8 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
             // that is too large)
             expires = Math.min(expires, attributes.getCreateTime() + EXPIRE_TIME_SERVER_LIMIT);
             if (now > expires) {
-                log.log(Level.FINE, "JCS - Object {0} has expired -> valid to {1}, now is: {2}", new Object[]{getUrl(), Long.toString(expires), Long.toString(now)});
+                log.log(Level.FINE, "JCS - Object {0} has expired -> valid to {1}, now is: {2}",
+                        new Object[]{getUrl(), Long.toString(expires), Long.toString(now)});
                 return false;
             }
         } else {
@@ -313,6 +299,9 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
      */
 
     private boolean loadObject() {
+        if (attributes == null) {
+            attributes = new CacheEntryAttributes();
+        }
         try {
             // if we have object in cache, and host doesn't support If-Modified-Since nor If-None-Match
             // then just use HEAD request and check returned values
@@ -323,7 +312,7 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
                 return true;
             }
 
-            HttpURLConnection urlConn = getURLConnection();
+            URLConnection urlConn = getURLConnection();
 
             if (isObjectLoadable()  &&
                     (now - attributes.getLastModification()) <= ABSOLUTE_EXPIRE_TIME_LIMIT) {
@@ -332,7 +321,7 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
             if (isObjectLoadable() && attributes.getEtag() != null) {
                 urlConn.addRequestProperty("If-None-Match", attributes.getEtag());
             }
-            if (urlConn.getResponseCode() == 304) {
+            if (responseCode(urlConn) == 304) {
                 // If isModifiedSince or If-None-Match has been set
                 // and the server answers with a HTTP 304 = "Not Modified"
                 log.log(Level.FINE, "JCS - IfModifiedSince/Etag test: local version is up to date: {0}", getUrl());
@@ -340,12 +329,13 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
             } else if (isObjectLoadable()) {
                 // we have an object in cache, but we haven't received 304 resposne code
                 // check if we should use HEAD request to verify
-                if((attributes.getEtag() != null && attributes.getEtag().equals(urlConn.getRequestProperty("ETag"))) ||
+                if ((attributes.getEtag() != null && attributes.getEtag().equals(urlConn.getRequestProperty("ETag"))) ||
                         attributes.getLastModification() == urlConn.getLastModified()) {
                     // we sent ETag or If-Modified-Since, but didn't get 304 response code
                     // for further requests - use HEAD
                     String serverKey = getServerKey();
-                    log.log(Level.INFO, "JCS - Host: {0} found not to return 304 codes for If-Modifed-Since or If-None-Match headers", serverKey);
+                    log.log(Level.INFO, "JCS - Host: {0} found not to return 304 codes for If-Modifed-Since or If-None-Match headers",
+                            serverKey);
                     useHead.put(serverKey, Boolean.TRUE);
                 }
             }
@@ -353,16 +343,15 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
             attributes = parseHeaders(urlConn);
 
             for (int i = 0; i < 5; ++i) {
-                if (urlConn.getResponseCode() == 503) {
+                if (responseCode(urlConn) == 503) {
                     Thread.sleep(5000+(new Random()).nextInt(5000));
                     continue;
                 }
 
-                attributes.setResponseCode(urlConn.getResponseCode());
+                attributes.setResponseCode(responseCode(urlConn));
                 byte[] raw = read(urlConn);
 
-                if (!cacheAsEmpty(urlConn.getHeaderFields(), urlConn.getResponseCode(), raw) &&
-                        raw != null && raw.length > 0) {
+                if (isResponseLoadable(urlConn.getHeaderFields(), responseCode(urlConn), raw)) {
                     // we need to check cacheEmpty, so for cases, when data is returned, but we want to store
                     // as empty (eg. empty tile images) to save some space
                     cacheData = createCacheEntry(raw);
@@ -370,17 +359,35 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
                     log.log(Level.FINE, "JCS - downloaded key: {0}, length: {1}, url: {2}",
                             new Object[] {getCacheKey(), raw.length, getUrl()});
                     return true;
-                } else  {
+                } else if (cacheAsEmpty()) {
                     cacheData = createCacheEntry(new byte[]{});
                     cache.put(getCacheKey(), cacheData, attributes);
                     log.log(Level.FINE, "JCS - Caching empty object {0}", getUrl());
                     return true;
+                } else {
+                    log.log(Level.FINE, "JCS - failure during load - reponse is not loadable nor cached as empty");
+                    return false;
                 }
             }
         } catch (FileNotFoundException e) {
             log.log(Level.FINE, "JCS - Caching empty object as server returned 404 for: {0}", getUrl());
-            cache.put(getCacheKey(), createCacheEntry(new byte[]{}), attributes);
-            return handleNotFound();
+            attributes.setResponseCode(404);
+            boolean doCache = isResponseLoadable(null, 404, null) || cacheAsEmpty();
+            if (doCache) {
+                cacheData = createCacheEntry(new byte[]{});
+                cache.put(getCacheKey(), cacheData, attributes);
+            }
+            return doCache;
+        } catch (IOException e) {
+            log.log(Level.FINE, "JCS - IOExecption during communication with server for: {0}", getUrl());
+
+            attributes.setResponseCode(499); // set dummy error code
+            boolean doCache = isResponseLoadable(null, 499, null) || cacheAsEmpty(); //generic 499 error code returned
+            if (doCache) {
+                cacheData = createCacheEntry(new byte[]{});
+                cache.put(getCacheKey(), createCacheEntry(new byte[]{}), attributes);
+            }
+            return doCache;
         } catch (Exception e) {
             log.log(Level.WARNING, "JCS - Exception during download {0}",  getUrl());
             Main.warn(e);
@@ -391,9 +398,22 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
     }
 
     /**
-     *  @return if we should treat this object as properly loaded
+     * Check if the object is loadable. This means, if the data will be parsed, and if this response
+     * will finish as successful retrieve.
+     *
+     * This simple implementation doesn't load empty response, nor client (4xx) and server (5xx) errors
+     *
+     * @param headerFields headers sent by server
+     * @param responseCode http status code
+     * @param raw data read from server
+     * @return true if object should be cached and returned to listener
      */
-    protected abstract boolean handleNotFound();
+    protected boolean isResponseLoadable(Map<String, List<String>> headerFields, int responseCode, byte[] raw) {
+        if (raw == null || raw.length == 0 || responseCode >= 400) {
+            return false;
+        }
+        return true;
+    }
 
     protected abstract V createCacheEntry(byte[] content);
 
@@ -414,6 +434,9 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
                 }
             } catch (NumberFormatException e) {
                 // ignore malformed Cache-Control headers
+                if (Main.isTraceEnabled()) {
+                    Main.trace(e.getMessage());
+                }
             }
         }
 
@@ -423,12 +446,12 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
         return ret;
     }
 
-    private HttpURLConnection getURLConnection() throws IOException {
-        HttpURLConnection urlConn = (HttpURLConnection) getUrl().openConnection();
+    private URLConnection getURLConnection() throws IOException {
+        URLConnection urlConn = getUrl().openConnection();
         urlConn.setRequestProperty("Accept", "text/html, image/png, image/jpeg, image/gif, */*");
         urlConn.setReadTimeout(readTimeout); // 30 seconds read timeout
         urlConn.setConnectTimeout(connectTimeout);
-        for(Map.Entry<String, String> e: headers.entrySet()) {
+        for (Map.Entry<String, String> e: headers.entrySet()) {
             urlConn.setRequestProperty(e.getKey(), e.getValue());
         }
         if (force) {
@@ -438,11 +461,15 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
     }
 
     private boolean isCacheValidUsingHead() throws IOException {
-        HttpURLConnection urlConn = (HttpURLConnection) getUrl().openConnection();
-        urlConn.setRequestMethod("HEAD");
-        long lastModified = urlConn.getLastModified();
-        return (attributes.getEtag() != null && attributes.getEtag().equals(urlConn.getRequestProperty("ETag"))) ||
-               (lastModified != 0 && lastModified <= attributes.getLastModification());
+        URLConnection urlConn = getUrl().openConnection();
+        if (urlConn instanceof HttpURLConnection) {
+            ((HttpURLConnection) urlConn).setRequestMethod("HEAD");
+            long lastModified = urlConn.getLastModified();
+            return (attributes.getEtag() != null && attributes.getEtag().equals(urlConn.getRequestProperty("ETag"))) ||
+                    (lastModified != 0 && lastModified <= attributes.getLastModification());
+        }
+        // for other URL connections, do not use HEAD requests for cache validation
+        return false;
     }
 
     private static byte[] read(URLConnection urlConn) throws IOException {
@@ -472,12 +499,9 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
      * cancels all outstanding tasks in the queue.
      */
     public void cancelOutstandingTasks() {
-        ThreadPoolExecutor downloadExecutor = getDownloadExecutor();
-        for(Runnable r: downloadExecutor.getQueue()) {
-            if (downloadExecutor.remove(r)) {
-                if (r instanceof JCSCachedTileLoaderJob) {
-                    ((JCSCachedTileLoaderJob<?, ?>) r).handleJobCancellation();
-                }
+        for (Runnable r: downloadJobExecutor.getQueue()) {
+            if (downloadJobExecutor.remove(r) && r instanceof JCSCachedTileLoaderJob) {
+                ((JCSCachedTileLoaderJob<?, ?>) r).handleJobCancellation();
             }
         }
     }
@@ -496,5 +520,16 @@ public abstract class JCSCachedTileLoaderJob<K, V extends CacheEntry> implements
      */
     public void handleJobCancellation() {
         finishLoading(LoadResult.CANCELED);
+    }
+
+    /*
+     * Temporary fix for file URLs. Returns response code for HttpURLConnections or 200 for all other
+     */
+    private int responseCode(URLConnection urlConn) throws IOException {
+        if (urlConn instanceof HttpURLConnection) {
+            return ((HttpURLConnection) urlConn).getResponseCode();
+        } else {
+            return 200;
+        }
     }
 }

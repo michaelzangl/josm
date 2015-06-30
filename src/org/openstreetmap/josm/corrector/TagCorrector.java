@@ -143,11 +143,11 @@ public abstract class TagCorrector<P extends OsmPrimitive> {
                     // create the clone
                     OsmPrimitive clone = null;
                     if (primitive instanceof Way) {
-                        clone = new Way((Way)primitive);
+                        clone = new Way((Way) primitive);
                     } else if (primitive instanceof Node) {
-                        clone = new Node((Node)primitive);
+                        clone = new Node((Node) primitive);
                     } else if (primitive instanceof Relation) {
-                        clone = new Relation((Relation)primitive);
+                        clone = new Relation((Relation) primitive);
                     } else
                         throw new AssertionError();
 
@@ -179,7 +179,8 @@ public abstract class TagCorrector<P extends OsmPrimitive> {
                     for (int i = 0; i < roleCorrections.size(); i++) {
                         RoleCorrection roleCorrection = roleCorrections.get(i);
                         if (roleTableMap.get(primitive).getCorrectionTableModel().getApply(i)) {
-                            commands.add(new ChangeRelationMemberRoleCommand(roleCorrection.relation, roleCorrection.position, roleCorrection.newRole));
+                            commands.add(new ChangeRelationMemberRoleCommand(
+                                    roleCorrection.relation, roleCorrection.position, roleCorrection.newRole));
                         }
                     }
                 }

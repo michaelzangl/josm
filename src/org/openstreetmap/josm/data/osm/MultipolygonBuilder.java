@@ -70,7 +70,7 @@ public class MultipolygonBuilder {
         public List<Node> getNodes() {
             List<Node> nodes = new ArrayList<>();
 
-            for (int waypos = 0; waypos < this.ways.size(); waypos ++) {
+            for (int waypos = 0; waypos < this.ways.size(); waypos++) {
                 Way way = this.ways.get(waypos);
                 boolean reversed = this.reversed.get(waypos).booleanValue();
 
@@ -202,7 +202,7 @@ public class MultipolygonBuilder {
             //find polygon ways
             while (true) {
                 boolean curWayReverse = prevNode == curWay.lastNode();
-                Node nextNode = (curWayReverse) ? curWay.firstNode(): curWay.lastNode();
+                Node nextNode = (curWayReverse) ? curWay.firstNode() : curWay.lastNode();
 
                 //add cur way to the list
                 collectedWays.add(curWay);
@@ -221,7 +221,7 @@ public class MultipolygonBuilder {
                 }
 
                 Way nextWay = null;
-                for(Way way: adjacentWays) {
+                for (Way way: adjacentWays) {
                     if (way != curWay) {
                         nextWay = way;
                     }
@@ -305,7 +305,7 @@ public class MultipolygonBuilder {
         final int bucketsize = Math.max(32, boundaryWays.size()/THREAD_POOL.a/3);
         final int noBuckets = (boundaryWays.size() + bucketsize - 1) / bucketsize;
         final boolean singleThread = THREAD_POOL.a == 1 || noBuckets == 1;
-        for (int i=0; i<noBuckets; i++) {
+        for (int i = 0; i < noBuckets; i++) {
             int from = i*bucketsize;
             int to = Math.min((i+1)*bucketsize, boundaryWays.size());
             List<PolygonLevel> target = singleThread ? result : new ArrayList<PolygonLevel>(to - from);
@@ -368,7 +368,8 @@ public class MultipolygonBuilder {
             return result;
         }
 
-        private static List<PolygonLevel> processOuterWay(int level, List<JoinedPolygon> boundaryWays, final List<PolygonLevel> result, JoinedPolygon outerWay) {
+        private static List<PolygonLevel> processOuterWay(int level, List<JoinedPolygon> boundaryWays,
+                final List<PolygonLevel> result, JoinedPolygon outerWay) {
             Pair<Boolean, List<JoinedPolygon>> p = findInnerWaysCandidates(outerWay, boundaryWays);
             if (p == null) {
                 // ways intersect
@@ -402,7 +403,7 @@ public class MultipolygonBuilder {
 
         @Override
         public List<PolygonLevel> call() throws Exception {
-            for (int i = from; i<to; i++) {
+            for (int i = from; i < to; i++) {
                 if (processOuterWay(0, input, output, input.get(i)) == null) {
                     return null;
                 }

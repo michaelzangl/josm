@@ -16,7 +16,7 @@ import org.openstreetmap.josm.tools.CheckParameterUtil;
  * The value is a string which will be displayed in the auto completion list.
  *
  */
-public class AutoCompletionListItem implements Comparable<AutoCompletionListItem>{
+public class AutoCompletionListItem implements Comparable<AutoCompletionListItem> {
 
     /** the pritority of this item */
     private  AutoCompletionItemPriority priority;
@@ -115,7 +115,7 @@ public class AutoCompletionListItem implements Comparable<AutoCompletionListItem
             return obj.equals(value);
         if (getClass() != obj.getClass())
             return false;
-        final AutoCompletionListItem other = (AutoCompletionListItem)obj;
+        final AutoCompletionListItem other = (AutoCompletionListItem) obj;
         if (priority == null) {
             if (other.priority != null)
                 return false;

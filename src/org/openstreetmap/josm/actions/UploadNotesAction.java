@@ -23,7 +23,7 @@ public class UploadNotesAction extends JosmAction {
 
     /** Create a new action to upload notes */
     public UploadNotesAction() {
-        putValue(SHORT_DESCRIPTION,tr("Upload note changes to server"));
+        putValue(SHORT_DESCRIPTION, tr("Upload note changes to server"));
         putValue(NAME, tr("Upload notes"));
         putValue(SMALL_ICON, ImageProvider.get("upload"));
     }
@@ -46,13 +46,12 @@ public class UploadNotesAction extends JosmAction {
         }
         NoteData noteData = layer.getNoteData();
 
-        if(noteData == null || !noteData.isModified()) {
+        if (noteData == null || !noteData.isModified()) {
             if (Main.isDebugEnabled()) {
                 Main.debug("No changed notes to upload");
             }
             return;
         }
-        UploadNotesTask uploadTask = new UploadNotesTask();
-        uploadTask.uploadNotes(noteData, new PleaseWaitProgressMonitor(tr("Uploading notes to server")));
+        new UploadNotesTask().uploadNotes(noteData, new PleaseWaitProgressMonitor(tr("Uploading notes to server")));
     }
 }

@@ -39,13 +39,12 @@ public class ToolbarPreferencesTest {
         public void actionPerformed(ActionEvent e) {
 
         }
-
     }
 
     private void checkAction(ActionDefinition a, Object... params) {
         Map<String, Object> expected = new HashMap<>();
-        for (int i=0; i<params.length; i+=2) {
-            expected.put((String)params[i], params[i+1]);
+        for (int i = 0; i < params.length; i += 2) {
+            expected.put((String) params[i], params[i+1]);
         }
         Assert.assertEquals(expected, a.getParameters());
     }
@@ -66,9 +65,11 @@ public class ToolbarPreferencesTest {
         checkAction(parser.loadAction("action"));
         checkAction(parser.loadAction("action(uknownParam=aa)"));
 
-        Assert.assertEquals("action(param1=value1,param2=value2)", parser.saveAction(parser.loadAction("action(param1=value1,param2=value2)")));
-        Assert.assertEquals("action(param1=value1,param2=)", parser.saveAction(parser.loadAction("action(param1=value1)")));
-        Assert.assertEquals("action(param1=value1,param2=2\\(\\=\\,\\\\)", parser.saveAction(parser.loadAction("action(param1=value1,param2=2\\(\\=\\,\\\\)")));
+        Assert.assertEquals("action(param1=value1,param2=value2)",
+                parser.saveAction(parser.loadAction("action(param1=value1,param2=value2)")));
+        Assert.assertEquals("action(param1=value1,param2=)",
+                parser.saveAction(parser.loadAction("action(param1=value1)")));
+        Assert.assertEquals("action(param1=value1,param2=2\\(\\=\\,\\\\)",
+                parser.saveAction(parser.loadAction("action(param1=value1,param2=2\\(\\=\\,\\\\)")));
     }
-
 }

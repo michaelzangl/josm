@@ -1,13 +1,14 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.actions;
 
-import static org.openstreetmap.josm.TestUtils.assertEastNorthEquals;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openstreetmap.josm.JOSMFixture;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
@@ -39,7 +40,7 @@ public final class AlignInLineActionTest {
      * https://josm.openstreetmap.de/ticket/9605#comment:3. Note that in this test, after alignment, way is overlapping
      * itself.
      */
-    @Test(timeout = 1000)
+    @Test
     public void nodesOpenWay() {
         DataSet dataSet = new DataSet();
         OsmDataLayer layer = new OsmDataLayer(dataSet, OsmDataLayer.createNewName(), null);
@@ -78,7 +79,7 @@ public final class AlignInLineActionTest {
      * Test case: only nodes selected, part of a closed way: align these nodes on the line passing through the most
      * distant nodes.
      */
-    @Test(timeout = 1000)
+    @Test
     public void nodesClosedWay() {
         DataSet dataSet = new DataSet();
         OsmDataLayer layer = new OsmDataLayer(dataSet, OsmDataLayer.createNewName(), null);
@@ -118,7 +119,7 @@ public final class AlignInLineActionTest {
      * Test case: only nodes selected, part of multiple ways: align these nodes on the line passing through the most
      * distant nodes.
      */
-    @Test(timeout = 1000)
+    @Test
     public void nodesOpenWays() {
         DataSet dataSet = new DataSet();
         OsmDataLayer layer = new OsmDataLayer(dataSet, OsmDataLayer.createNewName(), null);
@@ -183,6 +184,8 @@ public final class AlignInLineActionTest {
      * @param y Y coordinate.
      */
     private void assertCoordEq(Node node, double x, double y) {
-        assertEastNorthEquals(new EastNorth(x, y), node.getEastNorth());
+        EastNorth coordinate = node.getEastNorth();
+        assertEquals("Wrong x coordinate.", x, coordinate.getX(), LatLon.MAX_SERVER_PRECISION);
+        assertEquals("Wrong y coordinate.", y, coordinate.getY(), LatLon.MAX_SERVER_PRECISION);
     }
 }

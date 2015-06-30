@@ -15,9 +15,9 @@ public class ConflictResolutionDialogTest extends JFrame {
     private ConflictResolutionDialog dialog;
 
     protected void build() {
-        setSize(100,100);
+        setSize(100, 100);
         dialog = new ConflictResolutionDialog(this);
-        dialog.setSize(600,600);
+        dialog.setSize(600, 600);
     }
 
     protected void populate() {
@@ -43,7 +43,7 @@ public class ConflictResolutionDialogTest extends JFrame {
         build();
     }
 
-    static public void main(String args[]) {
+    public static void main(String[] args) {
         ConflictResolutionDialogTest test = new ConflictResolutionDialogTest();
         test.setVisible(true);
         test.populate();

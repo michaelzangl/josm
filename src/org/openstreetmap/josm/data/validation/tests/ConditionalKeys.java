@@ -26,8 +26,9 @@ import org.openstreetmap.josm.tools.Utils;
 public class ConditionalKeys extends Test.TagTest {
 
     private final OpeningHourTest openingHourTest = new OpeningHourTest();
-    private static final Set<String> RESTRICTION_TYPES = new HashSet<>(Arrays.asList("oneway", "toll", "noexit", "maxspeed", "minspeed", "maxstay",
-            "maxweight", "maxaxleload", "maxheight", "maxwidth", "maxlength", "overtaking", "maxgcweight", "maxgcweightrating", "fee"));
+    private static final Set<String> RESTRICTION_TYPES = new HashSet<>(Arrays.asList("oneway", "toll", "noexit", "maxspeed", "minspeed",
+            "maxstay", "maxweight", "maxaxleload", "maxheight", "maxwidth", "maxlength", "overtaking", "maxgcweight", "maxgcweightrating",
+            "fee"));
     private static final Set<String> RESTRICTION_VALUES = new HashSet<>(Arrays.asList("yes", "official", "designated", "destination",
             "delivery", "permissive", "private", "agricultural", "forestry", "no"));
     private static final Set<String> TRANSPORT_MODES = new HashSet<>(Arrays.asList("access", "foot", "ski", "inline_skates", "ice_skates",
@@ -101,7 +102,8 @@ public class ConditionalKeys extends Test.TagTest {
         public static List<ConditionalValue> parse(String value) throws ConditionalParsingException {
             // <restriction-value> @ <condition>[;<restriction-value> @ <condition>]
             final List<ConditionalValue> r = new ArrayList<>();
-            final Pattern part = Pattern.compile("([^@\\p{Space}][^@]*?)" + "\\s*@\\s*" + "(\\([^)\\p{Space}][^)]+?\\)|[^();\\p{Space}][^();]*?)\\s*");
+            final Pattern part = Pattern.compile("([^@\\p{Space}][^@]*?)"
+                    + "\\s*@\\s*" + "(\\([^)\\p{Space}][^)]+?\\)|[^();\\p{Space}][^();]*?)\\s*");
             final Matcher m = Pattern.compile("(" + part + ")(;\\s*" + part + ")*").matcher(value);
             if (!m.matches()) {
                 throw new ConditionalParsingException(tr("Does not match pattern ''restriction value @ condition''"));

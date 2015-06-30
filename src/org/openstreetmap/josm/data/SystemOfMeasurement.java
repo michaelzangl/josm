@@ -13,7 +13,7 @@ import org.openstreetmap.josm.Main;
 /**
  * A system of units used to express length and area measurements.
  * @since 3406 (creation)
- * @since 6992 (extraction in this package) 
+ * @since 6992 (extraction in this package)
  */
 public class SystemOfMeasurement {
 
@@ -40,7 +40,7 @@ public class SystemOfMeasurement {
      * @since 5549
      */
     public static final SystemOfMeasurement NAUTICAL_MILE = new SystemOfMeasurement(185.2, "kbl", 1852, "NM");
-    
+
     /**
      * Known systems of measurement.
      * @since 3406
@@ -53,7 +53,7 @@ public class SystemOfMeasurement {
         ALL_SYSTEMS.put(marktr("Imperial"), IMPERIAL);
         ALL_SYSTEMS.put(marktr("Nautical Mile"), NAUTICAL_MILE);
     }
-    
+
     /** First value, in meters, used to translate unit according to above formula. */
     public final double aValue;
     /** Second value, in meters, used to translate unit according to above formula. */
@@ -158,7 +158,8 @@ public class SystemOfMeasurement {
         double a = area / (aValue*aValue);
         boolean lowerOnly = Main.pref.getBoolean("system_of_measurement.use_only_lower_unit", false);
         boolean customAreaOnly = Main.pref.getBoolean("system_of_measurement.use_only_custom_area_unit", false);
-        if ((!lowerOnly && areaCustomValue > 0 && a > areaCustomValue / (aValue*aValue) && a < (bValue*bValue) / (aValue*aValue)) || customAreaOnly)
+        if ((!lowerOnly && areaCustomValue > 0 && a > areaCustomValue / (aValue*aValue)
+                && a < (bValue*bValue) / (aValue*aValue)) || customAreaOnly)
             return formatText(area / areaCustomValue, areaCustomName, format);
         else if (!lowerOnly && a >= (bValue*bValue) / (aValue*aValue))
             return formatText(area / (bValue * bValue), bName + "\u00b2", format);
@@ -172,6 +173,6 @@ public class SystemOfMeasurement {
         if (format != null) {
             return format.format(v) + " " + unit;
         }
-        return String.format(Locale.US, "%." + (v<9.999999 ? 2 : 1) + "f %s", v, unit);
+        return String.format(Locale.US, "%." + (v < 9.999999 ? 2 : 1) + "f %s", v, unit);
     }
 }
