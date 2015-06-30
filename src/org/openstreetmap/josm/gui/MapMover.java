@@ -5,6 +5,7 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -12,6 +13,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.Point2D;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
@@ -42,16 +44,16 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         public ZoomerAction(String action) {
             this.action = action;
         }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if (".".equals(action) || ",".equals(action)) {
-                // TODO: ...
-//                Point mouse = nm.getMousePosition();
-//                if (mouse == null)
-//                    mouse = new Point((int)nm.getBounds().getCenterX(), (int)nm.getBounds().getCenterY());
-//                MouseWheelEvent we = new MouseWheelEvent((Component) e.getSource(), e.getID(), e.getWhen(), e.getModifiers(), mouse.x, mouse.y, 0, false,
-//                        MouseWheelEvent.WHEEL_UNIT_SCROLL, 1, ",".equals(action) ? -1 : 1);
-//                mouseWheelMoved(we);
+                Point2D mouse = lastMousePosition;
+                if (mouse == null)
+                    mouse = nm.getScreenPosition(nm.getCenter());
+                MouseWheelEvent we = new MouseWheelEvent((Component) e.getSource(), e.getID(), e.getWhen(), e.getModifiers(), (int) mouse.getX(), (int) mouse.getY(), 0, false,
+                        MouseWheelEvent.WHEEL_UNIT_SCROLL, 1, ",".equals(action) ? -1 : 1);
+                mouseWheelMoved(we);
             } else {
                 double relativeX = .5;
                 double relativeY = .5;
@@ -88,6 +90,8 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
 
     private boolean movementInPlace = false;
     private final NavigationCursorManager cursorManager;
+
+    private Point lastMousePosition = null;
 
     /**
      * Constructs a new {@code MapMover}.
@@ -136,6 +140,10 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         }
     }
 
+    /**
+     * Registers the mouse events of a component so that they move the map on the right actions.
+     * @param c The component to register the event on.
+     */
     public void registerMouseEvents(Component c) {
         c.addMouseListener(this);
         c.addMouseMotionListener(this);
@@ -164,6 +172,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         } else {
             endMovement();
         }
+        updateMousePosition(e);
     }
 
     /**
@@ -177,6 +186,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
                 Main.isPlatformOsx() && e.getModifiersEx() == macMouseMask) {
             startMovement(e);
         }
+        updateMousePosition(e);
     }
 
     /**
@@ -187,6 +197,12 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         if (e.getButton() == MouseEvent.BUTTON3 || Main.isPlatformOsx() && e.getButton() == MouseEvent.BUTTON1) {
             endMovement();
         }
+        updateMousePosition(e);
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        lastMousePosition = null;
     }
 
     /**
@@ -244,6 +260,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
                 endMovement();
             }
         }
+        updateMousePosition(e);
     }
 
     @Override
@@ -269,5 +286,9 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
                 }
             }
         }
+    }
+
+    private void updateMousePosition(MouseEvent e) {
+        lastMousePosition = e.getPoint();
     }
 }
