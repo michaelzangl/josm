@@ -22,6 +22,7 @@ import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -60,6 +61,8 @@ import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.layer.geoimage.GeoImageLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.MarkerLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.PlayHeadMarker;
+import org.openstreetmap.josm.gui.navigate.NavigationModel;
+import org.openstreetmap.josm.gui.navigate.NavigationModel.ZoomData;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.AudioPlayer;
 import org.openstreetmap.josm.tools.BugReportExceptionHandler;
@@ -285,7 +288,6 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     // Layers that wasn't changed since last paint
     private final transient List<Layer> nonChangedLayers = new ArrayList<>();
     private transient Layer changedLayer;
-    private int lastViewID;
     private boolean paintPreferencesChanged = true;
     private Rectangle lastClipBounds = new Rectangle();
     public transient MapMover mapMover;
@@ -305,10 +307,14 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
             @Override public void componentResized(ComponentEvent e) {
                 removeComponentListener(this);
 
-                addMapNavigationComponents(MapView.this, MapView.this);
+                for (JComponent c : getMapNavigationComponents(MapView.this)) {
+                    MapView.this.add(c);
+                }
 
                 mapMover = new MapMover(getNavigationModel(), cursorManager, contentPane);
                 mapMover.registerMouseEvents(MapView.this);
+                // Notify the map view that it has changed.
+                repaint();
             }
         });
 
@@ -337,15 +343,20 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         }
     }
 
-    public static void addMapNavigationComponents(JComponent addTo, MapView forMapView) {
+    /**
+     * Adds the map navigation components to a
+     * @param forMapView The map view to get the components for.
+     * @return A list containing the correctly positioned map navigation components.
+     */
+    public static List<? extends JComponent> getMapNavigationComponents(MapView forMapView) {
         MapSlider zoomSlider = new MapSlider(forMapView);
-        addTo.add(zoomSlider);
         zoomSlider.setBounds(3, 0, 114, 30);
         zoomSlider.setFocusTraversalKeysEnabled(Shortcut.findShortcut(KeyEvent.VK_TAB, 0) == null);
 
         MapScaler scaler = new MapScaler(forMapView);
-        addTo.add(scaler);
         scaler.setLocation(10,30);
+
+        return Arrays.asList(zoomSlider, scaler);
     }
 
     // remebered geometry of the component
@@ -675,8 +686,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
             canUseBuffer = !paintPreferencesChanged;
             paintPreferencesChanged = false;
         }
-        canUseBuffer = canUseBuffer && nonChangedLayers.size() <= nonChangedLayersCount &&
-        lastViewID == getViewID() && lastClipBounds.contains(g.getClipBounds());
+        canUseBuffer = canUseBuffer && nonChangedLayers.size() <= nonChangedLayersCount && lastClipBounds.contains(g.getClipBounds());
         if (canUseBuffer) {
             for (int i=0; i<nonChangedLayers.size(); i++) {
                 if (visibleLayers.get(i) != nonChangedLayers.get(i)) {
@@ -722,7 +732,6 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         for (int i=0; i<nonChangedLayersCount; i++) {
             nonChangedLayers.add(visibleLayers.get(i));
         }
-        lastViewID = getViewID();
         lastClipBounds = g.getClipBounds();
 
         tempG.drawImage(nonChangedLayersBuffer, 0, 0, null);
@@ -1102,6 +1111,14 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
     @Override
     public void preferenceChanged(PreferenceChangeEvent e) {
+        synchronized (this) {
+            paintPreferencesChanged = true;
+        }
+    }
+
+    @Override
+    public void zoomChanged(NavigationModel navigationModel, ZoomData oldZoom, ZoomData newZoom) {
+        super.zoomChanged(navigationModel, oldZoom, newZoom);
         synchronized (this) {
             paintPreferencesChanged = true;
         }

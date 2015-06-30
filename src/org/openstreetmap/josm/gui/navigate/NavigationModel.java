@@ -38,7 +38,7 @@ public class NavigationModel {
     public interface ZoomChangeListener {
         /**
          * Method called when the zoom area has changed.
-         * @param navigationModel The model fireing the change.
+         * @param navigationModel The model firing the change.
          * @param oldZoom The old zoom. Might be null on initial zoom.
          * @param newZoom The new zoom.
          */
@@ -337,7 +337,7 @@ public class NavigationModel {
     /**
      * The size of the navigation view. It is used to translate pixel coordinates.
      */
-    private Dimension viewDimension = new Dimension(1, 1);
+    private Dimension viewDimension = new Dimension(0, 0);
 
     private final ZoomHistoryStack zoomUndoBuffer = new ZoomHistoryStack();
     private final ZoomHistoryStack zoomRedoBuffer = new ZoomHistoryStack();
@@ -402,7 +402,10 @@ public class NavigationModel {
     }
 
     protected void setViewportSize(Dimension size) {
-        this.viewDimension = size;
+        if (!size.equals(viewDimension)) {
+            this.viewDimension = size;
+            fireZoomChanged(currentZoom, currentZoom);
+        }
     }
 
     /**
