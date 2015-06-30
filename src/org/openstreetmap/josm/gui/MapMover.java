@@ -36,15 +36,17 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
 
     private final class ZoomerAction extends AbstractAction {
         private final String action;
+
         public ZoomerAction(String action) {
             this.action = action;
         }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if (".".equals(action) || ",".equals(action)) {
                 Point mouse = nc.getMousePosition();
                 if (mouse == null)
-                    mouse = new Point((int)nc.getBounds().getCenterX(), (int)nc.getBounds().getCenterY());
+                    mouse = new Point((int) nc.getBounds().getCenterX(), (int) nc.getBounds().getCenterY());
                 MouseWheelEvent we = new MouseWheelEvent(nc, e.getID(), e.getWhen(), e.getModifiers(), mouse.x, mouse.y, 0, false,
                         MouseWheelEvent.WHEEL_UNIT_SCROLL, 1, ",".equals(action) ? -1 : 1);
                 mouseWheelMoved(we);
@@ -95,6 +97,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         nc.addMouseWheelListener(this);
 
         if (contentPane != null) {
+            // CHECKSTYLE.OFF: LineLength
             contentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 Shortcut.registerShortcut("system:movefocusright", tr("Map: {0}", tr("Move right")), KeyEvent.VK_RIGHT, Shortcut.CTRL).getKeyStroke(),
                 "MapMover.Zoomer.right");
@@ -114,16 +117,19 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
                 Shortcut.registerShortcut("system:movefocusdown", tr("Map: {0}", tr("Move down")), KeyEvent.VK_DOWN, Shortcut.CTRL).getKeyStroke(),
                 "MapMover.Zoomer.down");
             contentPane.getActionMap().put("MapMover.Zoomer.down", new ZoomerAction("down"));
+            // CHECKSTYLE.ON: LineLength
 
             // see #10592 - Disable these alternate shortcuts on OS X because of conflict with system shortcut
             if (!Main.isPlatformOsx()) {
                 contentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-                    Shortcut.registerShortcut("view:zoominalternate", tr("Map: {0}", tr("Zoom in")), KeyEvent.VK_COMMA, Shortcut.CTRL).getKeyStroke(),
+                    Shortcut.registerShortcut("view:zoominalternate",
+                            tr("Map: {0}", tr("Zoom in")), KeyEvent.VK_COMMA, Shortcut.CTRL).getKeyStroke(),
                     "MapMover.Zoomer.in");
                 contentPane.getActionMap().put("MapMover.Zoomer.in", new ZoomerAction(","));
 
                 contentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-                    Shortcut.registerShortcut("view:zoomoutalternate", tr("Map: {0}", tr("Zoom out")), KeyEvent.VK_PERIOD, Shortcut.CTRL).getKeyStroke(),
+                    Shortcut.registerShortcut("view:zoomoutalternate",
+                            tr("Map: {0}", tr("Zoom out")), KeyEvent.VK_PERIOD, Shortcut.CTRL).getKeyStroke(),
                     "MapMover.Zoomer.out");
                 contentPane.getActionMap().put("MapMover.Zoomer.out", new ZoomerAction("."));
             }
@@ -242,7 +248,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
             if (inputKeys != null) {
                 for (KeyStroke key : inputKeys) {
                     Object binding = inputMap.get(key);
-                    if (binding instanceof String && ((String)binding).startsWith("MapMover.")) {
+                    if (binding instanceof String && ((String) binding).startsWith("MapMover.")) {
                         inputMap.remove(key);
                     }
                 }
@@ -251,7 +257,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
             Object[] actionsKeys = actionMap.keys();
             if (actionsKeys != null) {
                 for (Object key : actionsKeys) {
-                    if (key instanceof String && ((String)key).startsWith("MapMover.")) {
+                    if (key instanceof String && ((String) key).startsWith("MapMover.")) {
                         actionMap.remove(key);
                     }
                 }

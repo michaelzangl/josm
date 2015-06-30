@@ -73,7 +73,7 @@ public class InetAddressValidator extends AbstractValidator {
         // verify that address subgroups are legal
         for (int i = 0; i <= 3; i++) {
             String ipSegment = groups[i];
-            if (ipSegment == null || ipSegment.length() <= 0) {
+            if (ipSegment == null || ipSegment.isEmpty()) {
                 return false;
             }
 
@@ -81,7 +81,7 @@ public class InetAddressValidator extends AbstractValidator {
 
             try {
                 iIpSegment = Integer.parseInt(ipSegment);
-            } catch(NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 return false;
             }
 

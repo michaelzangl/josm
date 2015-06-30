@@ -27,11 +27,11 @@ public class PropertiesMergerTest extends JFrame{
 
     protected void populate() {
         Node my = new Node(1);
-        my.setCoor(new LatLon(1,1));
+        my.setCoor(new LatLon(1, 1));
         my.setDeleted(true);
 
         Node their = new Node(2);
-        their.setCoor(new LatLon(10,10));
+        their.setCoor(new LatLon(10, 10));
 
         merger.getModel().populate(new Conflict<OsmPrimitive>(my, their));
     }
@@ -44,7 +44,7 @@ public class PropertiesMergerTest extends JFrame{
         populate();
     }
 
-    static public void main(String args[]) {
+    public static void main(String[] args) {
         PropertiesMergerTest app = new PropertiesMergerTest();
         app.setSize(600, 400);
         app.setVisible(true);

@@ -64,6 +64,7 @@ public class ImageryMenu extends JMenu implements LayerChangeListener {
             putValue("toolbar", "imagery-offset");
             Main.toolbar.register(this);
         }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             Collection<ImageryLayer> layers = Main.map.mapView.getLayersOfType(ImageryLayer.class);
@@ -73,7 +74,7 @@ public class ImageryMenu extends JMenu implements LayerChangeListener {
             }
             Component source = null;
             if (e.getSource() instanceof Component) {
-                source = (Component)e.getSource();
+                source = (Component) e.getSource();
             }
             JPopupMenu popup = new JPopupMenu();
             if (layers.size() == 1) {
@@ -168,11 +169,11 @@ public class ImageryMenu extends JMenu implements LayerChangeListener {
             inViewLayers.removeAll(ImageryLayerInfo.instance.getLayers());
             // For layers containing complex shapes, check that center is in one
             // of its shapes (fix #7910)
-            for (Iterator<ImageryInfo> iti = inViewLayers.iterator(); iti.hasNext(); ) {
+            for (Iterator<ImageryInfo> iti = inViewLayers.iterator(); iti.hasNext();) {
                 List<Shape> shapes = iti.next().getBounds().getShapes();
                 if (shapes != null && !shapes.isEmpty()) {
                     boolean found = false;
-                    for (Iterator<Shape> its = shapes.iterator(); its.hasNext() && !found; ) {
+                    for (Iterator<Shape> its = shapes.iterator(); its.hasNext() && !found;) {
                         found = its.next().contains(pos);
                     }
                     if (!found) {
@@ -195,7 +196,7 @@ public class ImageryMenu extends JMenu implements LayerChangeListener {
         if (heightUnrolled < Main.panel.getHeight()) {
             // add all items of submenu if they will fit on screen
             int n = subMenu.getItemCount();
-            for (int i=0; i<n; i++) {
+            for (int i = 0; i < n; i++) {
                 addDynamic(subMenu.getItem(i).getAction());
             }
         } else {
@@ -204,7 +205,7 @@ public class ImageryMenu extends JMenu implements LayerChangeListener {
         }
     }
 
-    private JMenuItem getNewOffsetMenu(){
+    private JMenuItem getNewOffsetMenu() {
         if (!Main.isDisplayingMapView()) {
             offsetAction.setEnabled(false);
             return singleOffset;
@@ -215,11 +216,11 @@ public class ImageryMenu extends JMenu implements LayerChangeListener {
             return singleOffset;
         }
         offsetAction.setEnabled(true);
-        JMenu newMenu = new JMenu(trc("layer","Offset"));
+        JMenu newMenu = new JMenu(trc("layer", "Offset"));
         newMenu.setIcon(ImageProvider.get("mapmode", "adjustimg"));
         newMenu.setAction(offsetAction);
         if (layers.size() == 1)
-            return (JMenuItem)layers.iterator().next().getOffsetMenuItem(newMenu);
+            return (JMenuItem) layers.iterator().next().getOffsetMenuItem(newMenu);
         for (ImageryLayer layer : layers) {
             JMenuItem layerMenu = layer.getOffsetMenuItem();
             layerMenu.setText(layer.getName());
@@ -265,13 +266,13 @@ public class ImageryMenu extends JMenu implements LayerChangeListener {
     private void removeDynamicItems() {
         for (Object item : dynamicItems) {
             if (item instanceof JMenuItem) {
-                remove((JMenuItem)item);
+                remove((JMenuItem) item);
             }
             if (item instanceof MenuComponent) {
-                remove((MenuComponent)item);
+                remove((MenuComponent) item);
             }
             if (item instanceof Component) {
-                remove((Component)item);
+                remove((Component) item);
             }
         }
         dynamicItems.clear();
@@ -284,10 +285,10 @@ public class ImageryMenu extends JMenu implements LayerChangeListener {
     }
 
     private void addDynamic(Action a) {
-        dynamicItems.add( this.add(a) );
+        dynamicItems.add(this.add(a));
     }
 
     private void addDynamic(JMenuItem it) {
-        dynamicItems.add( this.add(it) );
+        dynamicItems.add(this.add(it));
     }
 }

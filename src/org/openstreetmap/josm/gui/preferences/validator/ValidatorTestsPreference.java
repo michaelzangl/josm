@@ -55,7 +55,7 @@ public class ValidatorTestsPreference implements SubPreferenceSetting {
     @Override
     public void addGui(PreferenceTabbedPane gui) {
         JPanel testPanel = new JPanel(new GridBagLayout());
-        testPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        testPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         prefUseIgnore = new JCheckBox(tr("Use ignore list."), Main.pref.getBoolean(ValidatorPreference.PREF_USE_IGNORE, true));
         prefUseIgnore.setToolTipText(tr("Use the ignore list to suppress warnings."));
@@ -69,7 +69,8 @@ public class ValidatorTestsPreference implements SubPreferenceSetting {
         prefOther.setToolTipText(tr("Show the informational tests."));
         testPanel.add(prefOther, GBC.eol());
 
-        prefOtherUpload = new JCheckBox(tr("Show informational level on upload."), Main.pref.getBoolean(ValidatorPreference.PREF_OTHER_UPLOAD, false));
+        prefOtherUpload = new JCheckBox(tr("Show informational level on upload."),
+                Main.pref.getBoolean(ValidatorPreference.PREF_OTHER_UPLOAD, false));
         prefOtherUpload.setToolTipText(tr("Show the informational tests in the upload check windows."));
         testPanel.add(prefOtherUpload, GBC.eol());
 
@@ -82,10 +83,10 @@ public class ValidatorTestsPreference implements SubPreferenceSetting {
         prefOther.addActionListener(otherUploadEnabled);
         otherUploadEnabled.actionPerformed(null);
 
-        GBC a = GBC.eol().insets(-5,0,0,0);
+        GBC a = GBC.eol().insets(-5, 0, 0, 0);
         a.anchor = GBC.EAST;
-        testPanel.add( new JLabel(tr("On demand")), GBC.std() );
-        testPanel.add( new JLabel(tr("On upload")), a );
+        testPanel.add(new JLabel(tr("On demand")), GBC.std());
+        testPanel.add(new JLabel(tr("On upload")), a);
 
         allTests = OsmValidator.getTests();
         for (Test test: allTests) {
@@ -105,9 +106,9 @@ public class ValidatorTestsPreference implements SubPreferenceSetting {
         for (Test test : allTests) {
             test.ok();
             String name = test.getClass().getName();
-            if(!test.enabled)
+            if (!test.enabled)
                 tests.add(name);
-            if(!test.testBeforeUpload)
+            if (!test.testBeforeUpload)
                 testsBeforeUpload.add(name);
         }
 

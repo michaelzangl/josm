@@ -106,7 +106,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
     public void cloneFrom(AbstractPrimitive other) {
         setKeys(other.getKeys());
         id = other.id;
-        if (id <=0) {
+        if (id <= 0) {
             // reset version and changeset id
             version = 0;
             changesetId = 0;
@@ -116,7 +116,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
             version = other.version;
         }
         flags = other.flags;
-        user= other.user;
+        user = other.user;
         if (id > 0 && other.changesetId > 0) {
             // #4208: sometimes we cloned from other with id < 0 *and*
             // an assigned changeset id. Don't know why yet. For primitives
@@ -145,7 +145,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
     @Override
     public long getId() {
         long id = this.id;
-        return id >= 0?id:0;
+        return id >= 0 ? id : 0;
     }
 
     /**
@@ -288,7 +288,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
 
     @Override
     public void setTimestamp(Date timestamp) {
-        this.timestamp = (int)(timestamp.getTime() / 1000);
+        this.timestamp = (int) (timestamp.getTime() / 1000);
     }
 
     /**
@@ -473,7 +473,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
         Map<String, String> result = new HashMap<>();
         String[] keys = this.keys;
         if (keys != null) {
-            for (int i=0; i<keys.length ; i+=2) {
+            for (int i = 0; i < keys.length; i += 2) {
                 result.put(keys[i], keys[i + 1]);
             }
         }
@@ -521,19 +521,20 @@ public abstract class AbstractPrimitive implements IPrimitive {
             return;
         else if (value == null) {
             remove(key);
-        } else if (keys == null){
+        } else if (keys == null) {
             keys = new String[] {key, value};
             keysChangedImpl(originalKeys);
         } else {
-            for (int i=0; i<keys.length;i+=2) {
+            for (int i = 0; i < keys.length; i += 2) {
                 if (keys[i].equals(key)) {
-                    keys[i+1] = value;  // This modifies the keys array but it doesn't make it invalidate for any time so its ok (see note no top)
+                    // This modifies the keys array but it doesn't make it invalidate for any time so its ok (see note no top)
+                    keys[i+1] = value;
                     keysChangedImpl(originalKeys);
                     return;
                 }
             }
             String[] newKeys = new String[keys.length + 2];
-            for (int i=0; i< keys.length;i+=2) {
+            for (int i = 0; i < keys.length; i += 2) {
                 newKeys[i] = keys[i];
                 newKeys[i+1] = keys[i+1];
             }
@@ -561,8 +562,8 @@ public abstract class AbstractPrimitive implements IPrimitive {
             return;
         }
         String[] newKeys = new String[keys.length - 2];
-        int j=0;
-        for (int i=0; i < keys.length; i+=2) {
+        int j = 0;
+        for (int i = 0; i < keys.length; i += 2) {
             if (!keys[i].equals(key)) {
                 newKeys[j++] = keys[i];
                 newKeys[j++] = keys[i+1];
@@ -598,7 +599,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
             return null;
         if (keys == null)
             return null;
-        for (int i=0; i<keys.length;i+=2) {
+        for (int i = 0; i < keys.length; i += 2) {
             if (keys[i].equals(key)) return keys[i+1];
         }
         return null;
@@ -626,7 +627,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
             return null;
         if (keys == null)
             return null;
-        for (int i=0; i<keys.length;i+=2) {
+        for (int i = 0; i < keys.length; i += 2) {
             if (keys[i].equalsIgnoreCase(key)) return keys[i+1];
         }
         return null;
@@ -642,7 +643,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
         if (keys == null)
             return Collections.emptySet();
         Set<String> result = new HashSet<>(keys.length / 2);
-        for (int i=0; i<keys.length; i+=2) {
+        for (int i = 0; i < keys.length; i += 2) {
             result.add(keys[i]);
         }
         return result;
@@ -669,7 +670,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
         String[] keys = this.keys;
         if (key == null) return false;
         if (keys == null) return false;
-        for (int i=0; i< keys.length;i+=2) {
+        for (int i = 0; i < keys.length; i += 2) {
             if (keys[i].equals(key)) return true;
         }
         return false;
@@ -695,12 +696,12 @@ public abstract class AbstractPrimitive implements IPrimitive {
      * Replies a localized name for this primitive given by the value of the name tags
      * accessed from very specific (language variant) to more generic (default name).
      *
-     * @see LanguageInfo#getLanguageCodes()
+     * @see LanguageInfo#getLanguageCodes
      * @return the name of this primitive, <code>null</code> if no name exists
      */
     @Override
     public String getLocalName() {
-        for(String s : LanguageInfo.getLanguageCodes(null)) {
+        for (String s : LanguageInfo.getLanguageCodes(null)) {
             String val = get("name:" + s);
             if (val != null)
                 return val;

@@ -127,7 +127,7 @@ public interface Selector {
              * Constructor
              * @param e the environment against which we match
              */
-            public MatchingReferrerFinder(Environment e){
+            public MatchingReferrerFinder(Environment e) {
                 this.e = e;
             }
 
@@ -147,7 +147,7 @@ public interface Selector {
 
                 if (!left.matches(e.withPrimitive(w)))
                     return;
-                for (int i=0; i<w.getNodesCount(); i++) {
+                for (int i = 0; i < w.getNodesCount(); i++) {
                     Node n = w.getNode(i);
                     if (n.equals(e.osm)) {
                         if (link.matches(e.withParentAndIndexAndLinkContext(w, i, w.getNodesCount()))) {
@@ -170,7 +170,7 @@ public interface Selector {
 
                 if (!left.matches(e.withPrimitive(r)))
                     return;
-                for (int i=0; i < r.getMembersCount(); i++) {
+                for (int i = 0; i < r.getMembersCount(); i++) {
                     RelationMember m = r.getMember(i);
                     if (m.getMember().equals(e.osm)) {
                         if (link.matches(e.withParentAndIndexAndLinkContext(r, i, r.getMembersCount()))) {
@@ -256,7 +256,8 @@ public interface Selector {
             @Override
             public void visit(Way w) {
                 if (e.child == null && left.matches(new Environment(w))) {
-                    if (e.osm instanceof Way && Geometry.PolygonIntersection.CROSSING.equals(Geometry.polygonIntersection(w.getNodes(), ((Way) e.osm).getNodes()))) {
+                    if (e.osm instanceof Way && Geometry.PolygonIntersection.CROSSING.equals(
+                            Geometry.polygonIntersection(w.getNodes(), ((Way) e.osm).getNodes()))) {
                         e.child = w;
                     }
                 }
@@ -264,7 +265,7 @@ public interface Selector {
         }
 
         private class ContainsFinder extends AbstractFinder {
-            private ContainsFinder(Environment e) {
+            protected ContainsFinder(Environment e) {
                 super(e);
                 CheckParameterUtil.ensureThat(!(e.osm instanceof Node), "Nodes not supported");
             }
@@ -273,7 +274,8 @@ public interface Selector {
             public void visit(Node n) {
                 if (e.child == null && left.matches(new Environment(n))) {
                     if (e.osm instanceof Way && Geometry.nodeInsidePolygon(n, ((Way) e.osm).getNodes())
-                            || e.osm instanceof Relation && ((Relation) e.osm).isMultipolygon() && Geometry.isNodeInsideMultiPolygon(n, (Relation) e.osm, null)) {
+                            || e.osm instanceof Relation && (
+                                    (Relation) e.osm).isMultipolygon() && Geometry.isNodeInsideMultiPolygon(n, (Relation) e.osm, null)) {
                         e.child = n;
                     }
                 }
@@ -282,8 +284,11 @@ public interface Selector {
             @Override
             public void visit(Way w) {
                 if (e.child == null && left.matches(new Environment(w))) {
-                    if (e.osm instanceof Way && Geometry.PolygonIntersection.FIRST_INSIDE_SECOND.equals(Geometry.polygonIntersection(w.getNodes(), ((Way) e.osm).getNodes()))
-                            || e.osm instanceof Relation && ((Relation) e.osm).isMultipolygon() && Geometry.isPolygonInsideMultiPolygon(w.getNodes(), (Relation) e.osm, null)) {
+                    if (e.osm instanceof Way && Geometry.PolygonIntersection.FIRST_INSIDE_SECOND.equals(
+                            Geometry.polygonIntersection(w.getNodes(), ((Way) e.osm).getNodes()))
+                            || e.osm instanceof Relation && (
+                                    (Relation) e.osm).isMultipolygon()
+                                    && Geometry.isPolygonInsideMultiPolygon(w.getNodes(), (Relation) e.osm, null)) {
                         e.child = w;
                     }
                 }
@@ -368,8 +373,7 @@ public interface Selector {
                 }
             } else if (ChildOrParentSelectorType.CHILD.equals(type)
                     && link.conds != null && !link.conds.isEmpty()
-                    && link.conds.get(0) instanceof Condition.PseudoClassCondition
-                    && "open_end".equals(((Condition.PseudoClassCondition) link.conds.get(0)).id)) {
+                    && link.conds.get(0) instanceof Condition.OpenEndPseudoClassCondition) {
                 if (e.osm instanceof Node) {
                     e.osm.visitReferrers(new MultipolygonOpenEndFinder(e));
                     return e.parent != null;
@@ -382,7 +386,7 @@ public interface Selector {
             } else if (ChildOrParentSelectorType.PARENT.equals(type)) {
                 if (e.osm instanceof Way) {
                     List<Node> wayNodes = ((Way) e.osm).getNodes();
-                    for (int i=0; i<wayNodes.size(); i++) {
+                    for (int i = 0; i < wayNodes.size(); i++) {
                         Node n = wayNodes.get(i);
                         if (left.matches(e.withPrimitive(n))) {
                             if (link.matches(e.withChildAndIndexAndLinkContext(n, i, wayNodes.size()))) {
@@ -395,7 +399,7 @@ public interface Selector {
                     }
                 } else if (e.osm instanceof Relation) {
                     List<RelationMember> members = ((Relation) e.osm).getMembers();
-                    for (int i=0; i<members.size(); i++) {
+                    for (int i = 0; i < members.size(); i++) {
                         OsmPrimitive member = members.get(i).getMember();
                         if (left.matches(e.withPrimitive(member))) {
                             if (link.matches(e.withChildAndIndexAndLinkContext(member, i, members.size()))) {

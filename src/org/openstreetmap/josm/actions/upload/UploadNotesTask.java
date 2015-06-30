@@ -24,7 +24,6 @@ import org.xml.sax.SAXException;
  */
 public class UploadNotesTask {
 
-    private UploadTask uploadTask;
     private NoteData noteData;
 
     /**
@@ -34,8 +33,7 @@ public class UploadNotesTask {
      */
     public void uploadNotes(NoteData noteData, ProgressMonitor progressMonitor) {
         this.noteData = noteData;
-        uploadTask = new UploadTask(tr("Uploading modified notes"), progressMonitor);
-        Main.worker.submit(uploadTask);
+        Main.worker.submit(new UploadTask(tr("Uploading modified notes"), progressMonitor));
     }
 
     private class UploadTask extends PleaseWaitRunnable {
@@ -66,7 +64,7 @@ public class UploadNotesTask {
             ProgressMonitor monitor = progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false);
             OsmApi api = OsmApi.getOsmApi();
             for (Note note : noteData.getNotes()) {
-                if(isCanceled) {
+                if (isCanceled) {
                     Main.info("Note upload interrupted by user");
                     break;
                 }
@@ -90,7 +88,6 @@ public class UploadNotesTask {
                         Main.debug("opening new note");
                     }
                     newNote = api.createNote(note.getLatLon(), comment.getText(), monitor);
-                    note.setId(newNote.getId());
                     break;
                 case closed:
                     if (Main.isDebugEnabled()) {
@@ -138,7 +135,5 @@ public class UploadNotesTask {
                 JOptionPane.showMessageDialog(Main.map, sb.toString(), tr("Notes failed to upload"), JOptionPane.ERROR_MESSAGE);
             }
         }
-
     }
-
 }

@@ -34,7 +34,8 @@ public class RelationNodeMap {
         public final Map<Node, Set<Integer>> nodes = new TreeMap<>();
         public final Map<Integer, Set<Node>> ways = new TreeMap<>();
         public final boolean oneWay;
-        public NodesWays(boolean oneWay){
+
+        public NodesWays(boolean oneWay) {
             this.oneWay = oneWay;
         }
     }
@@ -60,17 +61,17 @@ public class RelationNodeMap {
      */
     private final List<Integer> notSortable = new ArrayList<>();
 
-    public static Node firstOnewayNode(RelationMember m){
-        if(!m.isWay()) return null;
-        if("backward".equals(m.getRole())) {
+    public static Node firstOnewayNode(RelationMember m) {
+        if (!m.isWay()) return null;
+        if ("backward".equals(m.getRole())) {
             return m.getWay().lastNode();
         }
         return m.getWay().firstNode();
     }
 
-    public static Node lastOnewayNode(RelationMember m){
-        if(!m.isWay()) return null;
-        if("backward".equals(m.getRole())) {
+    public static Node lastOnewayNode(RelationMember m) {
+        if (!m.isWay()) return null;
+        if ("backward".equals(m.getRole())) {
             return m.getWay().firstNode();
         }
         return m.getWay().lastNode();
@@ -89,7 +90,7 @@ public class RelationNodeMap {
                 for (Node nd : w.getNodes()) {
                     addPair(nd, i);
                 }
-            } else if(RelationSortUtils.isOneway(m)) {
+            } else if (RelationSortUtils.isOneway(m)) {
                 addNodeWayMap(firstOnewayNode(m), i);
                 addWayNodeMap(lastOnewayNode(m), i);
                 addNodeWayMapReverse(lastOnewayNode(m), i);
@@ -179,13 +180,13 @@ public class RelationNodeMap {
         if (lastOnewayNode != null) return popBackwardOnewayPart(way);
         if (firstOneway != null) return popForwardOnewayPart(way);
 
-        if (map.ways.containsKey(way)){
+        if (map.ways.containsKey(way)) {
             for (Node n : map.ways.get(way)) {
                 Integer i = deleteAndGetAdjacentNode(map, n);
-                if(i != null) return i;
+                if (i != null) return i;
 
                 Integer j = deleteAndGetAdjacentNode(onewayMap, n);
-                if(j != null) {
+                if (j != null) {
                     firstOneway = j;
                     return j;
                 }
@@ -197,15 +198,15 @@ public class RelationNodeMap {
     }
 
     private Integer popForwardOnewayPart(Integer way) {
-        if(onewayMap.ways.containsKey(way)) {
+        if (onewayMap.ways.containsKey(way)) {
             for (Node n : onewayMap.ways.get(way)) {
                 Integer i = findAdjacentWay(onewayMap, n);
-                if(i == null) {
+                if (i == null) {
                     continue;
                 }
 
                 lastOnewayNode = processBackwardIfEndOfLoopReached(i);
-                if(lastOnewayNode != null)
+                if (lastOnewayNode != null)
                     return popBackwardOnewayPart(firstOneway);
 
                 deleteWayNode(onewayMap, i, n);
@@ -220,17 +221,17 @@ public class RelationNodeMap {
     private Node processBackwardIfEndOfLoopReached(Integer way) { //find if we didn't reach end of the loop (and process backward part)
         if (onewayReverseMap.ways.containsKey(way)) {
             for (Node n : onewayReverseMap.ways.get(way)) {
-                if((map.nodes.containsKey(n))
+                if ((map.nodes.containsKey(n))
                         || (onewayMap.nodes.containsKey(n) && onewayMap.nodes.get(n).size() > 1))
                     return n;
-                if(firstCircular != null && firstCircular == n)
+                if (firstCircular != null && firstCircular == n)
                     return firstCircular;
             }
         }
         return null;
     }
 
-    private Integer popBackwardOnewayPart(int way){
+    private Integer popBackwardOnewayPart(int way) {
         if (lastOnewayNode != null) {
             Set<Node> nodes = new TreeSet<>();
             if (onewayReverseMap.ways.containsKey(way)) {
@@ -240,21 +241,21 @@ public class RelationNodeMap {
                 nodes.addAll(map.ways.get(way));
             }
             for (Node n : nodes) {
-                if(n == lastOnewayNode) { //if oneway part ends
+                if (n == lastOnewayNode) { //if oneway part ends
                     firstOneway = null;
                     lastOnewayNode = null;
                     Integer j = deleteAndGetAdjacentNode(map, n);
-                    if(j != null) return j;
+                    if (j != null) return j;
 
                     Integer k = deleteAndGetAdjacentNode(onewayMap, n);
-                    if(k != null) {
+                    if (k != null) {
                         firstOneway = k;
                         return k;
                     }
                 }
 
                 Integer j = deleteAndGetAdjacentNode(onewayReverseMap, n);
-                if(j != null) return j;
+                if (j != null) return j;
             }
         }
 
@@ -266,13 +267,13 @@ public class RelationNodeMap {
 
     /**
      * find next node in nw NodeWays structure, if the node is found delete and return it
-     * @param nw
-     * @param n
+     * @param nw nodes and ways
+     * @param n node
      * @return node next to n
      */
-    private Integer deleteAndGetAdjacentNode(NodesWays nw, Node n){
+    private Integer deleteAndGetAdjacentNode(NodesWays nw, Node n) {
         Integer j = findAdjacentWay(nw, n);
-        if(j == null) return null;
+        if (j == null) return null;
         deleteWayNode(nw, j, n);
         return j;
     }
@@ -283,8 +284,8 @@ public class RelationNodeMap {
         return adj.iterator().next();
     }
 
-    private void deleteWayNode(NodesWays nw, Integer way, Node n){
-        if(nw.oneWay) {
+    private void deleteWayNode(NodesWays nw, Integer way, Node n) {
+        if (nw.oneWay) {
             doneOneway(way);
         } else {
             done(way);
@@ -297,16 +298,16 @@ public class RelationNodeMap {
      * every sortable member has been processed.
      */
     public Integer pop() {
-        if (!remaining.isEmpty()){
+        if (!remaining.isEmpty()) {
             Integer i = remaining.iterator().next();
             done(i);
             return i;
         }
 
         if (remainingOneway.isEmpty()) return null;
-        for(Integer i :remainingOneway.keySet()){ //find oneway, which is connected to more than one way (is between two oneway loops)
-            for(Node n : onewayReverseMap.ways.get(i)){
-                if(onewayReverseMap.nodes.containsKey(n) && onewayReverseMap.nodes.get(n).size() > 1) {
+        for (Integer i :remainingOneway.keySet()) { //find oneway, which is connected to more than one way (is between two oneway loops)
+            for (Node n : onewayReverseMap.ways.get(i)) {
+                if (onewayReverseMap.nodes.containsKey(n) && onewayReverseMap.nodes.get(n).size() > 1) {
                     doneOneway(i);
                     firstCircular = n;
                     return i;
@@ -326,10 +327,10 @@ public class RelationNodeMap {
     private void doneOneway(Integer i) {
         Set<Node> nodesForward = remainingOneway.get(i);
         for (Node n : nodesForward) {
-            if(onewayMap.nodes.containsKey(n)) {
+            if (onewayMap.nodes.containsKey(n)) {
                 onewayMap.nodes.get(n).remove(i);
             }
-            if(onewayReverseMap.nodes.containsKey(n)) {
+            if (onewayReverseMap.nodes.containsKey(n)) {
                 onewayReverseMap.nodes.get(n).remove(i);
             }
         }

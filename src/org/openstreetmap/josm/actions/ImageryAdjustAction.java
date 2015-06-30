@@ -118,7 +118,7 @@ public class ImageryAdjustAction extends MapMode implements MouseListener, Mouse
           || (offsetDialog != null && offsetDialog.areFieldsInFocus())) {
             return;
         }
-        KeyEvent kev = (KeyEvent)event;
+        KeyEvent kev = (KeyEvent) event;
         int dx = 0, dy = 0;
         switch (kev.getKeyCode()) {
         case KeyEvent.VK_UP : dy = +1; break;
@@ -132,6 +132,9 @@ public class ImageryAdjustAction extends MapMode implements MouseListener, Mouse
             if (offsetDialog != null) {
                 offsetDialog.updateOffset();
             }
+            if (Main.isDebugEnabled()) {
+                Main.debug(getClass().getName()+" consuming event "+kev);
+            }
             kev.consume();
             Main.map.repaint();
         }
@@ -144,7 +147,7 @@ public class ImageryAdjustAction extends MapMode implements MouseListener, Mouse
 
         if (layer.isVisible()) {
             requestFocusInMapView();
-            prevEastNorth=Main.map.mapView.getEastNorth(e.getX(),e.getY());
+            prevEastNorth = Main.map.mapView.getEastNorth(e.getX(), e.getY());
             Main.map.mapView.setNewCursor(Cursor.MOVE_CURSOR, this);
         }
     }
@@ -153,7 +156,7 @@ public class ImageryAdjustAction extends MapMode implements MouseListener, Mouse
     public void mouseDragged(MouseEvent e) {
         if (layer == null || prevEastNorth == null) return;
         EastNorth eastNorth =
-            Main.map.mapView.getEastNorth(e.getX(),e.getY());
+            Main.map.mapView.getEastNorth(e.getX(), e.getY());
         double dx = layer.getDx()+eastNorth.east()-prevEastNorth.east();
         double dy = layer.getDy()+eastNorth.north()-prevEastNorth.north();
         layer.setOffset(dx, dy);
@@ -190,19 +193,19 @@ public class ImageryAdjustAction extends MapMode implements MouseListener, Mouse
         public ImageryOffsetDialog() {
             super(Main.parent,
                     tr("Adjust imagery offset"),
-                    new String[] { tr("OK"),tr("Cancel") },
+                    new String[] {tr("OK"), tr("Cancel")},
                     false);
-            setButtonIcons(new String[] { "ok", "cancel" });
+            setButtonIcons(new String[] {"ok", "cancel"});
             contentInsets = new Insets(10, 15, 5, 15);
             JPanel pnl = new JPanel(new GridBagLayout());
             pnl.add(new JMultilineLabel(tr("Use arrow keys or drag the imagery layer with mouse to adjust the imagery offset.\n" +
                     "You can also enter east and north offset in the {0} coordinates.\n" +
                     "If you want to save the offset as bookmark, enter the bookmark name below",
                     Main.getProjection().toString())), GBC.eop());
-            pnl.add(new JLabel(tr("Offset: ")),GBC.std());
-            pnl.add(tOffset,GBC.eol().fill(GBC.HORIZONTAL).insets(0,0,0,5));
-            pnl.add(new JLabel(tr("Bookmark name: ")),GBC.std());
-            pnl.add(tBookmarkName,GBC.eol().fill(GBC.HORIZONTAL));
+            pnl.add(new JLabel(tr("Offset: ")), GBC.std());
+            pnl.add(tOffset, GBC.eol().fill(GBC.HORIZONTAL).insets(0, 0, 0, 5));
+            pnl.add(new JLabel(tr("Bookmark name: ")), GBC.std());
+            pnl.add(tBookmarkName, GBC.eol().fill(GBC.HORIZONTAL));
             tOffset.setColumns(16);
             updateOffsetIntl();
             tOffset.addFocusListener(this);
@@ -225,7 +228,7 @@ public class ImageryAdjustAction extends MapMode implements MouseListener, Mouse
             if (ignoreListener) return;
             String ostr = tOffset.getText();
             int semicolon = ostr.indexOf(';');
-            if( semicolon >= 0 && semicolon + 1 < ostr.length() ) {
+            if (semicolon >= 0 && semicolon + 1 < ostr.length()) {
                 try {
                     // here we assume that Double.parseDouble() needs '.' as a decimal separator
                     String easting = ostr.substring(0, semicolon).trim().replace(',', '.');
@@ -235,6 +238,9 @@ public class ImageryAdjustAction extends MapMode implements MouseListener, Mouse
                     layer.setOffset(dx, dy);
                 } catch (NumberFormatException nfe) {
                     // we repaint offset numbers in any case
+                    if (Main.isTraceEnabled()) {
+                        Main.trace(nfe.getMessage());
+                    }
                 }
             }
             updateOffsetIntl();
@@ -243,13 +249,13 @@ public class ImageryAdjustAction extends MapMode implements MouseListener, Mouse
             }
         }
 
-        private final void updateOffset() {
+        private void updateOffset() {
             ignoreListener = true;
             updateOffsetIntl();
             ignoreListener = false;
         }
 
-        private final void updateOffsetIntl() {
+        private void updateOffsetIntl() {
             // Support projections with very small numbers (e.g. 4326)
             int precision = Main.getProjection().getDefaultZoomInPPD() >= 1.0 ? 2 : 7;
             // US locale to force decimal separator to be '.'
@@ -265,9 +271,9 @@ public class ImageryAdjustAction extends MapMode implements MouseListener, Mouse
                     Main.parent,
                     tr("Overwrite"),
                     new String[] {tr("Overwrite"), tr("Cancel")}
-            ) {{
+            ) { {
                 contentInsets = new Insets(10, 15, 10, 15);
-            }};
+            } };
             dialog.setContent(tr("Offset bookmark already exists. Overwrite?"));
             dialog.setButtonIcons(new String[] {"ok.png", "cancel.png"});
             dialog.setupDialog();

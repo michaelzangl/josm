@@ -1,6 +1,7 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.data.osm;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
@@ -57,12 +58,12 @@ public class FilterTest {
         FilterWorker.executeFilters(all, filterMatcher);
 
         assertTrue(n2.isDisabledAndHidden());
-        assertTrue(!n1.isDisabled());
+        assertFalse(n1.isDisabled());
     }
 
     @Test
     public void filter_test() throws ParseError, IllegalDataException, IOException {
-        for (int i : new int [] {1,2,3, 11,12,13,14, 15}) {
+        for (int i : new int[] {1, 2, 3, 11, 12, 13, 14, 15}) {
             DataSet ds;
             try (InputStream is = new FileInputStream("data_nodist/filterTests.osm")) {
                 ds = OsmReader.parseDataSet(is, NullProgressMonitor.INSTANCE);
@@ -171,7 +172,8 @@ public class FilterTest {
                 if (osm.hasKey(key)) {
                     foundAtLeastOne = true;
                     if (!osm.get(key).equals(filterCode(osm))) {
-                        failedPrimitives.append(String.format("Object %s. Expected [%s] but was [%s]%n", osm.toString(), osm.get(key), filterCode(osm)));
+                        failedPrimitives.append(String.format(
+                                "Object %s. Expected [%s] but was [%s]%n", osm.toString(), osm.get(key), filterCode(osm)));
                     }
                 }
             }

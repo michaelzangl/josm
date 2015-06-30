@@ -58,6 +58,7 @@ public class CachedFile {
          */
         IfModifiedSince
     }
+
     protected String name;
     protected long maxAge;
     protected String destDir;
@@ -135,7 +136,7 @@ public class CachedFile {
 
     /**
      * Set the caching strategy. Only applies to URLs.
-     * @param cachingStrategy
+     * @param cachingStrategy caching strategy
      * @return this object
      */
     public CachedFile setCachingStrategy(CachingStrategy cachingStrategy) {
@@ -319,7 +320,7 @@ public class CachedFile {
                 List<String> localPath = new ArrayList<>(Main.pref.getCollection(prefKey));
                 if (localPath.size() == 2) {
                     File lfile = new File(localPath.get(1));
-                    if(lfile.exists()) {
+                    if (lfile.exists()) {
                         lfile.delete();
                     }
                 }
@@ -341,7 +342,7 @@ public class CachedFile {
             prefKey.append(destDir).append('.');
         }
         prefKey.append(url.toString());
-        return prefKey.toString().replaceAll("=","_");
+        return prefKey.toString().replaceAll("=", "_");
     }
 
     private File checkLocal(URL url) throws IOException {
@@ -363,7 +364,7 @@ public class CachedFile {
             if (!localFile.exists()) {
                 localFile = null;
             } else {
-                if ( maxAge == DEFAULT_MAXTIME
+                if (maxAge == DEFAULT_MAXTIME
                         || maxAge <= 0 // arbitrary value <= 0 is deprecated
                 ) {
                     lMaxAge = Main.pref.getInteger("mirror.maxtime", 7*24*60*60); // one week
@@ -460,21 +461,22 @@ public class CachedFile {
      * @throws OfflineAccessException if resource is accessed in offline mode, in any protocol
      * @since 6867
      */
-    public static HttpURLConnection connectFollowingRedirect(URL downloadUrl, String httpAccept, Long ifModifiedSince) throws MalformedURLException, IOException {
+    public static HttpURLConnection connectFollowingRedirect(URL downloadUrl, String httpAccept, Long ifModifiedSince)
+            throws MalformedURLException, IOException {
         CheckParameterUtil.ensureParameterNotNull(downloadUrl, "downloadUrl");
         String downloadString = downloadUrl.toExternalForm();
 
         checkOfflineAccess(downloadString);
 
         int numRedirects = 0;
-        while(true) {
+        while (true) {
             HttpURLConnection con = Utils.openHttpConnection(downloadUrl);
             if (ifModifiedSince != null) {
                 con.setIfModifiedSince(ifModifiedSince);
             }
             con.setInstanceFollowRedirects(false);
-            con.setConnectTimeout(Main.pref.getInteger("socket.timeout.connect",15)*1000);
-            con.setReadTimeout(Main.pref.getInteger("socket.timeout.read",30)*1000);
+            con.setConnectTimeout(Main.pref.getInteger("socket.timeout.connect", 15)*1000);
+            con.setReadTimeout(Main.pref.getInteger("socket.timeout.read", 30)*1000);
             if (Main.isDebugEnabled()) {
                 Main.debug("GET "+downloadString);
             }

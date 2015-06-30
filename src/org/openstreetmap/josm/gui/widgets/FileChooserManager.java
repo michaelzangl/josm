@@ -48,6 +48,8 @@ public class FileChooserManager {
         this(open, null);
     }
 
+    // CHECKSTYLE.OFF: LineLength
+
     /**
      * Creates a new {@code FileChooserManager}.
      * @param open If true, "Open File" dialogs will be created. If false, "Save File" dialogs will be created.
@@ -74,6 +76,8 @@ public class FileChooserManager {
                 defaultDir == null || defaultDir.isEmpty() ? "." : defaultDir
                 : Main.pref.get(this.lastDirProperty);
     }
+
+    // CHECKSTYLE.ON: LineLength
 
     /**
      * Replies the {@code AbstractFileChooser} that has been previously created.
@@ -157,7 +161,7 @@ public class FileChooserManager {
         return doCreateFileChooser(multiple, title, null, null, extension, selectionMode, allTypes);
     }
 
-    private final FileChooserManager doCreateFileChooser(boolean multiple, String title, Collection<? extends FileFilter> filters,
+    private FileChooserManager doCreateFileChooser(boolean multiple, String title, Collection<? extends FileFilter> filters,
             FileFilter defaultFilter, String extension, int selectionMode, boolean allTypes) {
         File file = new File(curDir);
         // Use native dialog is preference is set, unless an unsupported selection mode is specifically wanted

@@ -120,19 +120,20 @@ public final class MapRendererFactory {
         }
     }
 
-    private void activateMapRenderer(String rendererClassName){
+    private void activateMapRenderer(String rendererClassName) {
         Class<?> c = loadRendererClass(rendererClassName);
-        if (c == null){
+        if (c == null) {
             Main.error(tr("Can''t activate map renderer class ''{0}'', because the class wasn''t found.", rendererClassName));
             Main.error(tr("Activating the standard map renderer instead."));
             activateDefault();
-        } else if (! AbstractMapRenderer.class.isAssignableFrom(c)) {
-            Main.error(tr("Can''t activate map renderer class ''{0}'', because it isn''t a subclass of ''{1}''.", rendererClassName, AbstractMapRenderer.class.getName()));
+        } else if (!AbstractMapRenderer.class.isAssignableFrom(c)) {
+            Main.error(tr("Can''t activate map renderer class ''{0}'', because it isn''t a subclass of ''{1}''.",
+                    rendererClassName, AbstractMapRenderer.class.getName()));
             Main.error(tr("Activating the standard map renderer instead."));
             activateDefault();
         } else {
             Class<? extends AbstractMapRenderer> renderer = c.asSubclass(AbstractMapRenderer.class);
-            if (! isRegistered(renderer)) {
+            if (!isRegistered(renderer)) {
                 Main.error(tr("Can''t activate map renderer class ''{0}'', because it isn''t registered as map renderer.", rendererClassName));
                 Main.error(tr("Activating the standard map renderer instead."));
                 activateDefault();
@@ -206,7 +207,7 @@ public final class MapRendererFactory {
         if (renderer == null) return;
         if (!isRegistered(renderer)) return;
         Iterator<Descriptor> it = descriptors.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             Descriptor d = it.next();
             if (d.getRenderer().getName().equals(renderer.getName())) {
                 it.remove();
@@ -248,7 +249,8 @@ public final class MapRendererFactory {
         Class<? extends AbstractMapRenderer> defaultRenderer = StyledMapRenderer.class;
         if (!isRegistered(defaultRenderer))
             throw new IllegalStateException(
-                    MessageFormat.format("Class ''{0}'' not registered as renderer. Can''t activate default renderer.", defaultRenderer.getName())
+                    MessageFormat.format("Class ''{0}'' not registered as renderer. Can''t activate default renderer.",
+                            defaultRenderer.getName())
             );
         activate(defaultRenderer);
     }
@@ -259,11 +261,12 @@ public final class MapRendererFactory {
      * @throws MapRendererFactoryException if creating an instance fails
      * @see AbstractMapRenderer#AbstractMapRenderer(Graphics2D, NavigatableComponent, boolean)
      */
-    public AbstractMapRenderer createActiveRenderer(Graphics2D g, NavigatableComponent viewport, boolean isInactiveMode) throws MapRendererFactoryException{
+    public AbstractMapRenderer createActiveRenderer(Graphics2D g, NavigatableComponent viewport, boolean isInactiveMode)
+            throws MapRendererFactoryException {
         try {
             Constructor<?> c = activeRenderer.getConstructor(new Class<?>[]{Graphics2D.class, NavigatableComponent.class, boolean.class});
             return AbstractMapRenderer.class.cast(c.newInstance(g, viewport, isInactiveMode));
-        } catch(NoSuchMethodException | IllegalArgumentException | InstantiationException | IllegalAccessException e){
+        } catch (NoSuchMethodException | IllegalArgumentException | InstantiationException | IllegalAccessException e) {
             throw new MapRendererFactoryException(e);
         } catch (InvocationTargetException e) {
             throw new MapRendererFactoryException(e.getCause());

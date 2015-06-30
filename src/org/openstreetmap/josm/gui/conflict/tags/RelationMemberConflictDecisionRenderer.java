@@ -13,7 +13,8 @@ import javax.swing.table.TableCellRenderer;
 
 import org.openstreetmap.josm.gui.widgets.JosmComboBox;
 
-public class RelationMemberConflictDecisionRenderer extends JLabel implements TableCellRenderer, ListCellRenderer<RelationMemberConflictDecisionType> {
+public class RelationMemberConflictDecisionRenderer extends JLabel
+implements TableCellRenderer, ListCellRenderer<RelationMemberConflictDecisionType> {
 
     private JosmComboBox<RelationMemberConflictDecisionType> cbDecisionTypes;
 
@@ -53,7 +54,7 @@ public class RelationMemberConflictDecisionRenderer extends JLabel implements Ta
             setBackground(UIManager.getColor("Table.selectionBackground"));
             setForeground(UIManager.getColor("Table.selectionForeground"));
         }
-        RelationMemberConflictDecisionType decision = (RelationMemberConflictDecisionType)value;
+        RelationMemberConflictDecisionType decision = (RelationMemberConflictDecisionType) value;
         cbDecisionTypes.setSelectedItem(decision);
         return cbDecisionTypes;
     }

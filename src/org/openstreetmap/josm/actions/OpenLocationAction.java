@@ -79,7 +79,7 @@ public class OpenLocationAction extends JosmAction {
     /**
      * Restore the current history from the preferences
      *
-     * @param cbHistory
+     * @param cbHistory the history combo box
      */
     protected void restoreUploadAddressHistory(HistoryComboBox cbHistory) {
         List<String> cmtHistory = new LinkedList<>(Main.pref.getCollection(getClass().getName() + ".uploadAddressHistory",
@@ -92,7 +92,7 @@ public class OpenLocationAction extends JosmAction {
 
     /**
      * Remind the current history in the preferences
-     * @param cbHistory
+     * @param cbHistory the history combo box
      */
     protected void remindUploadAddressHistory(HistoryComboBox cbHistory) {
         cbHistory.addCurrentItemToHistory();
@@ -217,13 +217,14 @@ public class OpenLocationAction extends JosmAction {
     Collection<DownloadTask> askWhichTasksToLoad(final Collection<DownloadTask> tasks) {
         final JList<DownloadTask> list = new JList<>(tasks.toArray(new DownloadTask[tasks.size()]));
         list.addSelectionInterval(0, tasks.size() - 1);
-        final ExtendedDialog dialog = new ExtendedDialog(Main.parent, tr("Which tasks to perform?"), new String[]{tr("Ok"), tr("Cancel")}, true) {{
+        final ExtendedDialog dialog = new ExtendedDialog(Main.parent,
+                tr("Which tasks to perform?"), new String[]{tr("Ok"), tr("Cancel")}, true) { {
             setButtonIcons(new String[]{"ok", "cancel"});
             final JPanel pane = new JPanel(new GridLayout(2, 1));
             pane.add(new JLabel(tr("Which tasks to perform?")));
             pane.add(list);
             setContent(pane);
-        }};
+        } };
         dialog.showDialog();
         return dialog.getValue() == 1 ? list.getSelectedValuesList() : Collections.<DownloadTask>emptyList();
     }

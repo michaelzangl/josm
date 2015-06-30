@@ -147,13 +147,14 @@ public class MapCSSTagChecker extends Test.TagTest {
      */
     abstract static class FixCommand {
         /**
-         * Creates the fixing {@link Command} for the given primitive. The {@code matchingSelector} is used to
-         * evaluate placeholders (cf. {@link org.openstreetmap.josm.data.validation.tests.MapCSSTagChecker.TagCheck#insertArguments(Selector, String, OsmPrimitive)}).
+         * Creates the fixing {@link Command} for the given primitive. The {@code matchingSelector} is used to evaluate placeholders
+         * (cf. {@link org.openstreetmap.josm.data.validation.tests.MapCSSTagChecker.TagCheck#insertArguments(Selector, String, OsmPrimitive)}).
          */
         abstract Command createCommand(final OsmPrimitive p, final Selector matchingSelector);
 
         private static void checkObject(final Object obj) {
-            CheckParameterUtil.ensureThat(obj instanceof Expression || obj instanceof String, "instance of Exception or String expected, but got " + obj);
+            CheckParameterUtil.ensureThat(obj instanceof Expression || obj instanceof String,
+                    "instance of Exception or String expected, but got " + obj);
         }
 
         /**
@@ -217,7 +218,9 @@ public class MapCSSTagChecker extends Test.TagTest {
             return new FixCommand() {
                 @Override
                 Command createCommand(OsmPrimitive p, Selector matchingSelector) {
-                    return new ChangePropertyKeyCommand(p, oldKey, newKey);
+                    return new ChangePropertyKeyCommand(p,
+                            TagCheck.insertArguments(matchingSelector, oldKey, p),
+                            TagCheck.insertArguments(matchingSelector, newKey, p));
                 }
 
                 @Override
@@ -352,7 +355,7 @@ public class MapCSSTagChecker extends Test.TagTest {
         }
 
         private static void removeMetaRules(MapCSSStyleSource source) {
-            for (Iterator<MapCSSRule> it = source.rules.iterator(); it.hasNext(); ) {
+            for (Iterator<MapCSSRule> it = source.rules.iterator(); it.hasNext();) {
                 MapCSSRule x = it.next();
                 if (x.selector instanceof GeneralSelector) {
                     GeneralSelector gs = (GeneralSelector) x.selector;
@@ -420,14 +423,15 @@ public class MapCSSTagChecker extends Test.TagTest {
          */
         static String insertArguments(Selector matchingSelector, String s, OsmPrimitive p) {
             if (s != null && matchingSelector instanceof Selector.ChildOrParentSelector) {
-                return insertArguments(((Selector.ChildOrParentSelector)matchingSelector).right, s, p);
+                return insertArguments(((Selector.ChildOrParentSelector) matchingSelector).right, s, p);
             } else if (s == null || !(matchingSelector instanceof GeneralSelector)) {
                 return s;
             }
             final Matcher m = Pattern.compile("\\{(\\d+)\\.(key|value|tag)\\}").matcher(s);
             final StringBuffer sb = new StringBuffer();
             while (m.find()) {
-                final String argument = determineArgument((Selector.GeneralSelector) matchingSelector, Integer.parseInt(m.group(1)), m.group(2), p);
+                final String argument = determineArgument((Selector.GeneralSelector) matchingSelector,
+                        Integer.parseInt(m.group(1)), m.group(2), p);
                 try {
                     // Perform replacement with null-safe + regex-safe handling
                     m.appendReplacement(sb, String.valueOf(argument).replace("^(", "").replace(")$", ""));
@@ -579,7 +583,7 @@ public class MapCSSTagChecker extends Test.TagTest {
             Set<String> result = new HashSet<>();
             for (Selector s : rule.selectors) {
                 if (s instanceof AbstractSelector) {
-                    for (Condition c : ((AbstractSelector)s).getConditions()) {
+                    for (Condition c : ((AbstractSelector) s).getConditions()) {
                         if (c instanceof ClassCondition) {
                             result.add(((ClassCondition) c).id);
                         }

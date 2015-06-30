@@ -43,7 +43,8 @@ import org.openstreetmap.josm.gui.tagging.TaggingPreset;
 import org.openstreetmap.josm.gui.tagging.TaggingPresetType;
 import org.openstreetmap.josm.gui.widgets.OsmPrimitivesTableModel;
 
-public class MemberTableModel extends AbstractTableModel implements TableModelListener, SelectionChangedListener, DataSetListener, OsmPrimitivesTableModel {
+public class MemberTableModel extends AbstractTableModel
+implements TableModelListener, SelectionChangedListener, DataSetListener, OsmPrimitivesTableModel {
 
     /**
      * data of the table model: The list of members and the cached WayConnectionType of each member.
@@ -111,6 +112,7 @@ public class MemberTableModel extends AbstractTableModel implements TableModelLi
     public void nodeMoved(NodeMovedEvent event) {
         // ignore
     }
+
     @Override
     public void primitivesAdded(PrimitivesAddedEvent event) {
         // ignore
@@ -135,7 +137,7 @@ public class MemberTableModel extends AbstractTableModel implements TableModelLi
         // just refresh the respective table cells
         //
         Collection<RelationMember> sel = getSelectedMembers();
-        for (int i=0; i < members.size();i++) {
+        for (int i = 0; i < members.size(); i++) {
             if (members.get(i).getMember() == event.getPrimitive()) {
                 fireTableCellUpdated(i, 1 /* the column with the primitive name */);
             }
@@ -408,7 +410,8 @@ public class MemberTableModel extends AbstractTableModel implements TableModelLi
     }
 
     private void addMembersAtIndex(List<? extends OsmPrimitive> primitives, int index) {
-        final Collection<TaggingPreset> presets = TaggingPreset.getMatchingPresets(EnumSet.of(TaggingPresetType.RELATION), presetHandler.getSelection().iterator().next().getKeys(), false);
+        final Collection<TaggingPreset> presets = TaggingPreset.getMatchingPresets(EnumSet.of(TaggingPresetType.RELATION),
+                presetHandler.getSelection().iterator().next().getKeys(), false);
         if (primitives == null)
             return;
         int idx = index;
@@ -646,10 +649,10 @@ public class MemberTableModel extends AbstractTableModel implements TableModelLi
         if (primitives == null) return;
         getSelectionModel().setValueIsAdjusting(true);
         getSelectionModel().clearSelection();
-        for (int i=0; i< members.size();i++) {
+        for (int i = 0; i < members.size(); i++) {
             RelationMember m = members.get(i);
             if (primitives.contains(m.getMember())) {
-                this.getSelectionModel().addSelectionInterval(i,i);
+                this.getSelectionModel().addSelectionInterval(i, i);
             }
         }
         getSelectionModel().setValueIsAdjusting(false);
@@ -697,7 +700,7 @@ public class MemberTableModel extends AbstractTableModel implements TableModelLi
             List<Integer> selectedIndices = getSelectedIndices();
             newMembers = new ArrayList<>();
             boolean inserted = false;
-            for (int i=0; i < members.size(); i++) {
+            for (int i = 0; i < members.size(); i++) {
                 if (selectedIndices.contains(i)) {
                     if (!inserted) {
                         newMembers.addAll(sortedMembers);
@@ -715,6 +718,18 @@ public class MemberTableModel extends AbstractTableModel implements TableModelLi
         members.addAll(newMembers);
         fireTableDataChanged();
         setSelectedMembers(sortedMembers);
+    }
+
+    /**
+     * Sort the selected relation members and all members below by the way they are linked.
+     */
+    void sortBelow() {
+        final List<RelationMember> subList = members.subList(getSelectionModel().getMinSelectionIndex(), members.size());
+        final List<RelationMember> sorted = relationSorter.sortMembers(subList);
+        subList.clear();
+        subList.addAll(sorted);
+        fireTableDataChanged();
+        setSelectedMembers(sorted);
     }
 
     WayConnectionType getWayConnection(int i) {
@@ -745,7 +760,7 @@ public class MemberTableModel extends AbstractTableModel implements TableModelLi
 
             List<RelationMember> newMembers = new ArrayList<>(members);
 
-            for (int i=0; i < selectedIndices.size(); i++) {
+            for (int i = 0; i < selectedIndices.size(); i++) {
                 newMembers.set(selectedIndices.get(i), members.get(selectedIndicesReversed.get(i)));
             }
 

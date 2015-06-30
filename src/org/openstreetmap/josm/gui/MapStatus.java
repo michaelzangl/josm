@@ -217,7 +217,7 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof StatusTextHistory && ((StatusTextHistory)obj).id == id;
+            return obj instanceof StatusTextHistory && ((StatusTextHistory) obj).id == id;
         }
 
         @Override
@@ -227,12 +227,109 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
     }
 
     /**
-     * The collector class that waits for notification and then update
-     * the display objects.
+     * The collector class that waits for notification and then update the display objects.
      *
      * @author imi
      */
     private final class Collector implements Runnable {
+        private final class CollectorWorker implements Runnable {
+            private final MouseState ms;
+
+            private CollectorWorker(MouseState ms) {
+                this.ms = ms;
+            }
+
+            @Override
+            public void run() {
+                // Freeze display when holding down CTRL
+                if ((ms.modifiers & MouseEvent.CTRL_DOWN_MASK) != 0) {
+                    // update the information popup's labels though, because the selection might have changed from the outside
+                    popupUpdateLabels();
+                    return;
+                }
+
+                // This try/catch is a hack to stop the flooding bug reports about this.
+                // The exception needed to handle with in the first place, means that this
+                // access to the data need to be restarted, if the main thread modifies the data.
+                DataSet ds = null;
+                // The popup != null check is required because a left-click produces several events as well,
+                // which would make this variable true. Of course we only want the popup to show
+                // if the middle mouse button has been pressed in the first place
+                boolean mouseNotMoved = oldMousePos != null
+                        && oldMousePos.equals(ms.mousePos);
+                boolean isAtOldPosition = mouseNotMoved && popup != null;
+                boolean middleMouseDown = (ms.modifiers & MouseEvent.BUTTON2_DOWN_MASK) != 0;
+                try {
+                    ds = mv.getCurrentDataSet();
+                    if (ds != null) {
+                        // This is not perfect, if current dataset was changed during execution, the lock would be useless
+                        if (isAtOldPosition && middleMouseDown) {
+                            // Write lock is necessary when selecting in popupCycleSelection
+                            // locks can not be upgraded -> if do read lock here and write lock later
+                            // (in OsmPrimitive.updateFlags) then always occurs deadlock (#5814)
+                            ds.beginUpdate();
+                        } else {
+                            ds.getReadLock().lock();
+                        }
+                    }
+
+                    // Set the text label in the bottom status bar
+                    // "if mouse moved only" was added to stop heap growing
+                    if (!mouseNotMoved) {
+                        statusBarElementUpdate(ms);
+                    }
+
+                    // Popup Information
+                    // display them if the middle mouse button is pressed and keep them until the mouse is moved
+                    if (middleMouseDown || isAtOldPosition) {
+                        Collection<OsmPrimitive> osms = mv.getAllNearest(ms.mousePos, OsmPrimitive.isUsablePredicate);
+
+                        final JPanel c = new JPanel(new GridBagLayout());
+                        final JLabel lbl = new JLabel(
+                                "<html>"+tr("Middle click again to cycle through.<br>"+
+                                        "Hold CTRL to select directly from this list with the mouse.<hr>")+"</html>",
+                                        null,
+                                        JLabel.HORIZONTAL
+                                );
+                        lbl.setHorizontalAlignment(JLabel.LEFT);
+                        c.add(lbl, GBC.eol().insets(2, 0, 2, 0));
+
+                        // Only cycle if the mouse has not been moved and the middle mouse button has been pressed at least
+                        // twice (the reason for this is the popup != null check for isAtOldPosition, see above.
+                        // This is a nice side effect though, because it does not change selection of the first middle click)
+                        if (isAtOldPosition && middleMouseDown) {
+                            // Hand down mouse modifiers so the SHIFT mod can be handled correctly (see function)
+                            popupCycleSelection(osms, ms.modifiers);
+                        }
+
+                        // These labels may need to be updated from the outside so collect them
+                        List<JLabel> lbls = new ArrayList<>(osms.size());
+                        for (final OsmPrimitive osm : osms) {
+                            JLabel l = popupBuildPrimitiveLabels(osm);
+                            lbls.add(l);
+                            c.add(l, GBC.eol().fill(GBC.HORIZONTAL).insets(2, 0, 2, 2));
+                        }
+
+                        popupShowPopup(popupCreatePopup(c, ms), lbls);
+                    } else {
+                        popupHidePopup();
+                    }
+
+                    oldMousePos = ms.mousePos;
+                } catch (ConcurrentModificationException x) {
+                    Main.warn(x);
+                } finally {
+                    if (ds != null) {
+                        if (isAtOldPosition && middleMouseDown) {
+                            ds.endUpdate();
+                        } else {
+                            ds.getReadLock().unlock();
+                        }
+                    }
+                }
+            }
+        }
+
         /**
          * the mouse position of the previous iteration. This is used to show
          * the popup until the cursor is moved.
@@ -279,106 +376,12 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
                         return; // exit, if new parent.
 
                     // Do nothing, if required data is missing
-                    if(ms.mousePos == null || mv.center == null) {
+                    if (ms.mousePos == null || mv.center == null) {
                         continue;
                     }
 
                     try {
-                        EventQueue.invokeAndWait(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                // Freeze display when holding down CTRL
-                                if ((ms.modifiers & MouseEvent.CTRL_DOWN_MASK) != 0) {
-                                    // update the information popup's labels though, because
-                                    // the selection might have changed from the outside
-                                    popupUpdateLabels();
-                                    return;
-                                }
-
-                                // This try/catch is a hack to stop the flooding bug reports about this.
-                                // The exception needed to handle with in the first place, means that this
-                                // access to the data need to be restarted, if the main thread modifies
-                                // the data.
-                                DataSet ds = null;
-                                // The popup != null check is required because a left-click
-                                // produces several events as well, which would make this
-                                // variable true. Of course we only want the popup to show
-                                // if the middle mouse button has been pressed in the first place
-                                boolean mouseNotMoved = oldMousePos != null
-                                        && oldMousePos.equals(ms.mousePos);
-                                boolean isAtOldPosition = mouseNotMoved && popup != null;
-                                boolean middleMouseDown = (ms.modifiers & MouseEvent.BUTTON2_DOWN_MASK) != 0;
-                                try {
-                                    ds = mv.getCurrentDataSet();
-                                    if (ds != null) {
-                                        // This is not perfect, if current dataset was changed during execution, the lock would be useless
-                                        if(isAtOldPosition && middleMouseDown) {
-                                            // Write lock is necessary when selecting in popupCycleSelection
-                                            // locks can not be upgraded -> if do read lock here and write lock later (in OsmPrimitive.updateFlags)
-                                            // then always occurs deadlock (#5814)
-                                            ds.beginUpdate();
-                                        } else {
-                                            ds.getReadLock().lock();
-                                        }
-                                    }
-
-                                    // Set the text label in the bottom status bar
-                                    // "if mouse moved only" was added to stop heap growing
-                                    if (!mouseNotMoved) {
-                                        statusBarElementUpdate(ms);
-                                    }
-
-                                    // Popup Information
-                                    // display them if the middle mouse button is pressed and keep them until the mouse is moved
-                                    if (middleMouseDown || isAtOldPosition) {
-                                        Collection<OsmPrimitive> osms = mv.getAllNearest(ms.mousePos, OsmPrimitive.isUsablePredicate);
-
-                                        final JPanel c = new JPanel(new GridBagLayout());
-                                        final JLabel lbl = new JLabel(
-                                                "<html>"+tr("Middle click again to cycle through.<br>"+
-                                                        "Hold CTRL to select directly from this list with the mouse.<hr>")+"</html>",
-                                                        null,
-                                                        JLabel.HORIZONTAL
-                                                );
-                                        lbl.setHorizontalAlignment(JLabel.LEFT);
-                                        c.add(lbl, GBC.eol().insets(2, 0, 2, 0));
-
-                                        // Only cycle if the mouse has not been moved and the middle mouse button has been pressed at least
-                                        // twice (the reason for this is the popup != null check for isAtOldPosition, see above.
-                                        // This is a nice side effect though, because it does not change selection of the first middle click)
-                                        if (isAtOldPosition && middleMouseDown) {
-                                            // Hand down mouse modifiers so the SHIFT mod can be handled correctly (see function)
-                                            popupCycleSelection(osms, ms.modifiers);
-                                        }
-
-                                        // These labels may need to be updated from the outside so collect them
-                                        List<JLabel> lbls = new ArrayList<>(osms.size());
-                                        for (final OsmPrimitive osm : osms) {
-                                            JLabel l = popupBuildPrimitiveLabels(osm);
-                                            lbls.add(l);
-                                            c.add(l, GBC.eol().fill(GBC.HORIZONTAL).insets(2, 0, 2, 2));
-                                        }
-
-                                        popupShowPopup(popupCreatePopup(c, ms), lbls);
-                                    } else {
-                                        popupHidePopup();
-                                    }
-
-                                    oldMousePos = ms.mousePos;
-                                } catch (ConcurrentModificationException x) {
-                                    Main.warn(x);
-                                } finally {
-                                    if (ds != null) {
-                                        if(isAtOldPosition && middleMouseDown) {
-                                            ds.endUpdate();
-                                        } else {
-                                            ds.getReadLock().unlock();
-                                        }
-                                    }
-                                }
-                            }
-                        });
+                        EventQueue.invokeAndWait(new CollectorWorker(ms));
                     } catch (InterruptedException e) {
                         // Occurs frequently during JOSM shutdown, log set to trace only
                         Main.trace("InterruptedException in "+MapStatus.class.getSimpleName());
@@ -395,8 +398,8 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
          * Creates a popup for the given content next to the cursor. Tries to
          * keep the popup on screen and shows a vertical scrollbar, if the
          * screen is too small.
-         * @param content
-         * @param ms
+         * @param content popup content
+         * @param ms mouse state
          * @return popup
          */
         private Popup popupCreatePopup(Component content, MouseState ms) {
@@ -415,13 +418,13 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
             int xPos = p.x + ms.mousePos.x + 16;
             // Display the popup to the left of the cursor if it would be cut
             // off on its right, but only if more space is available
-            if(xPos + w > scrn.width && xPos > scrn.width/2) {
+            if (xPos + w > scrn.width && xPos > scrn.width/2) {
                 xPos = p.x + ms.mousePos.x - 4 - w;
             }
             int yPos = p.y + ms.mousePos.y + 16;
             // Move the popup up if it would be cut off at its bottom but do not
             // move it off screen on the top
-            if(yPos + h > scrn.height - 5) {
+            if (yPos + h > scrn.height - 5) {
                 yPos = Math.max(5, scrn.height - h - 5);
             }
 
@@ -431,7 +434,7 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
 
         /**
          * Calls this to update the element that is shown in the statusbar
-         * @param ms
+         * @param ms mouse state
          */
         private void statusBarElementUpdate(MouseState ms) {
             final OsmPrimitive osmNearest = mv.getNearestNodeOrWay(ms.mousePos, OsmPrimitive.isUsablePredicate, false);
@@ -455,13 +458,13 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
             OsmPrimitive firstSelected = null;
             OsmPrimitive nextSelected = null;
             for (final OsmPrimitive osm : osms) {
-                if(firstItem == null) {
+                if (firstItem == null) {
                     firstItem = osm;
                 }
-                if(firstSelected != null && nextSelected == null) {
+                if (firstSelected != null && nextSelected == null) {
                     nextSelected = osm;
                 }
-                if(firstSelected == null && ds.isSelected(osm)) {
+                if (firstSelected == null && ds.isSelected(osm)) {
                     firstSelected = osm;
                 }
             }
@@ -469,14 +472,14 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
             // Clear previous selection if SHIFT (add to selection) is not
             // pressed. Cannot use "setSelected()" because it will cause a
             // fireSelectionChanged event which is unnecessary at this point.
-            if((mods & MouseEvent.SHIFT_DOWN_MASK) == 0) {
+            if ((mods & MouseEvent.SHIFT_DOWN_MASK) == 0) {
                 ds.clearSelection();
             }
 
             // This will cycle through the available items.
             if (firstSelected != null) {
                 ds.clearSelection(firstSelected);
-                if(nextSelected != null) {
+                if (nextSelected != null) {
                     ds.addSelected(nextSelected);
                 }
             } else if (firstItem != null) {
@@ -489,11 +492,11 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
          */
         private void popupHidePopup() {
             popupLabels = null;
-            if(popup == null)
+            if (popup == null)
                 return;
             final Popup staticPopup = popup;
             popup = null;
-            EventQueue.invokeLater(new Runnable(){
+            EventQueue.invokeLater(new Runnable() {
                @Override
                public void run() {
                     staticPopup.hide();
@@ -508,10 +511,10 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
          */
         private void popupShowPopup(Popup newPopup, List<JLabel> lbls) {
             final Popup staticPopup = newPopup;
-            if(this.popup != null) {
+            if (this.popup != null) {
                 // If an old popup exists, remove it when the new popup has been drawn to keep flickering to a minimum
                 final Popup staticOldPopup = this.popup;
-                EventQueue.invokeLater(new Runnable(){
+                EventQueue.invokeLater(new Runnable() {
                     @Override
                     public void run() {
                         staticPopup.show();
@@ -520,7 +523,7 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
                 });
             } else {
                 // There is no old popup
-                EventQueue.invokeLater(new Runnable(){
+                EventQueue.invokeLater(new Runnable() {
                      @Override
                      public void run() {
                          staticPopup.show();
@@ -536,9 +539,9 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
          * user clicks on the map instead of the popup.
          */
         private void popupUpdateLabels() {
-            if(this.popup == null || this.popupLabels == null)
+            if (this.popup == null || this.popupLabels == null)
                 return;
-            for(JLabel l : this.popupLabels) {
+            for (JLabel l : this.popupLabels) {
                 l.validate();
             }
         }
@@ -552,7 +555,7 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
          */
         private void popupSetLabelColors(JLabel lbl, OsmPrimitive osm) {
             DataSet ds = Main.main.getCurrentDataSet();
-            if(ds.isSelected(osm)) {
+            if (ds.isSelected(osm)) {
                 lbl.setBackground(SystemColor.textHighlight);
                 lbl.setForeground(SystemColor.textHighlightText);
             } else {
@@ -582,7 +585,7 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
                 text.append(" [id=").append(osm.getId()).append(']');
             }
 
-            if(osm.getUser() != null) {
+            if (osm.getUser() != null) {
                 text.append(" [").append(tr("User:")).append(' ').append(osm.getUser().getName()).append(']');
             }
 
@@ -609,16 +612,18 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
             l.setVerticalTextPosition(JLabel.TOP);
             l.setHorizontalAlignment(JLabel.LEFT);
             l.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            l.addMouseListener(new MouseAdapter(){
+            l.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
                     l.setBackground(SystemColor.info);
                     l.setForeground(SystemColor.infoText);
                 }
+
                 @Override
                 public void mouseExited(MouseEvent e) {
                     popupSetLabelColors(l, osm);
                 }
+
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     DataSet ds = Main.main.getCurrentDataSet();
@@ -628,17 +633,19 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
                 }
             });
             // Sometimes the mouseEntered event is not catched, thus the label
-            // will not be highlighted, making it confusing. The MotionListener
-            // can correct this defect.
+            // will not be highlighted, making it confusing. The MotionListener can correct this defect.
             l.addMouseMotionListener(new MouseMotionListener() {
-                 @Override public void mouseMoved(MouseEvent e) {
+                 @Override
+                 public void mouseMoved(MouseEvent e) {
                     l.setBackground(SystemColor.info);
                     l.setForeground(SystemColor.infoText);
-                }
-                 @Override public void mouseDragged(MouseEvent e) {
+                 }
+
+                 @Override
+                 public void mouseDragged(MouseEvent e) {
                     l.setBackground(SystemColor.info);
                     l.setForeground(SystemColor.infoText);
-                }
+                 }
             });
             return l;
         }
@@ -661,11 +668,11 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
          @Override
          public void eventDispatched(AWTEvent event) {
             if (event instanceof InputEvent &&
-                    ((InputEvent)event).getComponent() == mv) {
+                    ((InputEvent) event).getComponent() == mv) {
                 synchronized (collector) {
-                    mouseState.modifiers = ((InputEvent)event).getModifiersEx();
+                    mouseState.modifiers = ((InputEvent) event).getModifiersEx();
                     if (event instanceof MouseEvent) {
-                        mouseState.mousePos = ((MouseEvent)event).getPoint();
+                        mouseState.mousePos = ((MouseEvent) event).getPoint();
                     }
                     collector.notifyAll();
                 }
@@ -719,6 +726,9 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
             Toolkit.getDefaultToolkit().removeAWTEventListener(awtListener);
         } catch (SecurityException e) {
             // Don't care, awtListener probably wasn't registered anyway
+            if (Main.isTraceEnabled()) {
+                Main.trace(e.getMessage());
+            }
         }
         mv.removeMouseMotionListener(mouseMotionListener);
         mv.removeKeyListener(keyAdapter);
@@ -758,7 +768,7 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
             addPopupMenuListener(new PopupMenuListener() {
                 @Override
                 public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-                    Component invoker = ((JPopupMenu)e.getSource()).getInvoker();
+                    Component invoker = ((JPopupMenu) e.getSource()).getInvoker();
                     jumpButton.setVisible(latText.equals(invoker) || lonText.equals(invoker));
                     String currentSOM = ProjectionPreference.PROP_SYSTEM_OF_MEASUREMENT.get();
                     for (JMenuItem item : somItems) {
@@ -768,10 +778,12 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
                     separator.setVisible(distText.equals(invoker));
                     doNotHide.setSelected(Main.pref.getBoolean("statusbar.always-visible", true));
                 }
+
                 @Override
                 public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
                     // Do nothing
                 }
+
                 @Override
                 public void popupMenuCanceled(PopupMenuEvent e) {
                     // Do nothing
@@ -802,11 +814,12 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
         };
 
         // Listen for mouse movements and set the position text field
-        mv.addMouseMotionListener(new MouseMotionListener(){
+        mv.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
                 mouseMoved(e);
             }
+
             @Override
             public void mouseMoved(MouseEvent e) {
                 if (mv.center == null)
@@ -814,7 +827,7 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
                 // Do not update the view if ctrl is pressed.
                 if ((e.getModifiersEx() & MouseEvent.CTRL_DOWN_MASK) == 0) {
                     CoordinateFormat mCord = CoordinateFormat.getDefaultFormat();
-                    LatLon p = mv.getLatLon(e.getX(),e.getY());
+                    LatLon p = mv.getLatLon(e.getX(), e.getY());
                     latText.setText(p.latToString(mCord));
                     lonText.setText(p.lonToString(mCord));
                 }
@@ -822,7 +835,7 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
         });
 
         setLayout(new GridBagLayout());
-        setBorder(BorderFactory.createEmptyBorder(1,2,1,2));
+        setBorder(BorderFactory.createEmptyBorder(1, 2, 1, 2));
 
         latText.setInheritsPopupMenu(true);
         lonText.setInheritsPopupMenu(true);
@@ -831,10 +844,10 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
         nameText.setInheritsPopupMenu(true);
 
         add(latText, GBC.std());
-        add(lonText, GBC.std().insets(3,0,0,0));
-        add(headingText, GBC.std().insets(3,0,0,0));
-        add(angleText, GBC.std().insets(3,0,0,0));
-        add(distText, GBC.std().insets(3,0,0,0));
+        add(lonText, GBC.std().insets(3, 0, 0, 0));
+        add(headingText, GBC.std().insets(3, 0, 0, 0));
+        add(angleText, GBC.std().insets(3, 0, 0, 0));
+        add(distText, GBC.std().insets(3, 0, 0, 0));
 
         if (Main.pref.getBoolean("statusbar.change-system-of-measurement-on-click", true)) {
             distText.addMouseListener(new MouseAdapter() {
@@ -844,7 +857,7 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
                 public void mouseClicked(MouseEvent e) {
                     if (!e.isPopupTrigger() && e.getButton() == MouseEvent.BUTTON1) {
                         String som = ProjectionPreference.PROP_SYSTEM_OF_MEASUREMENT.get();
-                        String newsom = soms.get((soms.indexOf(som)+1)%soms.size());
+                        String newsom = soms.get((soms.indexOf(som)+1) % soms.size());
                         updateSystemOfMeasurement(newsom);
                     }
                 }
@@ -862,14 +875,14 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
         lonText.addMouseListener(jumpToOnLeftClick);
 
         helpText.setEditable(false);
-        add(nameText, GBC.std().insets(3,0,0,0));
-        add(helpText, GBC.std().insets(3,0,0,0).fill(GBC.HORIZONTAL));
+        add(nameText, GBC.std().insets(3, 0, 0, 0));
+        add(helpText, GBC.std().insets(3, 0, 0, 0).fill(GBC.HORIZONTAL));
 
         progressBar.setMaximum(PleaseWaitProgressMonitor.PROGRESS_BAR_MAX);
         progressBar.setVisible(false);
         GBC gbc = GBC.eol();
         gbc.ipadx = 100;
-        add(progressBar,gbc);
+        add(progressBar, gbc);
         progressBar.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

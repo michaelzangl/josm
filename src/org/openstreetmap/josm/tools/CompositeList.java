@@ -8,11 +8,11 @@ import java.util.List;
  * Joined List build from two Lists (read-only).
  *
  * Extremely simple single-purpose implementation.
- * @param <T>
+ * @param <T> item type
  * @since 7109
  */
 public class CompositeList<T> extends AbstractList<T> {
-    private List<? extends T> a,b;
+    private List<? extends T> a, b;
 
     /**
      * Constructs a new {@code CompositeList} from two lists.

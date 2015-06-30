@@ -22,7 +22,7 @@ public class JOSMFixture {
      * Returns a new test fixture initialized to "unit" home.
      * @return A new test fixture for unit tests
      */
-    static public JOSMFixture createUnitTestFixture() {
+    public static JOSMFixture createUnitTestFixture() {
         return new JOSMFixture("test/config/unit-josm.home");
     }
 
@@ -30,7 +30,7 @@ public class JOSMFixture {
      * Returns a new test fixture initialized to "functional" home.
      * @return A new test fixture for functional tests
      */
-    static public JOSMFixture createFunctionalTestFixture() {
+    public static JOSMFixture createFunctionalTestFixture() {
         return new JOSMFixture("test/config/functional-josm.home");
     }
 
@@ -38,7 +38,7 @@ public class JOSMFixture {
      * Returns a new test fixture initialized to "performance" home.
      * @return A new test fixture for performance tests
      */
-    static public JOSMFixture createPerformanceTestFixture() {
+    public static JOSMFixture createPerformanceTestFixture() {
         return new JOSMFixture("test/config/performance-josm.home");
     }
 
@@ -71,8 +71,11 @@ public class JOSMFixture {
             fail(MessageFormat.format("property ''{0}'' not set in test environment", "josm.home"));
         } else {
             File f = new File(josmHome);
-            if (! f.exists() || ! f.canRead()) {
-                fail(MessageFormat.format("property ''{0}'' points to ''{1}'' which is either not existing ({2}) or not readable ({3}). Current directory is ''{4}''.",
+            if (!f.exists() || !f.canRead()) {
+                fail(MessageFormat.format(
+                        // CHECKSTYLE.OFF: LineLength
+                        "property ''{0}'' points to ''{1}'' which is either not existing ({2}) or not readable ({3}). Current directory is ''{4}''.",
+                        // CHECKSTYLE.ON: LineLength
                         "josm.home", josmHome, f.exists(), f.canRead(), Paths.get("").toAbsolutePath()));
             }
         }

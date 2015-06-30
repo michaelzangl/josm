@@ -39,7 +39,7 @@ public class ModifiedConflictResolveCommand extends ConflictResolveCommand {
         case WAY: msg = marktr("Set the ''modified'' flag for way {0}"); break;
         case RELATION: msg = marktr("Set the ''modified'' flag for relation {0}"); break;
         }
-        return tr(msg,conflict.getMy().getId());
+        return tr(msg, conflict.getMy().getId());
     }
 
     @Override
@@ -62,5 +62,30 @@ public class ModifiedConflictResolveCommand extends ConflictResolveCommand {
     public void fillModifiedData(Collection<OsmPrimitive> modified, Collection<OsmPrimitive> deleted,
             Collection<OsmPrimitive> added) {
         modified.add(conflict.getMy());
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((conflict == null) ? 0 : conflict.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ModifiedConflictResolveCommand other = (ModifiedConflictResolveCommand) obj;
+        if (conflict == null) {
+            if (other.conflict != null)
+                return false;
+        } else if (!conflict.equals(other.conflict))
+            return false;
+        return true;
     }
 }

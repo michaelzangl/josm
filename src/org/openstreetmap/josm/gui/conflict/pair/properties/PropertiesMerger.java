@@ -77,7 +77,7 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         gc.anchor = GridBagConstraints.CENTER;
         gc.weightx = 0.0;
         gc.weighty = 0.0;
-        gc.insets = new Insets(10,0,10,0);
+        gc.insets = new Insets(10, 0, 10, 0);
         JLabel lblMyVersion = new JLabel(tr("My version"));
         lblMyVersion.setToolTipText(tr("Properties in my dataset, i.e. the local dataset"));
         add(lblMyVersion, gc);
@@ -85,7 +85,8 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         gc.gridx = 3;
         gc.gridy = 0;
         JLabel lblMergedVersion = new JLabel(tr("Merged version"));
-        lblMergedVersion.setToolTipText(tr("Properties in the merged element. They will replace properties in my elements when merge decisions are applied."));
+        lblMergedVersion.setToolTipText(
+                tr("Properties in the merged element. They will replace properties in my elements when merge decisions are applied."));
         add(lblMergedVersion, gc);
 
         gc.gridx = 5;
@@ -106,7 +107,7 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         gc.anchor = GridBagConstraints.LINE_START;
         gc.weightx = 0.0;
         gc.weighty = 0.0;
-        gc.insets = new Insets(0,5,0,5);
+        gc.insets = new Insets(0, 5, 0, 5);
         add(new JLabel(tr("Coordinates:")), gc);
 
         gc.gridx = 1;
@@ -180,7 +181,7 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         gc.anchor = GridBagConstraints.LINE_START;
         gc.weightx = 0.0;
         gc.weighty = 0.0;
-        gc.insets = new Insets(0,5,0,5);
+        gc.insets = new Insets(0, 5, 0, 5);
         add(new JLabel(tr("Deleted State:")), gc);
 
         gc.gridx = 1;
@@ -256,7 +257,7 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         gc.anchor = GridBagConstraints.LINE_START;
         gc.weightx = 0.0;
         gc.weighty = 0.0;
-        gc.insets = new Insets(0,5,0,5);
+        gc.insets = new Insets(0, 5, 0, 5);
         add(new JLabel(tr("Referenced by:")), gc);
 
         gc.gridx = 1;
@@ -320,7 +321,7 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         lblMyCoordinates.setText(coordToString(model.getMyCoords()));
         lblMergedCoordinates.setText(coordToString(model.getMergedCoords()));
         lblTheirCoordinates.setText(coordToString(model.getTheirCoords()));
-        if (! model.hasCoordConflict()) {
+        if (!model.hasCoordConflict()) {
             lblMyCoordinates.setBackground(ConflictColors.BGCOLOR_NO_CONFLICT.get());
             lblMergedCoordinates.setBackground(ConflictColors.BGCOLOR_NO_CONFLICT.get());
             lblTheirCoordinates.setBackground(ConflictColors.BGCOLOR_NO_CONFLICT.get());
@@ -348,7 +349,7 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
         lblMergedDeletedState.setText(deletedStateToString(model.getMergedDeletedState()));
         lblTheirDeletedState.setText(deletedStateToString(model.getTheirDeletedState()));
 
-        if (! model.hasDeletedStateConflict()) {
+        if (!model.hasDeletedStateConflict()) {
             lblMyDeletedState.setBackground(ConflictColors.BGCOLOR_NO_CONFLICT.get());
             lblMergedDeletedState.setBackground(ConflictColors.BGCOLOR_NO_CONFLICT.get());
             lblTheirDeletedState.setBackground(ConflictColors.BGCOLOR_NO_CONFLICT.get());
@@ -402,7 +403,7 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
 
         @Override
         public void update(Observable o, Object arg) {
-            setEnabled(model.hasCoordConflict() && ! model.isDecidedCoord());
+            setEnabled(model.hasCoordConflict() && !model.isDecidedCoord());
         }
     }
 
@@ -419,7 +420,7 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
 
         @Override
         public void update(Observable o, Object arg) {
-            setEnabled(model.hasCoordConflict() && ! model.isDecidedCoord());
+            setEnabled(model.hasCoordConflict() && !model.isDecidedCoord());
         }
     }
 
@@ -453,7 +454,7 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
 
         @Override
         public void update(Observable o, Object arg) {
-            setEnabled(model.hasDeletedStateConflict() && ! model.isDecidedDeletedState());
+            setEnabled(model.hasDeletedStateConflict() && !model.isDecidedDeletedState());
         }
     }
 
@@ -470,7 +471,7 @@ public class PropertiesMerger extends JPanel implements Observer, IConflictResol
 
         @Override
         public void update(Observable o, Object arg) {
-            setEnabled(model.hasDeletedStateConflict() && ! model.isDecidedDeletedState());
+            setEnabled(model.hasDeletedStateConflict() && !model.isDecidedDeletedState());
         }
     }
 

@@ -18,9 +18,9 @@ import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
 
-import org.openstreetmap.gui.jmapviewer.Coordinate;
 import org.openstreetmap.gui.jmapviewer.OsmMercator;
 import org.openstreetmap.gui.jmapviewer.interfaces.Attributed;
+import org.openstreetmap.gui.jmapviewer.interfaces.ICoordinate;
 import org.openstreetmap.gui.jmapviewer.tilesources.AbstractTileSource;
 import org.openstreetmap.gui.jmapviewer.tilesources.OsmTileSource.Mapnik;
 import org.openstreetmap.gui.jmapviewer.tilesources.TileSourceInfo;
@@ -352,7 +352,7 @@ public class ImageryInfo extends TileSourceInfo implements Comparable<ImageryInf
         this(name);
         setExtendedUrl(url);
         ImageryType t = ImageryType.fromString(type);
-        this.cookies=cookies;
+        this.cookies = cookies;
         this.eulaAcceptanceRequired = eulaAcceptanceRequired;
         if (t != null) {
             this.imageryType = t;
@@ -574,7 +574,7 @@ public class ImageryInfo extends TileSourceInfo implements Comparable<ImageryInf
     }
 
     @Override
-    public String getAttributionText(int zoom, Coordinate topLeft, Coordinate botRight) {
+    public String getAttributionText(int zoom, ICoordinate topLeft, ICoordinate botRight) {
         return attributionText;
     }
 
@@ -663,9 +663,10 @@ public class ImageryInfo extends TileSourceInfo implements Comparable<ImageryInf
             try {
                 serverProjections = new ArrayList<>();
                 Matcher m = Pattern.compile(".*\\{PROJ\\(([^)}]+)\\)\\}.*").matcher(url.toUpperCase(Locale.ENGLISH));
-                if(m.matches()) {
-                    for(String p : m.group(1).split(","))
+                if (m.matches()) {
+                    for (String p : m.group(1).split(",")) {
                         serverProjections.add(p);
+                    }
                 }
             } catch (Exception e) {
                 Main.warn(e);
@@ -707,11 +708,11 @@ public class ImageryInfo extends TileSourceInfo implements Comparable<ImageryInf
      */
     public void setName(String language, String name) {
         boolean isdefault = LanguageInfo.getJOSMLocaleCode(null).equals(language);
-        if(LanguageInfo.isBetterLanguage(langName, language)) {
+        if (LanguageInfo.isBetterLanguage(langName, language)) {
             this.name = isdefault ? tr(name) : name;
             this.langName = language;
         }
-        if(origName == null || isdefault) {
+        if (origName == null || isdefault) {
             this.origName = name;
         }
     }
@@ -826,7 +827,7 @@ public class ImageryInfo extends TileSourceInfo implements Comparable<ImageryInf
      */
     public void setDescription(String language, String description) {
         boolean isdefault = LanguageInfo.getJOSMLocaleCode(null).equals(language);
-        if(LanguageInfo.isBetterLanguage(langDescription, language)) {
+        if (LanguageInfo.isBetterLanguage(langDescription, language)) {
             this.description = isdefault ? tr(description) : description;
             this.langDescription = language;
         }
@@ -915,7 +916,7 @@ public class ImageryInfo extends TileSourceInfo implements Comparable<ImageryInf
      */
     public String getExtendedUrl() {
         return imageryType.getTypeString() + (defaultMaxZoom != 0
-            ? "["+(defaultMinZoom != 0 ? defaultMinZoom+",":"")+defaultMaxZoom+"]" : "") + ":" + url;
+            ? "["+(defaultMinZoom != 0 ? defaultMinZoom+"," : "")+defaultMaxZoom+"]" : "") + ":" + url;
     }
 
     public String getToolbarName() {
@@ -1022,10 +1023,10 @@ public class ImageryInfo extends TileSourceInfo implements Comparable<ImageryInf
     }
 
     /**
-     * Sets the Map of <header name, header value> that if any of this header
+     * Sets the map of &lt;header name, header value&gt; that if any of this header
      * will be returned, then this tile will be treated as "no tile at this zoom level"
      *
-     * @param noTileHeaders
+     * @param noTileHeaders Map of &lt;header name, header value&gt; which will be treated as "no tile at this zoom level"
      * @since 8344
      */
     public void setNoTileHeaders(Map<String, String> noTileHeaders) {
@@ -1038,10 +1039,10 @@ public class ImageryInfo extends TileSourceInfo implements Comparable<ImageryInf
     }
 
     /**
-     * Returns the map <header name, metadata key> indicating, which HTTP headers should
+     * Returns the map of &lt;header name, metadata key&gt; indicating, which HTTP headers should
      * be moved to metadata
      *
-     * @param metadataHeaders
+     * @param metadataHeaders map of &lt;header name, metadata key&gt; indicating, which HTTP headers should be moved to metadata
      * @since 8418
      */
     public void setMetadataHeaders(Map<String, String> metadataHeaders) {

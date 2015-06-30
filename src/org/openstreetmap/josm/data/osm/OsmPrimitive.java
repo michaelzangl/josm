@@ -44,7 +44,6 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
     private static final String SPECIAL_VALUE_ID = "id";
     private static final String SPECIAL_VALUE_LOCAL_NAME = "localname";
 
-
     /**
      * An object can be disabled by the filter mechanism.
      * Then it will show in a shade of gray on the map or it is completely
@@ -114,15 +113,15 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
      *
      * If <code>list</code> is null, replies an empty list.
      *
-     * @param <T>
+     * @param <T> type of data (must be one of the {@link OsmPrimitive} types
      * @param list  the original list
      * @param type the type to filter for
      * @return the sub-list of OSM primitives of type <code>type</code>
      */
-    public static <T extends OsmPrimitive>  List<T> getFilteredList(Collection<OsmPrimitive> list, Class<T> type) {
+    public static <T extends OsmPrimitive> List<T> getFilteredList(Collection<OsmPrimitive> list, Class<T> type) {
         if (list == null) return Collections.emptyList();
         List<T> ret = new LinkedList<>();
-        for(OsmPrimitive p: list) {
+        for (OsmPrimitive p: list) {
             if (type.isInstance(p)) {
                 ret.add(type.cast(p));
             }
@@ -144,7 +143,7 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
     public static <T extends OsmPrimitive> Set<T> getFilteredSet(Collection<OsmPrimitive> set, Class<T> type) {
         Set<T> ret = new LinkedHashSet<>();
         if (set != null) {
-            for(OsmPrimitive p: set) {
+            for (OsmPrimitive p: set) {
                 if (type.isInstance(p)) {
                     ret.add(type.cast(p));
                 }
@@ -248,7 +247,7 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
      * positive number.
      *
      * @param id the id
-     * @param allowNegativeId
+     * @param allowNegativeId {@code true} to allow negative id
      * @throws IllegalArgumentException if id &lt; 0 and allowNegativeId is false
      */
     protected OsmPrimitive(long id, boolean allowNegativeId) {
@@ -277,9 +276,9 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
      *
      * If id is not &gt; 0 version is ignored and set to 0.
      *
-     * @param id
-     * @param version
-     * @param allowNegativeId
+     * @param id the id
+     * @param version the version (positive integer)
+     * @param allowNegativeId {@code true} to allow negative id
      * @throws IllegalArgumentException if id &lt; 0 and allowNegativeId is false
      */
     protected OsmPrimitive(long id, int version, boolean allowNegativeId) {
@@ -287,7 +286,6 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
         this.version = (id > 0 ? version : 0);
         setIncomplete(id > 0 && version == 0);
     }
-
 
     /*----------
      * MAPPAINT
@@ -312,7 +310,7 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
 
     /**
      * This method should never ever by called from somewhere else than Dataset.addPrimitive or removePrimitive methods
-     * @param dataSet
+     * @param dataSet the parent dataset
      */
     void setDataset(DataSet dataSet) {
         if (this.dataSet != null && dataSet != null && this.dataSet != dataSet)
@@ -346,7 +344,8 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
 
     protected void writeUnlock(boolean locked) {
         if (locked) {
-            // It shouldn't be possible for dataset to become null because method calling setDataset would need write lock which is owned by this thread
+            // It shouldn't be possible for dataset to become null because
+            // method calling setDataset would need write lock which is owned by this thread
             dataSet.endUpdate();
         }
     }
@@ -626,8 +625,8 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
     }
 
     private boolean isOuterMemberOfMultipolygon(OsmPrimitive ref) {
-        if (ref instanceof Relation && ref.isSelected() && ((Relation)ref).isMultipolygon()) {
-            for (RelationMember rm : ((Relation)ref).getMembersFor(Collections.singleton(this))) {
+        if (ref instanceof Relation && ref.isSelected() && ((Relation) ref).isMultipolygon()) {
+            for (RelationMember rm : ((Relation) ref).getMembersFor(Collections.singleton(this))) {
                 if ("outer".equals(rm.getRole())) {
                     return true;
                 }
@@ -965,14 +964,14 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
             referrers = referrer;
         } else if (referrers instanceof OsmPrimitive) {
             if (referrers != referrer) {
-                referrers = new OsmPrimitive[] { (OsmPrimitive)referrers, referrer };
+                referrers = new OsmPrimitive[] {(OsmPrimitive) referrers, referrer};
             }
         } else {
-            for (OsmPrimitive primitive:(OsmPrimitive[])referrers) {
+            for (OsmPrimitive primitive:(OsmPrimitive[]) referrers) {
                 if (primitive == referrer)
                     return;
             }
-            referrers = Utils.addInArrayCopy((OsmPrimitive[])referrers, referrer);
+            referrers = Utils.addInArrayCopy((OsmPrimitive[]) referrers, referrer);
         }
     }
 
@@ -986,9 +985,9 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
                 referrers = null;
             }
         } else if (referrers instanceof OsmPrimitive[]) {
-            OsmPrimitive[] orig = (OsmPrimitive[])referrers;
+            OsmPrimitive[] orig = (OsmPrimitive[]) referrers;
             int idx = -1;
-            for (int i=0; i<orig.length; i++) {
+            for (int i = 0; i < orig.length; i++) {
                 if (orig[i] == referrer) {
                     idx = i;
                     break;
@@ -1034,12 +1033,12 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
         List<OsmPrimitive> result = new ArrayList<>();
         if (referrers != null) {
             if (referrers instanceof OsmPrimitive) {
-                OsmPrimitive ref = (OsmPrimitive)referrers;
+                OsmPrimitive ref = (OsmPrimitive) referrers;
                 if (ref.dataSet == dataSet) {
                     result.add(ref);
                 }
             } else {
-                for (OsmPrimitive o:(OsmPrimitive[])referrers) {
+                for (OsmPrimitive o:(OsmPrimitive[]) referrers) {
                     if (dataSet == o.dataSet) {
                         result.add(o);
                     }
@@ -1058,7 +1057,7 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
      *
      * @param visitor the visitor. Ignored, if null.
      */
-    public void visitReferrers(Visitor visitor){
+    public void visitReferrers(Visitor visitor) {
         if (visitor == null) return;
         if (this.referrers == null)
             return;
@@ -1088,10 +1087,10 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
         if (referrers == null) return false;
         checkDataset();
         if (referrers instanceof OsmPrimitive)
-            return n<=1 && referrers instanceof Way && ((OsmPrimitive)referrers).dataSet == dataSet;
+            return n <= 1 && referrers instanceof Way && ((OsmPrimitive) referrers).dataSet == dataSet;
         else {
-            int counter=0;
-            for (OsmPrimitive o : (OsmPrimitive[])referrers) {
+            int counter = 0;
+            for (OsmPrimitive o : (OsmPrimitive[]) referrers) {
                 if (dataSet == o.dataSet && o instanceof Way) {
                     if (++counter >= n)
                         return true;
@@ -1100,7 +1099,6 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
             return false;
         }
     }
-
 
     /*-----------------
      * OTHER METHODS
@@ -1142,16 +1140,18 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
         try {
             CheckParameterUtil.ensureParameterNotNull(other, "other");
             if (other.isNew() ^ isNew())
-                throw new DataIntegrityProblemException(tr("Cannot merge because either of the participating primitives is new and the other is not"));
-            if (! other.isNew() && other.getId() != id)
-                throw new DataIntegrityProblemException(tr("Cannot merge primitives with different ids. This id is {0}, the other is {1}", id, other.getId()));
+                throw new DataIntegrityProblemException(
+                        tr("Cannot merge because either of the participating primitives is new and the other is not"));
+            if (!other.isNew() && other.getId() != id)
+                throw new DataIntegrityProblemException(
+                        tr("Cannot merge primitives with different ids. This id is {0}, the other is {1}", id, other.getId()));
 
             setKeys(other.getKeys());
             timestamp = other.timestamp;
             version = other.version;
             setIncomplete(other.isIncomplete());
             flags = other.flags;
-            user= other.user;
+            user = other.user;
             changesetId = other.changesetId;
         } finally {
             writeUnlock(locked);
@@ -1174,16 +1174,14 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
     }
 
     /**
-     * Replies true if this primitive and other are equal with respect to their
-     * semantic attributes.
+     * Replies true if this primitive and other are equal with respect to their semantic attributes.
      * <ol>
      *   <li>equal id</li>
      *   <li>both are complete or both are incomplete</li>
      *   <li>both have the same tags</li>
      * </ol>
-     * @param other
-     * @return true if this primitive and other are equal with respect to their
-     * semantic attributes.
+     * @param other other primitive to compare
+     * @return true if this primitive and other are equal with respect to their semantic attributes.
      */
     public boolean hasEqualSemanticAttributes(OsmPrimitive other) {
         if (!isNew() &&  id != other.id)
@@ -1196,8 +1194,8 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
     }
 
     /**
-     * Replies true if this primitive and other are equal with respect to their
-     * technical attributes. The attributes:
+     * Replies true if this primitive and other are equal with respect to their technical attributes.
+     * The attributes:
      * <ol>
      *   <li>deleted</li>
      *   <li>modified</li>
@@ -1208,19 +1206,17 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
      * </ol>
      * have to be equal
      * @param other the other primitive
-     * @return true if this primitive and other are equal with respect to their
-     * technical attributes
+     * @return true if this primitive and other are equal with respect to their technical attributes
      */
     public boolean hasEqualTechnicalAttributes(OsmPrimitive other) {
         if (other == null) return false;
 
-        return
-                isDeleted() == other.isDeleted()
+        return  isDeleted() == other.isDeleted()
                 && isModified() == other.isModified()
                 && timestamp == other.timestamp
                 && version == other.version
                 && isVisible() == other.isVisible()
-                && (user == null ? other.user==null : user==other.user)
+                && (user == null ? other.user == null : user == other.user)
                 && changesetId == other.changesetId;
     }
 
@@ -1307,9 +1303,10 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
      *
      * An primitive is equal to its incomplete counter part.
      */
-    @Override public boolean equals(Object obj) {
+    @Override
+    public boolean equals(Object obj) {
         if (obj instanceof OsmPrimitive)
-            return ((OsmPrimitive)obj).id == id && obj.getClass() == getClass();
+            return ((OsmPrimitive) obj).id == id && obj.getClass() == getClass();
         return false;
     }
 
@@ -1318,8 +1315,9 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
      *
      * An primitive has the same hashcode as its incomplete counterpart.
      */
-    @Override public final int hashCode() {
-        return (int)id;
+    @Override
+    public final int hashCode() {
+        return (int) id;
     }
 
     /**

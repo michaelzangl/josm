@@ -132,7 +132,7 @@ public class OsmServerBackreferenceReader extends OsmServerReader {
                 progressMonitor.subTask(message);
                 return OsmReader.parseDataSet(in, progressMonitor.createSubTaskMonitor(1, true));
             }
-        } catch(OsmTransferException e) {
+        } catch (OsmTransferException e) {
             throw e;
         } catch (Exception e) {
             if (cancel)
@@ -148,7 +148,7 @@ public class OsmServerBackreferenceReader extends OsmServerReader {
      * Reads referring ways from the API server and replies them in a {@link DataSet}
      *
      * @return the data set
-     * @throws OsmTransferException
+     * @throws OsmTransferException if any error occurs during dialog with OSM API
      */
     protected DataSet getReferringWays(ProgressMonitor progressMonitor) throws OsmTransferException {
         return getReferringPrimitives(progressMonitor, "/ways", tr("Downloading referring ways ..."));
@@ -159,7 +159,7 @@ public class OsmServerBackreferenceReader extends OsmServerReader {
      *
      * @param progressMonitor the progress monitor
      * @return the data set
-     * @throws OsmTransferException
+     * @throws OsmTransferException if any error occurs during dialog with OSM API
      */
     protected DataSet getReferringRelations(ProgressMonitor progressMonitor) throws OsmTransferException {
         return getReferringPrimitives(progressMonitor, "/relations", tr("Downloading referring relations ..."));
@@ -188,7 +188,7 @@ public class OsmServerBackreferenceReader extends OsmServerReader {
         progressMonitor.beginTask(null, 2);
         try {
             Collection<Way> waysToCheck = new ArrayList<>(ds.getWays());
-            if (isReadFull() ||primitiveType.equals(OsmPrimitiveType.NODE)) {
+            if (isReadFull() || primitiveType.equals(OsmPrimitiveType.NODE)) {
                 for (Way way: waysToCheck) {
                     if (!way.isNew() && way.hasIncompleteNodes()) {
                         OsmServerObjectReader reader = new OsmServerObjectReader(way.getId(), OsmPrimitiveType.from(way), true /* read full */);
@@ -202,7 +202,7 @@ public class OsmServerBackreferenceReader extends OsmServerReader {
                 Collection<Relation> relationsToCheck  = new ArrayList<>(ds.getRelations());
                 for (Relation relation: relationsToCheck) {
                     if (!relation.isNew() && relation.hasIncompleteMembers()) {
-                        OsmServerObjectReader reader = new OsmServerObjectReader(relation.getId(), OsmPrimitiveType.from(relation), true /* read full */);
+                        OsmServerObjectReader reader = new OsmServerObjectReader(relation.getId(), OsmPrimitiveType.from(relation), true);
                         DataSet wayDs = reader.parseOsm(progressMonitor.createSubTaskMonitor(1, false));
                         DataSetMerger visitor = new DataSetMerger(ds, wayDs);
                         visitor.merge();
@@ -233,12 +233,12 @@ public class OsmServerBackreferenceReader extends OsmServerReader {
             DataSet ret = new DataSet();
             if (primitiveType.equals(OsmPrimitiveType.NODE)) {
                 DataSet ds = getReferringWays(progressMonitor.createSubTaskMonitor(1, false));
-                DataSetMerger visitor = new DataSetMerger(ret,ds);
+                DataSetMerger visitor = new DataSetMerger(ret, ds);
                 visitor.merge();
                 ret = visitor.getTargetDataSet();
             }
             DataSet ds = getReferringRelations(progressMonitor.createSubTaskMonitor(1, false));
-            DataSetMerger visitor = new DataSetMerger(ret,ds);
+            DataSetMerger visitor = new DataSetMerger(ret, ds);
             visitor.merge();
             ret = visitor.getTargetDataSet();
             if (ret != null) {

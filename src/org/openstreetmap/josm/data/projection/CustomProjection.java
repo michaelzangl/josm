@@ -102,7 +102,7 @@ public class CustomProjection extends AbstractProjection {
         public final boolean hasValue;
 
         /** Map of all parameters by key */
-        public static final Map<String, Param> paramsByKey = new HashMap<>();
+        static final Map<String, Param> paramsByKey = new HashMap<>();
         static {
             for (Param p : Param.values()) {
                 paramsByKey.put(p.key, p);
@@ -124,7 +124,8 @@ public class CustomProjection extends AbstractProjection {
 
     /**
      * Constructs a new {@code CustomProjection} with given parameters.
-     * @param pref String containing projection parameters (ex: "+proj=tmerc +lon_0=-3 +k_0=0.9996 +x_0=500000 +ellps=WGS84 +datum=WGS84 +bounds=-8,-5,2,85")
+     * @param pref String containing projection parameters
+     * (ex: "+proj=tmerc +lon_0=-3 +k_0=0.9996 +x_0=500000 +ellps=WGS84 +datum=WGS84 +bounds=-8,-5,2,85")
      */
     public CustomProjection(String pref) {
         this(null, null, pref, null);
@@ -350,7 +351,7 @@ public class CustomProjection extends AbstractProjection {
         if (isCentric)
             return new CentricDatum(null, null, ellps);
         boolean is3Param = true;
-        for (int i = 3; i<towgs84Param.size(); i++) {
+        for (int i = 3; i < towgs84Param.size(); i++) {
             if (towgs84Param.get(i) != 0) {
                 is3Param = false;
                 break;

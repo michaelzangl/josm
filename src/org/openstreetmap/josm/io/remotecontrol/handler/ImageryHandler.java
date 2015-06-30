@@ -38,7 +38,7 @@ public class ImageryHandler extends RequestHandler.RawURLParseRequestHandler {
 
     @Override
     public String[] getOptionalParams() {
-        return new String[] { "title", "type", "cookies", "min_zoom", "max_zoom"};
+        return new String[] {"title", "type", "cookies", "min_zoom", "max_zoom"};
     }
 
     @Override
@@ -132,14 +132,18 @@ public class ImageryHandler extends RequestHandler.RawURLParseRequestHandler {
 
     @Override
     public String[] getUsageExamples() {
-        final String types = Utils.join("|", Utils.transform(Arrays.asList(ImageryInfo.ImageryType.values()), new Utils.Function<ImageryInfo.ImageryType, String>() {
+        final String types = Utils.join("|", Utils.transform(Arrays.asList(ImageryInfo.ImageryType.values()),
+                new Utils.Function<ImageryInfo.ImageryType, String>() {
             @Override
             public String apply(ImageryInfo.ImageryType x) {
                 return x.getTypeString();
             }
         }));
-        return new String[] { "/imagery?title=osm&type=tms&url=https://a.tile.openstreetmap.org/%7Bzoom%7D/%7Bx%7D/%7By%7D.png",
-            "/imagery?title=landsat&type=wms&url=http://irs.gis-lab.info/?layers=landsat&SRS=%7Bproj%7D&WIDTH=%7Bwidth%7D&HEIGHT=%7Bheight%7D&BBOX=%7Bbbox%7D",
-            "/imagery?title=...&type={"+types+"}&url=....[&cookies=...][&min_zoom=...][&max_zoom=...]"};
+        return new String[] {
+            "/imagery?title=osm&type=tms&url=https://a.tile.openstreetmap.org/%7Bzoom%7D/%7Bx%7D/%7By%7D.png",
+            "/imagery?title=landsat&type=wms&url=http://irs.gis-lab.info/?" +
+                    "layers=landsat&SRS=%7Bproj%7D&WIDTH=%7Bwidth%7D&HEIGHT=%7Bheight%7D&BBOX=%7Bbbox%7D",
+            "/imagery?title=...&type={"+types+"}&url=....[&cookies=...][&min_zoom=...][&max_zoom=...]"
+            };
     }
 }

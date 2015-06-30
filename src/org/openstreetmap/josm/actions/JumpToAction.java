@@ -49,15 +49,37 @@ public class JumpToAction extends JosmAction {
     private final JosmTextField zm = new JosmTextField();
 
     class OsmURLListener implements DocumentListener {
-        @Override public void changedUpdate(DocumentEvent e) { parseURL(); }
-        @Override public void insertUpdate(DocumentEvent e) { parseURL(); }
-        @Override public void removeUpdate(DocumentEvent e) { parseURL(); }
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            parseURL();
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            parseURL();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            parseURL();
+        }
     }
 
     class OsmLonLatListener implements DocumentListener {
-        @Override public void changedUpdate(DocumentEvent e) { updateUrl(false); }
-        @Override public void insertUpdate(DocumentEvent e) { updateUrl(false); }
-        @Override public void removeUpdate(DocumentEvent e) { updateUrl(false); }
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            updateUrl(false);
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            updateUrl(false);
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            updateUrl(false);
+        }
     }
 
     /**
@@ -108,10 +130,10 @@ public class JumpToAction extends JosmAction {
         p.add(new JLabel(tr("URL")), GBC.eol());
         p.add(url, GBC.eol().fill(GBC.HORIZONTAL));
 
-        Object[] buttons = { tr("Jump there"), tr("Cancel") };
+        Object[] buttons = {tr("Jump there"), tr("Cancel")};
         LatLon ll = null;
         double zoomLvl = 100;
-        while(ll == null) {
+        while (ll == null) {
             int option = JOptionPane.showOptionDialog(
                             Main.parent,
                             panel,
@@ -127,7 +149,9 @@ public class JumpToAction extends JosmAction {
                 zoomLvl = Double.parseDouble(zm.getText());
                 ll = new LatLon(Double.parseDouble(lat.getText()), Double.parseDouble(lon.getText()));
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(Main.parent, tr("Could not parse Latitude, Longitude or Zoom. Please check."), tr("Unable to parse Lon/Lat"), JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(Main.parent,
+                        tr("Could not parse Latitude, Longitude or Zoom. Please check."),
+                        tr("Unable to parse Lon/Lat"), JOptionPane.ERROR_MESSAGE);
             }
         }
 
@@ -163,17 +187,16 @@ public class JumpToAction extends JosmAction {
     }
 
     private void updateUrl(boolean force) {
-        if(!lat.hasFocus() && !lon.hasFocus() && !zm.hasFocus() && !force) return;
+        if (!lat.hasFocus() && !lon.hasFocus() && !zm.hasFocus() && !force) return;
         try {
             double dlat = Double.parseDouble(lat.getText());
             double dlon = Double.parseDouble(lon.getText());
             double m = Double.parseDouble(zm.getText());
             // Inverse function to the one above. 18 is the current maximum zoom
-            // available on standard renderers, so choose this is in case m
-            // should be zero
+            // available on standard renderers, so choose this is in case m should be zero
             int zoomLvl = 18;
-            if(m > 0)
-                zoomLvl = (int)Math.round((-1) * Math.log(m/10000000)/Math.log(2));
+            if (m > 0)
+                zoomLvl = (int) Math.round((-1) * Math.log(m/10000000)/Math.log(2));
 
             url.setText(OsmUrlToBounds.getURL(dlat, dlon, zoomLvl));
         } catch (NumberFormatException x) {

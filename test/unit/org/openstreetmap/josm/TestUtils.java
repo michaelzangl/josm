@@ -9,7 +9,11 @@ import java.util.Comparator;
 /**
  * Various utils, useful for unit tests.
  */
-public class TestUtils {
+public final class TestUtils {
+
+    private TestUtils() {
+        // Hide constructor for utility classes
+    }
 
     /**
      * Returns the path to test data root directory.
@@ -51,13 +55,13 @@ public class TestUtils {
     public static <T> void checkComparableContract(Comparator<T> comparator, T[] array) {
         System.out.println("Validating Comparable contract on array of "+array.length+" elements");
         // Check each compare possibility
-        for (int i=0; i<array.length; i++) {
+        for (int i = 0; i < array.length; i++) {
             T r1 = array[i];
-            for (int j=i; j<array.length; j++) {
+            for (int j = i; j < array.length; j++) {
                 T r2 = array[j];
                 int a = comparator.compare(r1, r2);
                 int b = comparator.compare(r2, r1);
-                if (i==j || a==b) {
+                if (i == j || a == b) {
                     if (a != 0 || b != 0) {
                         fail(getFailMessage(r1, r2, a, b));
                     }
@@ -66,7 +70,7 @@ public class TestUtils {
                         fail(getFailMessage(r1, r2, a, b));
                     }
                 }
-                for (int k=j; k<array.length; k++) {
+                for (int k = j; k < array.length; k++) {
                     T r3 = array[k];
                     int c = comparator.compare(r1, r3);
                     int d = comparator.compare(r2, r3);

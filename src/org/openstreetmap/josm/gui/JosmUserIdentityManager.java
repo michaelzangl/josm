@@ -105,7 +105,8 @@ public final class JosmUserIdentityManager implements PreferenceChangedListener{
     public void setPartiallyIdentified(String userName) {
         CheckParameterUtil.ensureParameterNotNull(userName, "userName");
         if (userName.trim().isEmpty())
-            throw new IllegalArgumentException(MessageFormat.format("Expected non-empty value for parameter ''{0}'', got ''{1}''", "userName", userName));
+            throw new IllegalArgumentException(
+                    MessageFormat.format("Expected non-empty value for parameter ''{0}'', got ''{1}''", "userName", userName));
         this.userName = userName;
         userInfo = null;
     }
@@ -200,10 +201,9 @@ public final class JosmUserIdentityManager implements PreferenceChangedListener{
         } else {
             if (userName != null && !userName.equals(this.userName)) {
                 setPartiallyIdentified(userName);
-            } else {
-                // same name in the preferences as JOSM already knows about.
-                // keep the state, be it partially or fully identified
             }
+            // else: same name in the preferences as JOSM already knows about.
+            // keep the state, be it partially or fully identified
         }
     }
 

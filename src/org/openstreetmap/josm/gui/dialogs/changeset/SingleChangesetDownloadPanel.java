@@ -29,14 +29,13 @@ import org.openstreetmap.josm.io.OnlineResource;
 public class SingleChangesetDownloadPanel extends JPanel {
 
     private ChangesetIdTextField tfChangesetId;
-    private DownloadAction actDownload;
 
     protected void build() {
-        setLayout(new FlowLayout(FlowLayout.LEFT,0,0));
+        setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         setBorder(
                 BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(Color.GRAY),
-                        BorderFactory.createEmptyBorder(0,3,0,3)
+                        BorderFactory.createEmptyBorder(0, 3, 0, 3)
                 )
         );
 
@@ -45,7 +44,7 @@ public class SingleChangesetDownloadPanel extends JPanel {
         tfChangesetId.setToolTipText(tr("Enter a changeset id"));
         SelectAllOnFocusGainedDecorator.decorate(tfChangesetId);
 
-        actDownload = new DownloadAction();
+        DownloadAction actDownload = new DownloadAction();
         SideButton btn = new SideButton(actDownload);
         tfChangesetId.addActionListener(actDownload);
         tfChangesetId.getDocument().addDocumentListener(actDownload);

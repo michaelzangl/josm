@@ -70,7 +70,7 @@ public class TagConflictResolverModel extends DefaultTableModel {
                 new Comparator<String>() {
                     @Override
                     public int compare(String key1, String key2) {
-                        if (decisions.get(key1).isDecided() && ! decisions.get(key2).isDecided())
+                        if (decisions.get(key1).isDecided() && !decisions.get(key2).isDecided())
                             return 1;
                         else if (!decisions.get(key1).isDecided() && decisions.get(key2).isDecided())
                             return -1;
@@ -86,10 +86,10 @@ public class TagConflictResolverModel extends DefaultTableModel {
      */
     public void rebuild() {
         if (tags == null) return;
-        for(String key: tags.getKeys()) {
+        for (String key: tags.getKeys()) {
             MultiValueResolutionDecision decision = new MultiValueResolutionDecision(tags.getTagsFor(key));
             if (decisions.get(key) == null) {
-                decisions.put(key,decision);
+                decisions.put(key, decision);
             }
         }
         displayedKeys.clear();
@@ -167,9 +167,9 @@ public class TagConflictResolverModel extends DefaultTableModel {
     public void setValueAt(Object value, int row, int column) {
         MultiValueResolutionDecision decision = getDecision(row);
         if (value instanceof String) {
-            decision.keepOne((String)value);
+            decision.keepOne((String) value);
         } else if (value instanceof MultiValueDecisionType) {
-            MultiValueDecisionType type = (MultiValueDecisionType)value;
+            MultiValueDecisionType type = (MultiValueDecisionType) value;
             switch(type) {
             case KEEP_NONE:
                 decision.keepNone();
@@ -263,11 +263,11 @@ public class TagConflictResolverModel extends DefaultTableModel {
             List<String> values = decision.getValues();
             values.remove("");
             if (values.size() == 1) {
-                // TODO: Do not suggest to keep the single value in order to avoid long highways to become tunnels+bridges+... (only if both primitives are tagged)
+                // TODO: Do not suggest to keep the single value in order to avoid long highways to become tunnels+bridges+...
+                // (only if both primitives are tagged)
                 decision.keepOne(values.get(0));
-            } else {
-                // Do not suggest to keep all values in order to reduce the wrong usage of semicolon values, see #9104!
             }
+            // else: Do not suggest to keep all values in order to reduce the wrong usage of semicolon values, see #9104!
         }
         rebuild();
     }

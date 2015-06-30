@@ -49,8 +49,6 @@ import org.openstreetmap.josm.gui.preferences.PreferenceTabbedPane.PreferencePan
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.gui.widgets.JosmTextField;
 import org.openstreetmap.josm.gui.widgets.SelectAllOnFocusGainedDecorator;
-import org.openstreetmap.josm.io.OfflineAccessException;
-import org.openstreetmap.josm.io.OnlineResource;
 import org.openstreetmap.josm.plugins.PluginDownloadTask;
 import org.openstreetmap.josm.plugins.PluginInformation;
 import org.openstreetmap.josm.plugins.ReadLocalPluginInformationTask;
@@ -95,7 +93,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
                     downloaded.size()
                     ));
             sb.append("<ul>");
-            for(PluginInformation pi: downloaded) {
+            for (PluginInformation pi: downloaded) {
                 sb.append("<li>").append(pi.name).append(" (").append(pi.version).append(")</li>");
             }
             sb.append("</ul>");
@@ -108,7 +106,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
                     failed.size()
                     ));
             sb.append("<ul>");
-            for(PluginInformation pi: failed) {
+            for (PluginInformation pi: failed) {
                 sb.append("<li>").append(pi.name).append("</li>");
             }
             sb.append("</ul>");
@@ -120,6 +118,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
      * Notifies user about result of a finished plugin download task.
      * @param parent The parent component
      * @param task The finished plugin download task
+     * @param restartRequired true if a restart is required
      * @since 6797
      */
     public static void notifyDownloadResults(final Component parent, PluginDownloadTask task, boolean restartRequired) {
@@ -159,13 +158,13 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
 
     protected JPanel buildSearchFieldPanel() {
         JPanel pnl  = new JPanel(new GridBagLayout());
-        pnl.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        pnl.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         GridBagConstraints gc = new GridBagConstraints();
 
         gc.anchor = GridBagConstraints.NORTHWEST;
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.weightx = 0.0;
-        gc.insets = new Insets(0,0,0,3);
+        gc.insets = new Insets(0, 0, 0, 3);
         pnl.add(new JLabel(tr("Search:")), gc);
 
         gc.gridx = 1;
@@ -179,7 +178,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
     }
 
     protected JPanel buildActionPanel() {
-        JPanel pnl = new JPanel(new GridLayout(1,3));
+        JPanel pnl = new JPanel(new GridLayout(1, 3));
 
         pnl.add(new JButton(new DownloadAvailablePluginsAction()));
         pnl.add(new JButton(new UpdateSelectedPluginsAction()));
@@ -194,11 +193,12 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
         pnlPluginPreferences = new PluginListPanel(model);
         spPluginPreferences = GuiHelper.embedInVerticalScrollPane(pnlPluginPreferences);
         spPluginPreferences.getVerticalScrollBar().addComponentListener(
-                new ComponentAdapter(){
+                new ComponentAdapter() {
                     @Override
                     public void componentShown(ComponentEvent e) {
                         spPluginPreferences.setBorder(UIManager.getBorder("ScrollPane.border"));
                     }
+
                     @Override
                     public void componentHidden(ComponentEvent e) {
                         spPluginPreferences.setBorder(null);
@@ -280,7 +280,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
 
     @Override
     public boolean ok() {
-        if (! pluginPreferencesActivated)
+        if (!pluginPreferencesActivated)
             return false;
         pnlPluginUpdatePolicy.rememberInPreferences();
         if (model.isActivePluginsChanged()) {
@@ -320,33 +320,23 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
         Main.worker.submit(r);
     }
 
-    private static Collection<String> getOnlinePluginSites() {
-        Collection<String> pluginSites = new ArrayList<>(Main.pref.getPluginSites());
-        for (Iterator<String> it = pluginSites.iterator(); it.hasNext();) {
-            try {
-                OnlineResource.JOSM_WEBSITE.checkOfflineAccess(it.next(), Main.getJOSMWebsite());
-            } catch (OfflineAccessException ex) {
-                Main.warn(ex.getMessage());
-                it.remove();
-            }
-        }
-        return pluginSites;
-    }
-
     /**
      * The action for downloading the list of available plugins
      */
     class DownloadAvailablePluginsAction extends AbstractAction {
 
+        /**
+         * Constructs a new {@code DownloadAvailablePluginsAction}.
+         */
         public DownloadAvailablePluginsAction() {
-            putValue(NAME,tr("Download list"));
+            putValue(NAME, tr("Download list"));
             putValue(SHORT_DESCRIPTION, tr("Download the list of available plugins"));
             putValue(SMALL_ICON, ImageProvider.get("download"));
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            Collection<String> pluginSites = getOnlinePluginSites();
+            Collection<String> pluginSites = Main.pref.getOnlinePluginSites();
             if (pluginSites.isEmpty()) {
                 return;
             }
@@ -368,7 +358,6 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
             Main.worker.submit(task);
             Main.worker.submit(continuation);
         }
-
     }
 
     /**
@@ -376,7 +365,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
      */
     class UpdateSelectedPluginsAction extends AbstractAction {
         public UpdateSelectedPluginsAction() {
-            putValue(NAME,tr("Update plugins"));
+            putValue(NAME, tr("Update plugins"));
             putValue(SHORT_DESCRIPTION, tr("Update the selected plugins"));
             putValue(SMALL_ICON, ImageProvider.get("dialogs", "refresh"));
         }
@@ -410,7 +399,8 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
                     tr("Update plugins")
                     );
             // the async task for downloading plugin information
-            final ReadRemotePluginInformationTask pluginInfoDownloadTask = new ReadRemotePluginInformationTask(getOnlinePluginSites());
+            final ReadRemotePluginInformationTask pluginInfoDownloadTask = new ReadRemotePluginInformationTask(
+                    Main.pref.getOnlinePluginSites());
 
             // to be run asynchronously after the plugin download
             //
@@ -477,7 +467,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
      */
     class ConfigureSitesAction extends AbstractAction {
         public ConfigureSitesAction() {
-            putValue(NAME,tr("Configure sites..."));
+            putValue(NAME, tr("Configure sites..."));
             putValue(SHORT_DESCRIPTION, tr("Configure the list of sites where plugins are downloaded from"));
             putValue(SMALL_ICON, ImageProvider.get("dialogs", "settings"));
         }
@@ -532,7 +522,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
             final JList<String> list = new JList<>(model);
             add(new JScrollPane(list), GBC.std().fill());
             JPanel buttons = new JPanel(new GridBagLayout());
-            buttons.add(new JButton(new AbstractAction(tr("Add")){
+            buttons.add(new JButton(new AbstractAction(tr("Add")) {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     String s = JOptionPane.showInputDialog(
@@ -546,7 +536,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
                     }
                 }
             }), GBC.eol().fill(GBC.HORIZONTAL));
-            buttons.add(new JButton(new AbstractAction(tr("Edit")){
+            buttons.add(new JButton(new AbstractAction(tr("Edit")) {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (list.getSelectedValue() == null) {
@@ -558,7 +548,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
                                 );
                         return;
                     }
-                    String s = (String)JOptionPane.showInputDialog(
+                    String s = (String) JOptionPane.showInputDialog(
                             Main.parent,
                             tr("Edit JOSM Plugin description URL."),
                             tr("JOSM Plugin description URL"),
@@ -572,7 +562,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
                     }
                 }
             }), GBC.eol().fill(GBC.HORIZONTAL));
-            buttons.add(new JButton(new AbstractAction(tr("Delete")){
+            buttons.add(new JButton(new AbstractAction(tr("Delete")) {
                 @Override
                 public void actionPerformed(ActionEvent event) {
                     if (list.getSelectedValue() == null) {
@@ -597,12 +587,10 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
         public List<String> getUpdateSites() {
             if (model.getSize() == 0) return Collections.emptyList();
             List<String> ret = new ArrayList<>(model.getSize());
-            for (int i=0; i< model.getSize();i++){
+            for (int i = 0; i < model.getSize(); i++) {
                 ret.add(model.get(i));
             }
             return ret;
         }
     }
-
-
 }

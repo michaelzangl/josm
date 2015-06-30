@@ -42,7 +42,7 @@ public class Highways extends Test {
     /**
      * Classified highways in order of importance
      */
-    private static final Set<String> CLASSIFIED_HIGHWAYS = new HashSet<>(Arrays.asList(
+    private static final List<String> CLASSIFIED_HIGHWAYS = Arrays.asList(
             "motorway",  "motorway_link",
             "trunk",     "trunk_link",
             "primary",   "primary_link",
@@ -50,7 +50,7 @@ public class Highways extends Test {
             "tertiary",  "tertiary_link",
             "unclassified",
             "residential",
-            "living_street"));
+            "living_street");
 
     private static final Set<String> KNOWN_SOURCE_MAXSPEED_CONTEXTS = new HashSet<>(Arrays.asList(
             "urban", "rural", "zone", "zone30", "zone:30", "nsl_single", "nsl_dual", "motorway", "trunk", "living_street", "bicycle_road"));
@@ -92,7 +92,8 @@ public class Highways extends Test {
                 testMissingPedestrianCrossing(n);
             }
             if (n.hasKey("source:maxspeed")) {
-                // Check maxspeed but not context against highway for nodes as maxspeed is not set on highways here but on signs, speed cameras, etc.
+                // Check maxspeed but not context against highway for nodes
+                // as maxspeed is not set on highways here but on signs, speed cameras, etc.
                 testSourceMaxspeed(n, false);
             }
         }
@@ -101,7 +102,8 @@ public class Highways extends Test {
     @Override
     public void visit(Way w) {
         if (w.isUsable()) {
-            if (w.hasKey("highway") && CLASSIFIED_HIGHWAYS.contains(w.get("highway")) && w.hasKey("junction") && "roundabout".equals(w.get("junction"))) {
+            if (w.hasKey("highway") && CLASSIFIED_HIGHWAYS.contains(w.get("highway"))
+                    && w.hasKey("junction") && "roundabout".equals(w.get("junction"))) {
                 testWrongRoundabout(w);
             }
             if (w.hasKey("source:maxspeed")) {
@@ -207,7 +209,8 @@ public class Highways extends Test {
                     handleCarWay(n, w);
                 }
                 if ((leftByPedestrians || leftByCyclists) && leftByCars) {
-                    errors.add(new TestError(this, Severity.OTHER, tr("Missing pedestrian crossing information"), MISSING_PEDESTRIAN_CROSSING, n));
+                    errors.add(new TestError(this, Severity.OTHER, tr("Missing pedestrian crossing information"),
+                            MISSING_PEDESTRIAN_CROSSING, n));
                     return;
                 }
             }
@@ -242,12 +245,14 @@ public class Highways extends Test {
             // Check country
             String country = value.substring(0, index);
             if (!ISO_COUNTRIES.contains(country)) {
-                errors.add(new TestError(this, Severity.WARNING, tr("Unknown country code: {0}", country), SOURCE_MAXSPEED_UNKNOWN_COUNTRY_CODE, p));
+                errors.add(new TestError(this, Severity.WARNING,
+                        tr("Unknown country code: {0}", country), SOURCE_MAXSPEED_UNKNOWN_COUNTRY_CODE, p));
             }
             // Check context
             String context = value.substring(index+1);
             if (!KNOWN_SOURCE_MAXSPEED_CONTEXTS.contains(context)) {
-                errors.add(new TestError(this, Severity.WARNING, tr("Unknown source:maxspeed context: {0}", context), SOURCE_MAXSPEED_UNKNOWN_CONTEXT, p));
+                errors.add(new TestError(this, Severity.WARNING,
+                        tr("Unknown source:maxspeed context: {0}", context), SOURCE_MAXSPEED_UNKNOWN_CONTEXT, p));
             }
             // TODO: Check coherence of context against maxspeed
             // TODO: Check coherence of context against highway

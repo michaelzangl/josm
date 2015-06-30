@@ -26,6 +26,7 @@ import org.openstreetmap.gui.jmapviewer.JMapViewer;
 import org.openstreetmap.gui.jmapviewer.MapMarkerDot;
 import org.openstreetmap.gui.jmapviewer.MemoryTileCache;
 import org.openstreetmap.gui.jmapviewer.OsmTileLoader;
+import org.openstreetmap.gui.jmapviewer.interfaces.ICoordinate;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
 import org.openstreetmap.gui.jmapviewer.interfaces.TileLoader;
 import org.openstreetmap.gui.jmapviewer.interfaces.TileSource;
@@ -69,7 +70,7 @@ public class SlippyMapBBoxChooser extends JMapViewer implements BBoxChooser {
                     continue;
                 }
                 try {
-                    TileSource source = TMSLayer.getTileSource(info);
+                    TileSource source = TMSLayer.getTileSourceStatic(info);
                     if (source != null) {
                         sources.add(source);
                     }
@@ -91,14 +92,13 @@ public class SlippyMapBBoxChooser extends JMapViewer implements BBoxChooser {
 
     /**
      * Plugins that wish to add custom tile sources to slippy map choose should call this method
-     * @param tileSourceProvider
+     * @param tileSourceProvider new tile source provider
      */
     public static void addTileSourceProvider(TileSourceProvider tileSourceProvider) {
         providers.addIfAbsent(tileSourceProvider);
     }
 
     private static CopyOnWriteArrayList<TileSourceProvider> providers = new CopyOnWriteArrayList<>();
-
     static {
         addTileSourceProvider(new TileSourceProvider() {
             @Override
@@ -124,8 +124,8 @@ public class SlippyMapBBoxChooser extends JMapViewer implements BBoxChooser {
     private transient Bounds bbox;
 
     // upper left and lower right corners of the selection rectangle (x/y on ZOOM_MAX)
-    private Coordinate iSelectionRectStart;
-    private Coordinate iSelectionRectEnd;
+    private ICoordinate iSelectionRectStart;
+    private ICoordinate iSelectionRectEnd;
 
     /**
      * Constructs a new {@code SlippyMapBBoxChooser}.
@@ -142,7 +142,7 @@ public class SlippyMapBBoxChooser extends JMapViewer implements BBoxChooser {
 
         uncachedLoader = new OsmTileLoader(this);
         uncachedLoader.headers.putAll(headers);
-        setZoomContolsVisible(Main.pref.getBoolean("slippy_map_chooser.zoomcontrols",false));
+        setZoomContolsVisible(Main.pref.getBoolean("slippy_map_chooser.zoomcontrols", false));
         setMapMarkerVisible(false);
         setMinimumSize(new Dimension(350, 350 / 2));
         // We need to set an initial size - this prevents a wrong zoom selection
@@ -236,11 +236,10 @@ public class SlippyMapBBoxChooser extends JMapViewer implements BBoxChooser {
     }
 
     /**
-     * Callback for the OsmMapControl. (Re-)Sets the start and end point of the
-     * selection rectangle.
+     * Callback for the OsmMapControl. (Re-)Sets the start and end point of the selection rectangle.
      *
-     * @param aStart
-     * @param aEnd
+     * @param aStart selection start
+     * @param aEnd selection end
      */
     public void setSelection(Point aStart, Point aEnd) {
         if (aStart == null || aEnd == null || aStart.x == aEnd.x || aStart.y == aEnd.y)

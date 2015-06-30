@@ -19,16 +19,22 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import org.openstreetmap.josm.data.projection.Ellipsoid;
 import org.openstreetmap.josm.data.projection.ProjectionConfigurationException;
 
+// CHECKSTYLE.OFF: LineLength
+
 /**
  * Projection for the SwissGrid CH1903 / L03, see <a href="https://en.wikipedia.org/wiki/Swiss_coordinate_system">Wikipedia article</a>.<br>
  *
- * Calculations were originally based on <a href="http://www.swisstopo.admin.ch/internet/swisstopo/en/home/topics/survey/sys/refsys/switzerland.parsysrelated1.37696.downloadList.12749.DownloadFile.tmp/ch1903wgs84en.pdf">
+ * Calculations were originally based on
+ * <a href="http://www.swisstopo.admin.ch/internet/swisstopo/en/home/topics/survey/sys/refsys/switzerland.parsysrelated1.37696.downloadList.12749.DownloadFile.tmp/ch1903wgs84en.pdf">
  * simple formula</a>.<br>
  *
- * August 2010 update to <a href="http://www.swisstopo.admin.ch/internet/swisstopo/en/home/topics/survey/sys/refsys/switzerland.parsysrelated1.37696.downloadList.97912.DownloadFile.tmp/swissprojectionen.pdf">
+ * August 2010 update to
+ * <a href="http://www.swisstopo.admin.ch/internet/swisstopo/en/home/topics/survey/sys/refsys/switzerland.parsysrelated1.37696.downloadList.97912.DownloadFile.tmp/swissprojectionen.pdf">
  * this formula (rigorous formulas)</a>.
  */
 public class SwissObliqueMercator implements Proj {
+
+    // CHECKSTYLE.ON: LineLength
 
     private Ellipsoid ellps;
     private double kR;
@@ -80,7 +86,7 @@ public class SwissObliqueMercator implements Proj {
         double y = kR * lb;
         double x = kR / 2 * log((1 + sin(bb)) / (1 - sin(bb)));
 
-        return new double[] { y, x };
+        return new double[] {y, x};
     }
 
     @Override
@@ -106,6 +112,6 @@ public class SwissObliqueMercator implements Proj {
             * log(tan(PI / 4 + asin(ellps.e * sin(phi)) / 2));
             phi = 2 * atan(exp(s)) - PI / 2;
         }
-        return new double[] { phi, lambda };
+        return new double[] {phi, lambda};
     }
 }

@@ -34,7 +34,8 @@ public final class ServerAccessPreference extends DefaultTabPreferenceSetting {
     }
 
     private ServerAccessPreference() {
-        super(/* ICON(preferences/) */ "connection", tr("Connection Settings"), tr("Connection Settings for the OSM server."), false, new JTabbedPane());
+        super(/* ICON(preferences/) */ "connection", tr("Connection Settings"),
+                tr("Connection Settings for the OSM server."), false, new JTabbedPane());
     }
 
     /** indicates whether to use the default OSM URL or not */
@@ -64,7 +65,7 @@ public final class ServerAccessPreference extends DefaultTabPreferenceSetting {
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.anchor = GridBagConstraints.NORTHWEST;
         gc.weightx = 1.0;
-        gc.insets = new Insets(0,0,0,0);
+        gc.insets = new Insets(0, 0, 0, 0);
         pnlApiUrlPreferences = new OsmApiUrlInputPanel();
         pnl.add(pnlApiUrlPreferences, gc);
 
@@ -73,7 +74,7 @@ public final class ServerAccessPreference extends DefaultTabPreferenceSetting {
         gc.fill = GridBagConstraints.BOTH;
         gc.weightx = 1.0;
         gc.weighty = 1.0;
-        gc.insets = new Insets(10,0,3,3);
+        gc.insets = new Insets(10, 0, 3, 3);
         pnl.add(buildTabbedServerPreferences(), gc);
 
         HelpUtil.setHelpContext(pnl, HelpUtil.ht("/Preferences/Connection"));
@@ -85,7 +86,7 @@ public final class ServerAccessPreference extends DefaultTabPreferenceSetting {
      * @param listener the listener
      * @since 6523
      */
-    public final void addApiUrlChangeListener(PropertyChangeListener listener) {
+    public void addApiUrlChangeListener(PropertyChangeListener listener) {
         pnlApiUrlPreferences.addPropertyChangeListener(listener);
     }
 

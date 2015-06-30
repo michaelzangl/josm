@@ -7,7 +7,6 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-
 /**
  * Cache Entry that has methods to get the BufferedImage, that will be cached along in memory
  * but will be not serialized when saved to the disk (to avoid duplication of data)
@@ -19,6 +18,9 @@ public class BufferedImageCacheEntry extends CacheEntry {
     // transient to avoid serialization, volatile to avoid synchronization of whole getImage() method
     private transient volatile BufferedImage img = null;
     private transient volatile boolean writtenToDisk = false;
+    // we need to have separate control variable, to know, if we already tried to load the image, as img might be null
+    // after we loaded image, as for example, when image file is malformed (eg. HTML file)
+    private transient volatile boolean imageLoaded = false;
 
     /**
      *
@@ -33,17 +35,18 @@ public class BufferedImageCacheEntry extends CacheEntry {
      * to reduce overhead of ImageIO
      *
      * @return BufferedImage of cache entry content
-     * @throws IOException
+     * @throws IOException if an error occurs during reading.
      */
     public BufferedImage getImage() throws IOException {
-        if (img != null)
+        if (imageLoaded)
             return img;
-        synchronized(this) {
-            if (img != null)
+        synchronized (this) {
+            if (imageLoaded)
                 return img;
             byte[] content = getContent();
             if (content != null && content.length > 0) {
                 img = ImageIO.read(new ByteArrayInputStream(content));
+                imageLoaded = true;
 
                 if (writtenToDisk)
                     content = null;
@@ -52,7 +55,6 @@ public class BufferedImageCacheEntry extends CacheEntry {
         }
         return img;
     }
-
 
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         /*
@@ -76,7 +78,8 @@ public class BufferedImageCacheEntry extends CacheEntry {
          */
         synchronized (this) {
             if (content == null && img != null) {
-                throw new AssertionError("Trying to serialize (save to disk?) an BufferedImageCacheEntry that was converted to BufferedImage and no raw data is present anymore");
+                throw new AssertionError("Trying to serialize (save to disk?) an BufferedImageCacheEntry " +
+                        "that was converted to BufferedImage and no raw data is present anymore");
             }
             out.writeObject(this);
             // ugly hack to wait till element will get to disk to clean the memory
@@ -85,7 +88,6 @@ public class BufferedImageCacheEntry extends CacheEntry {
             if (img != null) {
                 content = null;
             }
-
         }
     }
 }

@@ -14,7 +14,6 @@
     <property name="build.dir" location="build"/>
     <property name="javacc.home" location="tools"/>
     <property name="mapcss.dir" location="${src.dir}/org/openstreetmap/josm/gui/mappaint/mapcss"/>
-    <property name="imagerytypes.dir" location="${src.dir}/org/openstreetmap/josm/data/imagery/types"/>
     <!-- build parameter: compression level (ant -Dclevel=N)
              N ranges from 0 (no compression) to 9 (maximum compression)
              default: 9 -->
@@ -198,22 +197,7 @@ Build-Date: ${build.tstamp}
             <arg value="${mapcss.dir}/MapCSSParser.jj"/>
         </exec>
     </target>
-    <target name="-jaxb_win" if="isWindows">
-        <property name="xjc" value="${java.home}\..\bin\xjc.exe" />
-    </target>
-    <target name="-jaxb_nix" unless="isWindows">
-        <property name="xjc" value="${java.home}/../bin/xjc" />
-    </target>
-    <target name="jaxb" depends="init, -jaxb_win, -jaxb_nix" unless="jaxb.notRequired">
-        <exec executable="${xjc}" failonerror="true">
-            <arg value="-d"/>
-            <arg value="${src.dir}"/>
-            <arg value="-encoding"/>
-            <arg value="UTF-8"/>
-            <arg value="data_nodist/wms-cache.xsd"/>
-        </exec>
-    </target>
-    <target name="compile" depends="init,javacc,jaxb">
+    <target name="compile" depends="init,javacc">
         <!-- COTS -->
         <javac srcdir="${src.dir}" includes="com/**,oauth/**,org/apache/commons/**,org/glassfish/**" nowarn="on" encoding="iso-8859-1"
             destdir="build" target="1.7" source="1.7" debug="on" includeAntRuntime="false" createMissingPackageInfoClass="false">
@@ -238,8 +222,8 @@ Build-Date: ${build.tstamp}
             <exclude name="org/apache/commons/logging/impl/LogKitLogger.java"/>
             <exclude name="org/apache/commons/logging/impl/ServletContextCleaner.java"/>
         </javac>
-        <!-- JMapViewer/JOSM -->
-        <javac srcdir="${src.dir}" excludes="com/**,oauth/**,org/apache/commons/**,org/glassfish/**,org/openstreetmap/gui/jmapviewer/Demo.java" 
+        <!-- JMapViewer -->
+        <javac sourcepath="" srcdir="${src.dir}" excludes="com/**,oauth/**,org/apache/commons/**,org/glassfish/**,org/openstreetmap/gui/jmapviewer/Demo.java,org/openstreetmap/josm/**,JOSM.java,gnu/**" 
             destdir="build" target="1.7" source="1.7" debug="on" includeantruntime="false" createMissingPackageInfoClass="false" encoding="UTF-8">
             <compilerarg value="-Xlint:cast"/>
             <compilerarg value="-Xlint:deprecation"/>
@@ -255,6 +239,26 @@ Build-Date: ${build.tstamp}
             <!-- Undocumented argument to ignore "Sun internal proprietary API" warning, see http://stackoverflow.com/a/13862308/2257172 -->
             <compilerarg value="-XDignore.symbol.file"/>
         </javac>
+
+        <!-- JOSM -->
+        <javac sourcepath="" srcdir="${src.dir}" excludes="com/**,oauth/**,org/apache/commons/**,org/glassfish/**,org/openstreetmap/gui/jmapviewer/Demo.java" 
+            destdir="build" target="1.7" source="1.7" debug="on" includeantruntime="false" createMissingPackageInfoClass="false" encoding="UTF-8">
+            <compilerarg value="-Xlint:cast"/>
+            <compilerarg value="-Xlint:deprecation"/>
+            <compilerarg value="-Xlint:dep-ann"/>
+            <compilerarg value="-Xlint:divzero"/>
+            <compilerarg value="-Xlint:empty"/>
+            <compilerarg value="-Xlint:finally"/>
+            <compilerarg value="-Xlint:overrides"/>
+            <!--<compilerarg value="-Xlint:rawtypes"/>-->
+            <compilerarg value="-Xlint:static"/>
+            <compilerarg value="-Xlint:try"/>
+            <compilerarg value="-Xlint:unchecked"/>
+            <!-- Undocumented argument to ignore "Sun internal proprietary API" warning, see http://stackoverflow.com/a/13862308/2257172 -->
+            <compilerarg value="-XDignore.symbol.file"/>
+        </javac>
+
+
         <copy todir="build" failonerror="no" includeemptydirs="no">
             <fileset dir="resources"/>
         </copy>
@@ -262,9 +266,6 @@ Build-Date: ${build.tstamp}
     <target name="init">
         <uptodate property="javacc.notRequired" targetfile="${mapcss.dir}/parsergen/MapCSSParser.java" >
             <srcfiles dir="${mapcss.dir}" includes="MapCSSParser.jj"/>
-        </uptodate>
-        <uptodate property="jaxb.notRequired" targetfile="${src.dir}/org/openstreetmap/josm/data/imagery/types/package-info.java" >
-            <srcfiles dir="data_nodist" includes="wms-cache.xsd"/>
         </uptodate>
         <mkdir dir="build"/>
         <mkdir dir="dist"/>
@@ -288,7 +289,8 @@ Build-Date: ${build.tstamp}
         <delete dir="build"/>
         <delete dir="dist"/>
         <delete dir="${mapcss.dir}/parsergen"/>
-        <delete dir="${imagerytypes.dir}"/>
+        <delete file="${src.dir}/org/w3/_2001/xmlschema/Adapter1.java"/>
+        <delete dir="${src.dir}/org/openstreetmap/josm/data/imagery/types"/>
     </target>
     <path id="test.classpath">
         <fileset dir="${test.dir}/lib">
@@ -436,13 +438,14 @@ Build-Date: ${build.tstamp}
         -keepclasseswithmembers public class org.openstreetmap.josm.gui.MainApplication {
             public static void main(java.lang.String[]);
         }
-        -keepclasseswithmembers public class org.openstreetmap.josm.gui.MainApplet
 
         -keep class JOSM
         -keep class * extends org.openstreetmap.josm.io.FileImporter
         -keep class * extends org.openstreetmap.josm.io.FileExporter
-        -keep class org.w3._2001.xmlschema.Adapter1
         -keep class org.openstreetmap.josm.actions.search.SearchCompiler$Never
+        -keep class org.openstreetmap.josm.gui.mappaint.mapcss.Condition$PseudoClasses {
+            static boolean *(org.openstreetmap.josm.gui.mappaint.Environment);
+        }
         -keep class org.apache.commons.logging.impl.*
 
         -keepclassmembers enum  * {
@@ -569,6 +572,16 @@ Build-Date: ${build.tstamp}
             <ignore classname="org.openstreetmap.josm.plugins.utilsplugin2.*"/>
             <path path="${dir}"/>
         </as:check-signature>
+    </target>
+
+    <target name="checkstyle">
+        <taskdef resource="checkstyletask.properties" classpath="tools/checkstyle/checkstyle-6.7-all.jar"/>
+        <checkstyle config="tools/checkstyle/josm_checks.xml">
+            <fileset dir="${basedir}/src/org/openstreetmap/josm" includes="**/*.java" 
+            	excludes="gui/mappaint/mapcss/parsergen/*.java"/>
+            <fileset dir="${basedir}/test" includes="**/*.java"/>
+            <formatter type="xml" toFile="checkstyle-josm.xml"/>
+        </checkstyle>
     </target>
 
     <target name="findbugs" depends="dist">

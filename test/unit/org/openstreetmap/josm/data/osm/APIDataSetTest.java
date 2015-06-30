@@ -2,6 +2,7 @@
 package org.openstreetmap.josm.data.osm;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class APIDataSetTest {
         apiDataSet.init(ds);
         try {
             apiDataSet.adjustRelationUploadOrder();
-        } catch(CyclicUploadDependencyException e) {
+        } catch (CyclicUploadDependencyException e) {
             fail("unexpected exception:" + e);
         }
         List<OsmPrimitive> toAdd = apiDataSet.getPrimitivesToAdd();
@@ -56,7 +57,7 @@ public class APIDataSetTest {
         apiDataSet.init(ds);
         try {
             apiDataSet.adjustRelationUploadOrder();
-        } catch(CyclicUploadDependencyException e) {
+        } catch (CyclicUploadDependencyException e) {
             fail("unexpected exception:" + e);
         }
         List<OsmPrimitive> toAdd = apiDataSet.getPrimitivesToAdd();
@@ -94,7 +95,7 @@ public class APIDataSetTest {
         apiDataSet.init(ds);
         try {
             apiDataSet.adjustRelationUploadOrder();
-        } catch(CyclicUploadDependencyException e) {
+        } catch (CyclicUploadDependencyException e) {
             fail("unexpected exception:" + e);
         }
         List<OsmPrimitive> toAdd = apiDataSet.getPrimitivesToAdd();
@@ -132,14 +133,14 @@ public class APIDataSetTest {
         apiDataSet.init(ds);
         try {
             apiDataSet.adjustRelationUploadOrder();
-        } catch(CyclicUploadDependencyException e) {
+        } catch (CyclicUploadDependencyException e) {
             fail("unexpected exception:" + e);
         }
         List<OsmPrimitive> toAdd = apiDataSet.getPrimitivesToAdd();
 
         assertEquals(3, toAdd.size());
-        assertEquals(true, toAdd.indexOf(r2) < toAdd.indexOf(r1));
-        assertEquals(true, toAdd.indexOf(r3) < toAdd.indexOf(r1));
+        assertTrue(toAdd.indexOf(r2) < toAdd.indexOf(r1));
+        assertTrue(toAdd.indexOf(r3) < toAdd.indexOf(r1));
     }
 
     @Test // for ticket #9624
@@ -179,14 +180,14 @@ public class APIDataSetTest {
         apiDataSet.getPrimitivesToDelete().add(r4);
         try {
             apiDataSet.adjustRelationUploadOrder();
-        } catch(CyclicUploadDependencyException e) {
+        } catch (CyclicUploadDependencyException e) {
             fail("unexpected exception:" + e);
         }
         List<OsmPrimitive> toDelete = apiDataSet.getPrimitivesToDelete();
 
         assertEquals(4, toDelete.size());
-        assertEquals(true, toDelete.indexOf(r2) < toDelete.indexOf(r1));
-        assertEquals(true, toDelete.indexOf(r3) < toDelete.indexOf(r1));
+        assertTrue(toDelete.indexOf(r2) < toDelete.indexOf(r1));
+        assertTrue(toDelete.indexOf(r3) < toDelete.indexOf(r1));
     }
 
     @Test // for ticket #9656
@@ -225,9 +226,9 @@ public class APIDataSetTest {
         List<OsmPrimitive> toDelete = apiDataSet.getPrimitivesToDelete();
 
         assertEquals(4, toDelete.size());
-        assertEquals(true, toDelete.indexOf(way) < toDelete.indexOf(n1));
-        assertEquals(true, toDelete.indexOf(way) < toDelete.indexOf(n2));
-        assertEquals(true, toDelete.indexOf(r1) < toDelete.indexOf(way));
+        assertTrue(toDelete.indexOf(way) < toDelete.indexOf(n1));
+        assertTrue(toDelete.indexOf(way) < toDelete.indexOf(n2));
+        assertTrue(toDelete.indexOf(r1) < toDelete.indexOf(way));
     }
 
     @Test
@@ -254,7 +255,7 @@ public class APIDataSetTest {
         try {
             apiDataSet.adjustRelationUploadOrder();
             fail("expected cyclic upload dependency exception not thrown");
-        } catch(CyclicUploadDependencyException e) {
+        } catch (CyclicUploadDependencyException e) {
             System.out.println(e);
         }
     }

@@ -57,9 +57,11 @@ public class AddTagsDialog extends ExtendedDialog {
      */
     static class DeleteTagMarker {
         private int num;
+
         public DeleteTagMarker(int num) {
             this.num = num;
         }
+
         @Override
         public String toString() {
             return tr("<delete from {0} objects>", num);
@@ -70,24 +72,26 @@ public class AddTagsDialog extends ExtendedDialog {
      * Class for displaying list of existing tag values in the table
      */
     static class ExistingValues {
-        private String tag;
-        private Map<String, Integer> valueCount;
+        private final String tag;
+        private final Map<String, Integer> valueCount;
+
         public ExistingValues(String tag) {
-            this.tag=tag; valueCount=new HashMap<>();
+            this.tag = tag;
+            this.valueCount = new HashMap<>();
         }
 
         int addValue(String val) {
             Integer c = valueCount.get(val);
-            int r = c==null? 1 : (c.intValue()+1);
+            int r = c == null ? 1 : (c.intValue()+1);
             valueCount.put(val, r);
             return r;
         }
 
         @Override
         public String toString() {
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             for (String k: valueCount.keySet()) {
-                if (sb.length()>0) sb.append(", ");
+                if (sb.length() > 0) sb.append(", ");
                 sb.append(k);
             }
             return sb.toString();
@@ -116,14 +120,15 @@ public class AddTagsDialog extends ExtendedDialog {
      * Constructs a new {@code AddTagsDialog}.
      */
     public AddTagsDialog(String[][] tags, String senderName, Collection<? extends OsmPrimitive> primitives) {
-        super(Main.parent, tr("Add tags to selected objects"), new String[] { tr("Add selected tags"), tr("Add all tags"),  tr("Cancel")},
+        super(Main.parent, tr("Add tags to selected objects"), new String[] {tr("Add selected tags"), tr("Add all tags"), tr("Cancel")},
                 false,
                 true);
         setToolTipTexts(new String[]{tr("Add checked tags to selected objects"), tr("Shift+Enter: Add all tags to selected objects"), ""});
 
         this.sender = senderName;
 
-        final DefaultTableModel tm = new DefaultTableModel(new String[] {tr("Assume"), tr("Key"), tr("Value"), tr("Existing values")}, tags.length) {
+        final DefaultTableModel tm = new DefaultTableModel(new String[] {tr("Assume"), tr("Key"), tr("Value"), tr("Existing values")},
+                tags.length) {
             private final Class<?>[] types = {Boolean.class, String.class, Object.class, ExistingValues.class};
             @Override
             public Class<?> getColumnClass(int c) {
@@ -134,7 +139,7 @@ public class AddTagsDialog extends ExtendedDialog {
         sel = primitives;
         count = new int[tags.length];
 
-        for (int i = 0; i<tags.length; i++) {
+        for (int i = 0; i < tags.length; i++) {
             count[i] = 0;
             String key = tags[i][0];
             String value = tags[i][1], oldValue;
@@ -142,7 +147,7 @@ public class AddTagsDialog extends ExtendedDialog {
             ExistingValues old = new ExistingValues(key);
             for (OsmPrimitive osm : sel) {
                 oldValue  = osm.get(key);
-                if (oldValue!=null) {
+                if (oldValue != null) {
                     old.addValue(oldValue);
                     if (!oldValue.equals(value)) {
                         b = Boolean.FALSE;
@@ -161,7 +166,7 @@ public class AddTagsDialog extends ExtendedDialog {
             @Override
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
-                if (count[row]>0) {
+                if (count[row] > 0) {
                     c.setFont(c.getFont().deriveFont(Font.ITALIC));
                     c.setForeground(new Color(100, 100, 100));
                 } else {
@@ -173,7 +178,7 @@ public class AddTagsDialog extends ExtendedDialog {
 
             @Override
             public TableCellEditor getCellEditor(int row, int column) {
-                Object value = getValueAt(row,column);
+                Object value = getValueAt(row, column);
                 if (value instanceof DeleteTagMarker) return null;
                 if (value instanceof ExistingValues) return null;
                 return getDefaultEditor(value.getClass());
@@ -184,8 +189,8 @@ public class AddTagsDialog extends ExtendedDialog {
                 int r = rowAtPoint(event.getPoint());
                 int c = columnAtPoint(event.getPoint());
                 Object o = getValueAt(r, c);
-                if (c==1 || c==2) return o.toString();
-                if (c==3) return ((ExistingValues)o).getToolTip();
+                if (c == 1 || c == 2) return o.toString();
+                if (c == 3) return ((ExistingValues) o).getToolTip();
                 return tr("Enable the checkbox to accept the value");
             }
         };
@@ -212,22 +217,23 @@ public class AddTagsDialog extends ExtendedDialog {
         tablePanel.add(propertyTable, GBC.eol().fill(GBC.BOTH));
         if (!sender.isEmpty() && !trustedSenders.contains(sender)) {
             final JCheckBox c = new JCheckBox();
-            c.setAction(new AbstractAction(tr("Accept all tags from {0} for this session", sender) ) {
+            c.setAction(new AbstractAction(tr("Accept all tags from {0} for this session", sender)) {
                 @Override public void actionPerformed(ActionEvent e) {
                     if (c.isSelected())
                         trustedSenders.add(sender);
                     else
                         trustedSenders.remove(sender);
                 }
-            } );
-            tablePanel.add(c , GBC.eol().insets(20,10,0,0));
+            });
+            tablePanel.add(c , GBC.eol().insets(20, 10, 0, 0));
         }
         setContent(tablePanel);
         setDefaultButton(2);
     }
 
     /**
-     * If you click the "Add tags" button build a ChangePropertyCommand for every key that has a checked checkbox to apply the key value pair to all selected osm objects.
+     * If you click the "Add tags" button build a ChangePropertyCommand for every key that has a checked checkbox
+     * to apply the key value pair to all selected osm objects.
      * You get a entry for every key in the command queue.
      */
     @Override
@@ -235,9 +241,9 @@ public class AddTagsDialog extends ExtendedDialog {
         // if layer all layers were closed, ignore all actions
         if (Main.main.getCurrentDataSet() != null  && buttonIndex != 2) {
             TableModel tm = propertyTable.getModel();
-            for (int i=0; i<tm.getRowCount(); i++) {
-                if (buttonIndex==1 || (Boolean)tm.getValueAt(i, 0)) {
-                    String key =(String)tm.getValueAt(i, 1);
+            for (int i = 0; i < tm.getRowCount(); i++) {
+                if (buttonIndex == 1 || (Boolean) tm.getValueAt(i, 0)) {
+                    String key = (String) tm.getValueAt(i, 1);
                     Object value = tm.getValueAt(i, 2);
                     Main.main.undoRedo.add(new ChangePropertyCommand(sel,
                             key, value instanceof String ? (String) value : ""));
@@ -273,9 +279,9 @@ public class AddTagsDialog extends ExtendedDialog {
                         int i = 0;
                         for (String tag : tagSet) {
                             // support a  =   b===c as "a"="b===c"
-                            String [] pair = tag.split("\\s*=\\s*",2);
+                            String[] pair = tag.split("\\s*=\\s*", 2);
                             keyValue[i][0] = pair[0];
-                            keyValue[i][1] = pair.length<2 ? "": pair[1];
+                            keyValue[i][1] = pair.length < 2 ? "" : pair[1];
                             i++;
                         }
                         addTags(keyValue, sender, primitives);

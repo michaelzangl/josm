@@ -279,7 +279,7 @@ public class CombinePrimitiveResolverDialog extends JDialog {
         if (!allResolutions.isEmpty()) {
             cmds.addAll(buildTagChangeCommand(targetPrimitive, allResolutions));
         }
-        for(String p : OsmPrimitive.getDiscardableKeys()) {
+        for (String p : OsmPrimitive.getDiscardableKeys()) {
             if (targetPrimitive.get(p) != null) {
                 cmds.add(new ChangePropertyCommand(targetPrimitive, p, null));
             }
@@ -318,7 +318,8 @@ public class CombinePrimitiveResolverDialog extends JDialog {
             }
 
             final Integer keepResolutions = numberOfKeepResolutions.get(r);
-            final Collection<Relation> resolvedRelations = Utils.firstNonNull(resolvedRelationsPerPrimitive.get(p), Collections.<Relation>emptyList());
+            final Collection<Relation> resolvedRelations = Utils.firstNonNull(
+                    resolvedRelationsPerPrimitive.get(p), Collections.<Relation>emptyList());
             if (keepResolutions <= Utils.filter(resolvedRelations, Predicates.equalTo(r)).size()) {
                 // old relation contains one primitive more often than the current resolution => keep the current member
                 decision.decide(RelationMemberConflictDecisionType.KEEP);
@@ -606,12 +607,12 @@ public class CombinePrimitiveResolverDialog extends JDialog {
     protected static void informAboutTagConflicts(
             final Collection<? extends OsmPrimitive> primitives,
             final TagCollection normalizedTags) throws UserCancelException {
-        String conflicts = Utils.joinAsHtmlUnorderedList(Utils.transform(normalizedTags.getKeysWithMultipleValues(), new Function<String, String>() {
-
+        String conflicts = Utils.joinAsHtmlUnorderedList(Utils.transform(normalizedTags.getKeysWithMultipleValues(),
+                new Function<String, String>() {
             @Override
             public String apply(String key) {
-                return tr("{0} ({1})", key, Utils.join(tr(", "), Utils.transform(normalizedTags.getValues(key), new Function<String, String>() {
-
+                return tr("{0} ({1})", key, Utils.join(tr(", "), Utils.transform(normalizedTags.getValues(key),
+                        new Function<String, String>() {
                     @Override
                     public String apply(String x) {
                         return x == null || x.isEmpty() ? tr("<i>missing</i>") : x;

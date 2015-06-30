@@ -43,8 +43,8 @@ public class SimplifyWayAction extends JosmAction {
      * Constructs a new {@code SimplifyWayAction}.
      */
     public SimplifyWayAction() {
-        super(tr("Simplify Way"), "simplify", tr("Delete unnecessary nodes from a way."), Shortcut.registerShortcut("tools:simplify", tr("Tool: {0}", tr("Simplify Way")),
-                KeyEvent.VK_Y, Shortcut.SHIFT), true);
+        super(tr("Simplify Way"), "simplify", tr("Delete unnecessary nodes from a way."),
+                Shortcut.registerShortcut("tools:simplify", tr("Tool: {0}", tr("Simplify Way")), KeyEvent.VK_Y, Shortcut.SHIFT), true);
         putValue("help", ht("/Action/SimplifyWay"));
     }
 
@@ -138,7 +138,7 @@ public class SimplifyWayAction extends JosmAction {
      */
     protected boolean isRequiredNode(Way way, Node node) {
         boolean isRequired =  Collections.frequency(way.getNodes(), node) > 1;
-        if (! isRequired) {
+        if (!isRequired) {
             List<OsmPrimitive> parents = new LinkedList<>();
             parents.addAll(node.getReferrers());
             parents.remove(way);
@@ -165,6 +165,7 @@ public class SimplifyWayAction extends JosmAction {
      * Simplifies a way with a given threshold.
      *
      * @param w the way to simplify
+     * @param threshold the max error threshold
      * @return The sequence of commands to run
      * @since 6411
      */
@@ -172,8 +173,8 @@ public class SimplifyWayAction extends JosmAction {
         int lower = 0;
         int i = 0;
         List<Node> newNodes = new ArrayList<>(w.getNodesCount());
-        while(i < w.getNodesCount()){
-            if (isRequiredNode(w,w.getNode(i))) {
+        while (i < w.getNodesCount()) {
+            if (isRequiredNode(w, w.getNode(i))) {
                 // copy a required node to the list of new nodes. Simplify not possible
                 newNodes.add(w.getNode(i));
                 i++;
@@ -182,12 +183,12 @@ public class SimplifyWayAction extends JosmAction {
             }
             i++;
             // find the longest sequence of not required nodes ...
-            while(i<w.getNodesCount() && !isRequiredNode(w,w.getNode(i))) {
+            while (i < w.getNodesCount() && !isRequiredNode(w, w.getNode(i))) {
                 i++;
             }
             // ... and simplify them
-            buildSimplifiedNodeList(w.getNodes(), lower, Math.min(w.getNodesCount()-1, i), threshold,newNodes);
-            lower=i;
+            buildSimplifiedNodeList(w.getNodes(), lower, Math.min(w.getNodesCount()-1, i), threshold, newNodes);
+            lower = i;
             i++;
         }
 
@@ -203,7 +204,8 @@ public class SimplifyWayAction extends JosmAction {
         cmds.add(new ChangeCommand(w, newWay));
         cmds.add(new DeleteCommand(delNodes));
         w.getDataSet().clearSelection(delNodes);
-        return new SequenceCommand(trn("Simplify Way (remove {0} node)", "Simplify Way (remove {0} nodes)", delNodes.size(), delNodes.size()), cmds);
+        return new SequenceCommand(
+                trn("Simplify Way (remove {0} node)", "Simplify Way (remove {0} nodes)", delNodes.size(), delNodes.size()), cmds);
     }
 
     /**
@@ -213,7 +215,7 @@ public class SimplifyWayAction extends JosmAction {
      * @param wnew the way to simplify
      * @param from the lower index
      * @param to the upper index
-     * @param threshold
+     * @param threshold the max error threshold
      */
     protected void buildSimplifiedNodeList(List<Node> wnew, int from, int to, double threshold, List<Node> simplifiedNodes) {
 
@@ -237,8 +239,8 @@ public class SimplifyWayAction extends JosmAction {
 
         if (imax != -1 && xtemax >= threshold) {
             // Segment cannot be simplified - try shorter segments
-            buildSimplifiedNodeList(wnew, from, imax,threshold,simplifiedNodes);
-            buildSimplifiedNodeList(wnew, imax, to, threshold,simplifiedNodes);
+            buildSimplifiedNodeList(wnew, from, imax, threshold, simplifiedNodes);
+            buildSimplifiedNodeList(wnew, imax, to, threshold, simplifiedNodes);
         } else {
             // Simplify segment
             if (simplifiedNodes.isEmpty() || simplifiedNodes.get(simplifiedNodes.size()-1) != fromN) {

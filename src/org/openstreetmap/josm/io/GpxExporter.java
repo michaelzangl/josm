@@ -134,8 +134,8 @@ public class GpxExporter extends FileExporter implements GpxConstants {
 
         ExtendedDialog ed = new ExtendedDialog(Main.parent,
                 tr("Export options"),
-                new String[] { tr("Export and Save"), tr("Cancel") });
-        ed.setButtonIcons(new String[] { "exportgpx", "cancel" });
+                new String[] {tr("Export and Save"), tr("Cancel")});
+        ed.setButtonIcons(new String[] {"exportgpx", "cancel"});
         ed.setContent(p);
         ed.showDialog();
 
@@ -146,10 +146,10 @@ public class GpxExporter extends FileExporter implements GpxConstants {
         setCanceled(false);
 
         Main.pref.put("lastAddAuthor", author.isSelected());
-        if (authorName.getText().length() != 0) {
+        if (!authorName.getText().isEmpty()) {
             Main.pref.put("lastAuthorName", authorName.getText());
         }
-        if (copyright.getText().length() != 0) {
+        if (!copyright.getText().isEmpty()) {
             Main.pref.put("lastCopyright", copyright.getText());
         }
 
@@ -163,28 +163,28 @@ public class GpxExporter extends FileExporter implements GpxConstants {
 
         // add author and copyright details to the gpx data
         if (author.isSelected()) {
-            if (authorName.getText().length() > 0) {
+            if (!authorName.getText().isEmpty()) {
                 gpxData.put(META_AUTHOR_NAME, authorName.getText());
                 gpxData.put(META_COPYRIGHT_AUTHOR, authorName.getText());
             }
-            if (email.getText().length() > 0) {
+            if (!email.getText().isEmpty()) {
                 gpxData.put(META_AUTHOR_EMAIL, email.getText());
             }
-            if (copyright.getText().length() > 0) {
+            if (!copyright.getText().isEmpty()) {
                 gpxData.put(META_COPYRIGHT_LICENSE, copyright.getText());
             }
-            if (copyrightYear.getText().length() > 0) {
+            if (!copyrightYear.getText().isEmpty()) {
                 gpxData.put(META_COPYRIGHT_YEAR, copyrightYear.getText());
             }
         }
 
         // add the description to the gpx data
-        if (desc.getText().length() > 0) {
+        if (!desc.getText().isEmpty()) {
             gpxData.put(META_DESC, desc.getText());
         }
 
         // add keywords to the gpx data
-        if (keywords.getText().length() > 0) {
+        if (!keywords.getText().isEmpty()) {
             gpxData.put(META_KEYWORDS, keywords.getText());
         }
 
@@ -230,6 +230,8 @@ public class GpxExporter extends FileExporter implements GpxConstants {
         }
     }
 
+    // CHECKSTYLE.OFF: ParameterNumber
+
     /**
      * Add all those listeners to handle the enable state of the fields.
      */
@@ -247,7 +249,8 @@ public class GpxExporter extends FileExporter implements GpxConstants {
             final JLabel copyrightYearLabel,
             final JLabel warning) {
 
-        ActionListener authorActionListener = new ActionListener(){
+        // CHECKSTYLE.ON: ParameterNumber
+        ActionListener authorActionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 boolean b = author.isSelected();
@@ -270,21 +273,22 @@ public class GpxExporter extends FileExporter implements GpxConstants {
                     authorName.setText("");
                     email.setText("");
                 }
-                boolean isAuthorSet = authorName.getText().length() != 0;
-                GpxExporter.enableCopyright(data, copyright, predefined, copyrightYear, copyrightLabel, copyrightYearLabel, warning, b && isAuthorSet);
+                boolean isAuthorSet = !authorName.getText().isEmpty();
+                GpxExporter.enableCopyright(data, copyright, predefined, copyrightYear, copyrightLabel, copyrightYearLabel, warning,
+                        b && isAuthorSet);
             }
         };
         author.addActionListener(authorActionListener);
 
-        KeyAdapter authorNameListener = new KeyAdapter(){
+        KeyAdapter authorNameListener = new KeyAdapter() {
             @Override public void keyReleased(KeyEvent e) {
-                boolean b = authorName.getText().length()!=0 && author.isSelected();
+                boolean b = !authorName.getText().isEmpty() && author.isSelected();
                 GpxExporter.enableCopyright(data, copyright, predefined, copyrightYear, copyrightLabel, copyrightYearLabel, warning, b);
             }
         };
         authorName.addKeyListener(authorNameListener);
 
-        predefined.addActionListener(new ActionListener(){
+        predefined.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 final String[] licenses = {

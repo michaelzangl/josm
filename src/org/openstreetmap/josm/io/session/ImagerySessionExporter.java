@@ -16,6 +16,7 @@ import javax.swing.SwingConstants;
 
 import org.openstreetmap.josm.data.Preferences;
 import org.openstreetmap.josm.data.imagery.ImageryInfo.ImageryPreferenceEntry;
+import org.openstreetmap.josm.gui.layer.AbstractTileSourceLayer;
 import org.openstreetmap.josm.gui.layer.ImageryLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.TMSLayer;
@@ -59,7 +60,7 @@ public class ImagerySessionExporter implements SessionLayerExporter {
         lbl.setLabelFor(export);
         p.add(export, GBC.std());
         p.add(lbl, GBC.std());
-        p.add(GBC.glue(1,0), GBC.std().fill(GBC.HORIZONTAL));
+        p.add(GBC.glue(1, 0), GBC.std().fill(GBC.HORIZONTAL));
         return p;
     }
 
@@ -79,13 +80,14 @@ public class ImagerySessionExporter implements SessionLayerExporter {
         layerElem.setAttribute("type", "imagery");
         layerElem.setAttribute("version", "0.1");
         ImageryPreferenceEntry e = new ImageryPreferenceEntry(layer.getInfo());
-        Map<String,String> data = new LinkedHashMap<>(Preferences.serializeStruct(e, ImageryPreferenceEntry.class));
-        if (layer instanceof WMSLayer) {
-            WMSLayer wms = (WMSLayer) layer;
-            data.put("automatic-downloading", Boolean.toString(wms.hasAutoDownload()));
-            data.put("automatically-change-resolution", Boolean.toString(wms.isAutoResolution()));
+        Map<String, String> data = new LinkedHashMap<>(Preferences.serializeStruct(e, ImageryPreferenceEntry.class));
+        if (layer instanceof AbstractTileSourceLayer) {
+            AbstractTileSourceLayer tsLayer = (AbstractTileSourceLayer) layer;
+            data.put("automatic-downloading", Boolean.toString(tsLayer.autoLoad));
+            data.put("automatically-change-resolution", Boolean.toString(tsLayer.autoZoom));
+            data.put("show-errors", Boolean.toString(tsLayer.showErrors));
         }
-        for (Map.Entry<String,String> entry : data.entrySet()) {
+        for (Map.Entry<String, String> entry : data.entrySet()) {
             Element attrElem = support.createElement(entry.getKey());
             layerElem.appendChild(attrElem);
             attrElem.appendChild(support.createTextNode(entry.getValue()));

@@ -28,16 +28,17 @@ import org.openstreetmap.josm.data.preferences.IntegerProperty;
  */
 public class TMSCachedTileLoader implements TileLoader, CachedTileLoader, TileCache {
 
-    private ICacheAccess<String, BufferedImageCacheEntry> cache;
-    private int connectTimeout;
-    private int readTimeout;
-    private Map<String, String> headers;
-    private TileLoaderListener listener;
+    protected final ICacheAccess<String, BufferedImageCacheEntry> cache;
+    protected final int connectTimeout;
+    protected final int readTimeout;
+    protected final Map<String, String> headers;
+    protected final TileLoaderListener listener;
     private static final String PREFERENCE_PREFIX   = "imagery.tms.cache.";
+
     /**
-     * how many object on disk should be stored for TMS region. Average tile size is about 20kb
+     * how many object on disk should be stored for TMS region. Average tile size is about 20kb. 25000 is around 500MB under this assumption
      */
-    public static final IntegerProperty MAX_OBJECTS_ON_DISK = new IntegerProperty(PREFERENCE_PREFIX + "max_objects_disk", 25000); // 25000 is around 500MB under this assumptions
+    public static final IntegerProperty MAX_OBJECTS_ON_DISK = new IntegerProperty(PREFERENCE_PREFIX + "max_objects_disk", 25000);
 
     /**
      * overrides the THREAD_LIMIT in superclass, as we want to have separate limit and pool for TMS
@@ -49,23 +50,11 @@ public class TMSCachedTileLoader implements TileLoader, CachedTileLoader, TileCa
      */
     public static final IntegerProperty HOST_LIMIT = new IntegerProperty("imagery.tms.tmsloader.maxjobsperhost", 6);
 
-
     /**
      * separate from JCS thread pool for TMS loader, so we can have different thread pools for default JCS
      * and for TMS imagery
      */
-    private static ThreadPoolExecutor DEFAULT_DOWNLOAD_JOB_DISPATCHER = getThreadPoolExecutor();
-
-    private static ThreadPoolExecutor getThreadPoolExecutor() {
-        return new ThreadPoolExecutor(
-                THREAD_LIMIT.get().intValue(), // keep the thread number constant
-                THREAD_LIMIT.get().intValue(), // do not this number of threads
-                30, // keepalive for thread
-                TimeUnit.SECONDS,
-                new HostLimitQueue(HOST_LIMIT.get().intValue()),
-                JCSCachedTileLoaderJob.getNamedThreadFactory("TMS downloader")
-                );
-    }
+    private static ThreadPoolExecutor DEFAULT_DOWNLOAD_JOB_DISPATCHER = getNewThreadPoolExecutor("TMS downloader");
 
     private ThreadPoolExecutor downloadExecutor = DEFAULT_DOWNLOAD_JOB_DISPATCHER;
 
@@ -75,11 +64,12 @@ public class TMSCachedTileLoader implements TileLoader, CachedTileLoader, TileCa
      * @param name              of the cache
      * @param connectTimeout    to remote resource
      * @param readTimeout       to remote resource
-     * @param headers           to be sent along with request
+     * @param headers           HTTP headers to be sent along with request
      * @param cacheDir          where cache file shall reside
      * @throws IOException      when cache initialization fails
      */
-    public TMSCachedTileLoader(TileLoaderListener listener, String name, int connectTimeout, int readTimeout, Map<String, String> headers, String cacheDir) throws IOException {
+    public TMSCachedTileLoader(TileLoaderListener listener, String name, int connectTimeout, int readTimeout,
+            Map<String, String> headers, String cacheDir) throws IOException {
         this.cache = JCSCacheManager.getCache(name,
                 200, // use fairly small memory cache, as cached objects are quite big, as they contain BufferedImages
                 MAX_OBJECTS_ON_DISK.get(),
@@ -90,10 +80,34 @@ public class TMSCachedTileLoader implements TileLoader, CachedTileLoader, TileCa
         this.listener = listener;
     }
 
+    /**
+     * @param name name of the threads
+     * @param workers number of worker thread to keep
+     * @return new ThreadPoolExecutor that will use a @see HostLimitQueue based queue
+     */
+    public static ThreadPoolExecutor getNewThreadPoolExecutor(String name, int workers) {
+        return new ThreadPoolExecutor(
+                workers, // keep the thread number constant
+                workers, // do not this number of threads
+                30, // keepalive for thread
+                TimeUnit.SECONDS,
+                new HostLimitQueue(HOST_LIMIT.get().intValue()),
+                JCSCachedTileLoaderJob.getNamedThreadFactory(name)
+                );
+    }
+
+    /**
+     * @param name name of threads
+     * @return new ThreadPoolExecutor that will use a @see HostLimitQueue based queue, with default number of threads
+     */
+    public static ThreadPoolExecutor getNewThreadPoolExecutor(String name) {
+        return getNewThreadPoolExecutor(name, THREAD_LIMIT.get().intValue());
+    }
+
     @Override
     public TileJob createTileLoaderJob(Tile tile) {
         return new TMSCachedTileLoaderJob(listener, tile, cache,
-                connectTimeout, readTimeout, headers, downloadExecutor);
+                connectTimeout, readTimeout, headers, getDownloadExecutor());
     }
 
     @Override
@@ -103,7 +117,7 @@ public class TMSCachedTileLoader implements TileLoader, CachedTileLoader, TileCa
 
     @Override
     public Tile getTile(TileSource source, int x, int y, int z) {
-        return createTileLoaderJob(new Tile(source,x, y, z)).getTile();
+        return createTileLoaderJob(new Tile(source, x, y, z)).getTile();
     }
 
     @Override
@@ -133,10 +147,28 @@ public class TMSCachedTileLoader implements TileLoader, CachedTileLoader, TileCa
      * to loading = false / loaded = false
      */
     public void cancelOutstandingTasks() {
-        for(Runnable r: downloadExecutor.getQueue()) {
+        for (Runnable r: downloadExecutor.getQueue()) {
             if (downloadExecutor.remove(r) && r instanceof TMSCachedTileLoaderJob) {
-                ((TMSCachedTileLoaderJob)r).handleJobCancellation();
+                ((TMSCachedTileLoaderJob) r).handleJobCancellation();
             }
         }
+    }
+
+    /**
+     * Sets the download executor that will be used to download tiles instead of default one.
+     * You can use {@link #getNewThreadPoolExecutor} to create a new download executor with separate
+     * queue from default.
+     *
+     * @param downloadExecutor download executor that will be used to download tiles
+     */
+    public void setDownloadExecutor(ThreadPoolExecutor downloadExecutor) {
+        this.downloadExecutor = downloadExecutor;
+    }
+
+    /**
+     * @return download executor that is used by this factory
+     */
+    public ThreadPoolExecutor getDownloadExecutor() {
+        return downloadExecutor;
     }
 }

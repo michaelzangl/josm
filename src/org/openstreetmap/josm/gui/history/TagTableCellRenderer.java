@@ -17,7 +17,7 @@ import javax.swing.table.TableCellRenderer;
  *
  */
 public class TagTableCellRenderer extends JLabel implements TableCellRenderer {
-    public static final Color BGCOLOR_DIFFERENCE = new Color(255,197,197);
+    public static final Color BGCOLOR_DIFFERENCE = new Color(255, 197, 197);
 
     /**
      * Constructs a new {@code TagTableCellRenderer}.
@@ -31,7 +31,7 @@ public class TagTableCellRenderer extends JLabel implements TableCellRenderer {
         Color bgColor = UIManager.getColor("Table.background");
         Color fgColor = UIManager.getColor("Table.foreground");
         Font font = UIManager.getFont("Table.font");
-        if (! model.hasTag(key)) {
+        if (!model.hasTag(key)) {
             text = tr("not present");
             bgColor = BGCOLOR_DIFFERENCE;
             font = font.deriveFont(Font.ITALIC);
@@ -55,7 +55,7 @@ public class TagTableCellRenderer extends JLabel implements TableCellRenderer {
         Color bgColor = UIManager.getColor("Table.background");
         Color fgColor = UIManager.getColor("Table.foreground");
         Font font = UIManager.getFont("Table.font");
-        if (! model.hasTag(key)) {
+        if (!model.hasTag(key)) {
             text = tr("not present");
             bgColor = BGCOLOR_DIFFERENCE;
             font = font.deriveFont(Font.ITALIC);
@@ -84,7 +84,7 @@ public class TagTableCellRenderer extends JLabel implements TableCellRenderer {
         if (value == null)
             return this;
 
-        String key = (String)value;
+        String key = (String) value;
         HistoryBrowserModel.TagTableModel model = getTagTableModel(table);
 
         switch(column) {

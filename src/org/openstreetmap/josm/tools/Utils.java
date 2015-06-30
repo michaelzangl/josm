@@ -39,9 +39,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -211,7 +213,7 @@ public final class Utils {
     public static void ensure(boolean condition, String message, Object...data) {
         if (!condition)
             throw new AssertionError(
-                    MessageFormat.format(message,data)
+                    MessageFormat.format(message, data)
             );
     }
 
@@ -418,7 +420,7 @@ public final class Utils {
      *          successfully deleted; <code>false</code> otherwise
      */
     public static boolean deleteDirectory(File path) {
-        if( path.exists() ) {
+        if (path.exists()) {
             File[] files = path.listFiles();
             if (files != null) {
                 for (File file : files) {
@@ -571,7 +573,7 @@ public final class Utils {
         return toHexString(byteDigest);
     }
 
-    private static final char[] HEX_ARRAY = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+    private static final char[] HEX_ARRAY = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     /**
      * Converts a byte array to a string of hexadecimal characters.
@@ -608,8 +610,8 @@ public final class Utils {
      * There must not be cyclic dependencies.
      * @return the list of sorted objects
      */
-    public static <T> List<T> topologicalSort(final MultiMap<T,T> dependencies) {
-        MultiMap<T,T> deps = new MultiMap<>();
+    public static <T> List<T> topologicalSort(final MultiMap<T, T> dependencies) {
+        MultiMap<T, T> deps = new MultiMap<>();
         for (T key : dependencies.keySet()) {
             deps.putVoid(key);
             for (T val : dependencies.get(key)) {
@@ -620,7 +622,7 @@ public final class Utils {
 
         int size = deps.size();
         List<T> sorted = new ArrayList<>();
-        for (int i=0; i<size; ++i) {
+        for (int i = 0; i < size; ++i) {
             T parentless = null;
             for (T key : deps.keySet()) {
                 if (deps.get(key).isEmpty()) {
@@ -645,7 +647,7 @@ public final class Utils {
      * @param <A> class of input objects
      * @param <B> class of transformed objects
      */
-    public static interface Function<A, B> {
+    public interface Function<A, B> {
 
         /**
          * Applies the function on {@code x}.
@@ -836,8 +838,8 @@ public final class Utils {
     public static URLConnection setupURLConnection(URLConnection connection) {
         if (connection != null) {
             connection.setRequestProperty("User-Agent", Version.getInstance().getFullAgentString());
-            connection.setConnectTimeout(Main.pref.getInteger("socket.timeout.connect",15)*1000);
-            connection.setReadTimeout(Main.pref.getInteger("socket.timeout.read",30)*1000);
+            connection.setConnectTimeout(Main.pref.getInteger("socket.timeout.connect", 15)*1000);
+            connection.setReadTimeout(Main.pref.getInteger("socket.timeout.read", 30)*1000);
         }
         return connection;
     }
@@ -898,26 +900,48 @@ public final class Utils {
      * @see <a href="https://bugs.openjdk.java.net/browse/JDK-4080617">JDK bug 4080617</a>
      * @since 5772
      */
-    public static String strip(String str) {
+    public static String strip(final String str) {
+        return strip(str, null);
+    }
+
+    /**
+     * An alternative to {@link String#trim()} to effectively remove all leading and trailing white characters, including Unicode ones.
+     * @param str The string to strip
+     * @param skipChars additional characters to skip
+     * @return <code>str</code>, without leading and trailing characters, according to
+     *         {@link Character#isWhitespace(char)}, {@link Character#isSpaceChar(char)} and skipChars.
+     * @since 8435
+     */
+    public static String strip(final String str, final String skipChars) {
         if (str == null || str.isEmpty()) {
             return str;
         }
-        int start = 0, end = str.length();
-        boolean leadingWhite = true;
-        while (leadingWhite && start < end) {
+        // create set with chars to skip
+        Set<Character> skipSet = new HashSet<>();
+        // '\u200B' (ZERO WIDTH SPACE character) needs to be handled manually because of change in Unicode 6.0 (Java 7, see #8918)
+        skipSet.add('\u200B');
+        // same for '\uFEFF' (ZERO WIDTH NO-BREAK SPACE)
+        skipSet.add('\uFEFF');
+        if (skipChars != null) {
+            for (char c : skipChars.toCharArray()) {
+                skipSet.add(c);
+            }
+        }
+        int start = 0;
+        int end = str.length();
+        boolean leadingSkipChar = true;
+        while (leadingSkipChar && start < end) {
             char c = str.charAt(start);
-            // '\u200B' (ZERO WIDTH SPACE character) needs to be handled manually because of change in Unicode 6.0 (Java 7, see #8918)
-            // same for '\uFEFF' (ZERO WIDTH NO-BREAK SPACE)
-            leadingWhite = (Character.isWhitespace(c) || Character.isSpaceChar(c) || c == '\u200B' || c == '\uFEFF');
-            if (leadingWhite) {
+            leadingSkipChar = Character.isWhitespace(c) || Character.isSpaceChar(c) || skipSet.contains(c);
+            if (leadingSkipChar) {
                 start++;
             }
         }
-        boolean trailingWhite = true;
-        while (trailingWhite && end > start+1) {
+        boolean trailingSkipChar = true;
+        while (trailingSkipChar && end > start+1) {
             char c = str.charAt(end-1);
-            trailingWhite = (Character.isWhitespace(c) || Character.isSpaceChar(c) || c == '\u200B' || c == '\uFEFF');
-            if (trailingWhite) {
+            trailingSkipChar = Character.isWhitespace(c) || Character.isSpaceChar(c) || skipSet.contains(c);
+            if (trailingSkipChar) {
                 end--;
             }
         }
@@ -1133,7 +1157,7 @@ public final class Utils {
 
         StringBuilder sb = new StringBuilder(url.substring(0, url.indexOf('?') + 1));
 
-        for (int i=0; i<query.length(); i++) {
+        for (int i = 0; i < query.length(); i++) {
             String c = query.substring(i, i+1);
             if (URL_CHARS.contains(c)) {
                 sb.append(c);
@@ -1276,9 +1300,10 @@ public final class Utils {
      */
     public static boolean hasExtension(String filename, String ... extensions) {
         String name = filename.toLowerCase(Locale.ENGLISH);
-        for (String ext : extensions)
+        for (String ext : extensions) {
             if (name.endsWith("."+ext.toLowerCase(Locale.ENGLISH)))
                 return true;
+        }
         return false;
     }
 

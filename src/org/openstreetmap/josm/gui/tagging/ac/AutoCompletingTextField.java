@@ -88,20 +88,20 @@ public class AutoCompletingTextField extends JosmTextField implements ComboBoxEd
                     Long.parseLong(currentText);
                     super.insertString(offs, str, a);
                     return;
-                } catch(NumberFormatException e) {
-                    // either the new text or the current text isn't a number. We continue with
-                    // autocompletion
+                } catch (NumberFormatException e) {
+                    // either the new text or the current text isn't a number. We continue with autocompletion
+                    if (Main.isTraceEnabled()) {
+                        Main.trace(e.getMessage());
+                    }
                 }
             }
             String prefix = currentText.substring(0, offs);
             autoCompletionList.applyFilter(prefix+str);
             if (autoCompletionList.getFilteredSize() > 0 && !Objects.equals(str, noAutoCompletionString)) {
-                // there are matches. Insert the new text and highlight the
-                // auto completed suffix
-                //
+                // there are matches. Insert the new text and highlight the auto completed suffix
                 String matchingString = autoCompletionList.getFilteredItem(0).getValue();
-                remove(0,getLength());
-                super.insertString(0,matchingString,a);
+                remove(0, getLength());
+                super.insertString(0, matchingString, a);
 
                 // highlight from insert position to end position to put the caret at the end
                 setCaretPosition(offs + str.length());
@@ -110,10 +110,9 @@ public class AutoCompletingTextField extends JosmTextField implements ComboBoxEd
                 // there are no matches. Insert the new text, do not highlight
                 //
                 String newText = prefix + str;
-                remove(0,getLength());
-                super.insertString(0,newText,a);
+                remove(0, getLength());
+                super.insertString(0, newText, a);
                 setCaretPosition(getLength());
-
             }
         }
     }
@@ -291,7 +290,7 @@ public class AutoCompletingTextField extends JosmTextField implements ComboBoxEd
 
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-        setText( value == null ? "" : value.toString());
+        setText(value == null ? "" : value.toString());
         rememberOriginalValue(getText());
         return this;
     }

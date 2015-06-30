@@ -13,6 +13,7 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.notes.Note;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.gui.HelpAwareOptionPane;
 import org.openstreetmap.josm.gui.HelpAwareOptionPane.ButtonSpec;
@@ -27,7 +28,8 @@ public abstract class AbstractInfoAction extends JosmAction {
         super(installAdapters);
     }
 
-    public AbstractInfoAction(String name, String iconName, String tooltip, Shortcut shortcut, boolean register, String toolbarId, boolean installAdapters) {
+    public AbstractInfoAction(String name, String iconName, String tooltip, Shortcut shortcut, boolean register,
+            String toolbarId, boolean installAdapters) {
         super(name, iconName, tooltip, shortcut, register, toolbarId, installAdapters);
     }
 
@@ -44,7 +46,8 @@ public abstract class AbstractInfoAction extends JosmAction {
                 new ButtonSpec(
                         tr("Continue"),
                         ImageProvider.get("ok"),
-                        trn("Click to continue and to open {0} browser", "Click to continue and to open {0} browsers", numBrowsers, numBrowsers),
+                        trn("Click to continue and to open {0} browser", "Click to continue and to open {0} browsers",
+                                numBrowsers, numBrowsers),
                         null // no specific help topic
                 ),
                 new ButtonSpec(
@@ -67,19 +70,24 @@ public abstract class AbstractInfoAction extends JosmAction {
         return ret == 0;
     }
 
-    protected void launchInfoBrowsersForSelectedPrimitives() {
-        List<OsmPrimitive> primitivesToShow = new ArrayList<>(getCurrentDataSet().getAllSelected());
+    protected void launchInfoBrowsersForSelectedPrimitivesAndNote() {
+        List<OsmPrimitive> primitivesToShow = new ArrayList<>();
+        if (getCurrentDataSet() != null) {
+            primitivesToShow.addAll(getCurrentDataSet().getAllSelected());
+        }
+
+        Note noteToShow = Main.isDisplayingMapView() ? Main.map.noteDialog.getSelectedNote() : null;
 
         // filter out new primitives which are not yet uploaded to the server
         //
         Iterator<OsmPrimitive> it = primitivesToShow.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             if (it.next().isNew()) {
                 it.remove();
             }
         }
 
-        if (primitivesToShow.isEmpty()) {
+        if (primitivesToShow.isEmpty() && noteToShow == null) {
             JOptionPane.showMessageDialog(
                     Main.parent,
                     tr("Please select at least one already uploaded node, way, or relation."),
@@ -92,16 +100,30 @@ public abstract class AbstractInfoAction extends JosmAction {
         // don't launch more than 10 browser instances / browser windows
         //
         int max = Math.min(10, primitivesToShow.size());
-        if (primitivesToShow.size() > max && ! confirmLaunchMultiple(primitivesToShow.size()))
+        if (primitivesToShow.size() > max && !confirmLaunchMultiple(primitivesToShow.size()))
             return;
-        for(int i = 0; i < max; i++) {
-            OpenBrowser.displayUrl(createInfoUrl(primitivesToShow.get(i)));
+        for (int i = 0; i < max; i++) {
+            launchInfoBrowser(primitivesToShow.get(i));
+        }
+
+        if (noteToShow != null) {
+            launchInfoBrowser(noteToShow);
+        }
+    }
+
+    protected final void launchInfoBrowser(Object o) {
+        String url = createInfoUrl(o);
+        if (url != null) {
+            String result = OpenBrowser.displayUrl(url);
+            if (result != null) {
+                Main.warn(result);
+            }
         }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        launchInfoBrowsersForSelectedPrimitives();
+        launchInfoBrowsersForSelectedPrimitivesAndNote();
     }
 
     protected abstract String createInfoUrl(Object infoObject);

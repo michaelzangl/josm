@@ -25,9 +25,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.AbstractButton;
@@ -76,7 +75,8 @@ import org.openstreetmap.josm.tools.Utils;
  *
  * @author imi
  */
-public class MapView extends NavigatableComponent implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.LayerStateChangeListener {
+public class MapView extends NavigatableComponent
+implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.LayerStateChangeListener {
 
     /**
      * Interface to notify listeners of a layer change.
@@ -224,7 +224,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
      */
     public MouseEvent lastMEvent = new MouseEvent(this, 0, 0, 0, 0, 0, 0, false); // In case somebody reads it before first mouse move
 
-    private final transient Set<MapViewPaintable> temporaryLayers = new LinkedHashSet<>();
+    private final transient List<MapViewPaintable> temporaryLayers = new LinkedList<>();
 
     private transient BufferedImage nonChangedLayersBuffer;
     private transient BufferedImage offscreenBuffer;
@@ -246,9 +246,9 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     public MapView(final JPanel contentPane, final ViewportData viewportData) {
         initialViewport = viewportData;
         Main.pref.addPreferenceChangeListener(this);
-        final boolean unregisterTab = Shortcut.findShortcut(KeyEvent.VK_TAB, 0)!=null;
+        final boolean unregisterTab = Shortcut.findShortcut(KeyEvent.VK_TAB, 0) != null;
 
-        addComponentListener(new ComponentAdapter(){
+        addComponentListener(new ComponentAdapter() {
             @Override public void componentResized(ComponentEvent e) {
                 removeComponentListener(this);
 
@@ -259,7 +259,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
                 MapScaler scaler = new MapScaler(MapView.this);
                 add(scaler);
-                scaler.setLocation(10,30);
+                scaler.setLocation(10, 30);
 
                 mapMover = new MapMover(MapView.this, contentPane);
             }
@@ -270,10 +270,13 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
         //store the last mouse action
         this.addMouseMotionListener(new MouseMotionListener() {
-            @Override public void mouseDragged(MouseEvent e) {
+            @Override
+            public void mouseDragged(MouseEvent e) {
                 mouseMoved(e);
             }
-            @Override public void mouseMoved(MouseEvent e) {
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
                 lastMEvent = e;
             }
         });
@@ -285,7 +288,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
             }
         });
 
-        if (Shortcut.findShortcut(KeyEvent.VK_TAB, 0)!=null) {
+        if (Shortcut.findShortcut(KeyEvent.VK_TAB, 0) != null) {
             setFocusTraversalKeysEnabled(false);
         }
     }
@@ -312,7 +315,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
             layers.add(layer);
             return;
         }
-        for (int i=layers.size()-1; i>= 0; i--) {
+        for (int i = layers.size()-1; i >= 0; i--) {
             if (layers.get(i) instanceof OsmDataLayer) {
                 if (i == layers.size()-1) {
                     layers.add(layer);
@@ -336,7 +339,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         }
 
         if (layer instanceof GpxLayer) {
-            addGpxLayer((GpxLayer)layer);
+            addGpxLayer((GpxLayer) layer);
         } else if (layers.isEmpty()) {
             layers.add(layer);
         } else if (layer.isBackgroundLayer()) {
@@ -353,7 +356,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         fireLayerAdded(layer);
         boolean isOsmDataLayer = layer instanceof OsmDataLayer;
         if (isOsmDataLayer) {
-            ((OsmDataLayer)layer).addLayerStateChangeListener(this);
+            ((OsmDataLayer) layer).addLayerStateChangeListener(this);
         }
         boolean callSetActiveLayer = isOsmDataLayer || activeLayer == null;
         if (callSetActiveLayer) {
@@ -439,7 +442,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         }
 
         if (layer instanceof OsmDataLayer) {
-            ((OsmDataLayer)layer).removeLayerPropertyChangeListener(this);
+            ((OsmDataLayer) layer).removeLayerPropertyChangeListener(this);
         }
 
         layers.remove(layer);
@@ -454,11 +457,12 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     private boolean virtualNodesEnabled = false;
 
     public void setVirtualNodesEnabled(boolean enabled) {
-        if(virtualNodesEnabled != enabled) {
+        if (virtualNodesEnabled != enabled) {
             virtualNodesEnabled = enabled;
             repaint();
         }
     }
+
     public boolean isVirtualNodesEnabled() {
         return virtualNodesEnabled;
     }
@@ -530,7 +534,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
     private void paintLayer(Layer layer, Graphics2D g, Bounds box) {
         if (layer.getOpacity() < 1) {
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,(float)layer.getOpacity()));
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) layer.getOpacity()));
         }
         layer.paint(g, this, box);
         g.setPaintMode();
@@ -582,7 +586,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         canUseBuffer = canUseBuffer && nonChangedLayers.size() <= nonChangedLayersCount &&
         lastViewID == getViewID() && lastClipBounds.contains(g.getClipBounds());
         if (canUseBuffer) {
-            for (int i=0; i<nonChangedLayers.size(); i++) {
+            for (int i = 0; i < nonChangedLayers.size(); i++) {
                 if (visibleLayers.get(i) != nonChangedLayers.get(i)) {
                     canUseBuffer = false;
                     break;
@@ -599,7 +603,8 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         Bounds box = getLatLonBounds(g.getClipBounds());
 
         if (!canUseBuffer || nonChangedLayersBuffer == null) {
-            if (null == nonChangedLayersBuffer || nonChangedLayersBuffer.getWidth() != getWidth() || nonChangedLayersBuffer.getHeight() != getHeight()) {
+            if (null == nonChangedLayersBuffer
+                    || nonChangedLayersBuffer.getWidth() != getWidth() || nonChangedLayersBuffer.getHeight() != getHeight()) {
                 nonChangedLayersBuffer = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_3BYTE_BGR);
             }
             Graphics2D g2 = nonChangedLayersBuffer.createGraphics();
@@ -607,23 +612,23 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
             g2.setColor(PaintColors.getBackgroundColor());
             g2.fillRect(0, 0, getWidth(), getHeight());
 
-            for (int i=0; i<nonChangedLayersCount; i++) {
-                paintLayer(visibleLayers.get(i),g2, box);
+            for (int i = 0; i < nonChangedLayersCount; i++) {
+                paintLayer(visibleLayers.get(i), g2, box);
             }
         } else {
             // Maybe there were more unchanged layers then last time - draw them to buffer
             if (nonChangedLayers.size() != nonChangedLayersCount) {
                 Graphics2D g2 = nonChangedLayersBuffer.createGraphics();
                 g2.setClip(g.getClip());
-                for (int i=nonChangedLayers.size(); i<nonChangedLayersCount; i++) {
-                    paintLayer(visibleLayers.get(i),g2, box);
+                for (int i = nonChangedLayers.size(); i < nonChangedLayersCount; i++) {
+                    paintLayer(visibleLayers.get(i), g2, box);
                 }
             }
         }
 
         nonChangedLayers.clear();
         changedLayer = null;
-        for (int i=0; i<nonChangedLayersCount; i++) {
+        for (int i = 0; i < nonChangedLayersCount; i++) {
             nonChangedLayers.add(visibleLayers.get(i));
         }
         lastViewID = getViewID();
@@ -631,8 +636,8 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
         tempG.drawImage(nonChangedLayersBuffer, 0, 0, null);
 
-        for (int i=nonChangedLayersCount; i<visibleLayers.size(); i++) {
-            paintLayer(visibleLayers.get(i),tempG, box);
+        for (int i = nonChangedLayersCount; i < visibleLayers.size(); i++) {
+            paintLayer(visibleLayers.get(i), tempG, box);
         }
 
         for (MapViewPaintable mvp : temporaryLayers) {
@@ -651,22 +656,22 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
 
         path.moveTo(p.x, p.y);
         double max = b.getMax().lat();
-        for(; lat <= max; lat += 1.0) {
+        for (; lat <= max; lat += 1.0) {
             p = getPoint(new LatLon(lat >= max ? max : lat, lon));
             path.lineTo(p.x, p.y);
         }
         lat = max; max = b.getMax().lon();
-        for(; lon <= max; lon += 1.0) {
+        for (; lon <= max; lon += 1.0) {
             p = getPoint(new LatLon(lat, lon >= max ? max : lon));
             path.lineTo(p.x, p.y);
         }
         lon = max; max = b.getMinLat();
-        for(; lat >= max; lat -= 1.0) {
+        for (; lat >= max; lat -= 1.0) {
             p = getPoint(new LatLon(lat <= max ? max : lat, lon));
             path.lineTo(p.x, p.y);
         }
         lat = max; max = b.getMinLon();
-        for(; lon >= max; lon -= 1.0) {
+        for (; lon >= max; lon -= 1.0) {
             p = getPoint(new LatLon(lat, lon <= max ? max : lon));
             path.lineTo(p.x, p.y);
         }
@@ -741,7 +746,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
     }
 
     private void setEditLayer(List<Layer> layersList) {
-        OsmDataLayer newEditLayer = layersList.contains(editLayer)?editLayer:null;
+        OsmDataLayer newEditLayer = layersList.contains(editLayer) ? editLayer : null;
         OsmDataLayer oldEditLayer = editLayer;
 
         // Find new edit layer
@@ -801,7 +806,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
          * that I switch layers and actions at the same time and it was annoying to mind the
          * order. This way it works as visual clue for new users */
         for (final AbstractButton b: Main.map.allMapModeButtons) {
-            MapMode mode = (MapMode)b.getAction();
+            MapMode mode = (MapMode) b.getAction();
             if (mode.layerIsSupported(layer)) {
                 Main.registerActionShortcut(mode, mode.getShortcut()); //fix #6876
                 GuiHelper.runInEDTAndWait(new Runnable() {
@@ -864,14 +869,14 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         if (evt.getPropertyName().equals(Layer.VISIBLE_PROP)) {
             repaint();
         } else if (evt.getPropertyName().equals(Layer.OPACITY_PROP)) {
-            Layer l = (Layer)evt.getSource();
+            Layer l = (Layer) evt.getSource();
             if (l.isVisible()) {
                 changedLayer = l;
                 repaint();
             }
         } else if (evt.getPropertyName().equals(OsmDataLayer.REQUIRES_SAVE_TO_DISK_PROP)
                 || evt.getPropertyName().equals(OsmDataLayer.REQUIRES_UPLOAD_TO_SERVER_PROP)) {
-            OsmDataLayer layer = (OsmDataLayer)evt.getSource();
+            OsmDataLayer layer = (OsmDataLayer) evt.getSource();
             if (layer == getEditLayer()) {
                 refreshTitle();
             }
@@ -894,7 +899,7 @@ public class MapView extends NavigatableComponent implements PropertyChangeListe
         }
     }
 
-    private transient SelectionChangedListener repaintSelectionChangedListener = new SelectionChangedListener(){
+    private transient SelectionChangedListener repaintSelectionChangedListener = new SelectionChangedListener() {
         @Override
         public void selectionChanged(Collection<? extends OsmPrimitive> newSelection) {
             repaint();

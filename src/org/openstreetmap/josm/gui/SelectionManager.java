@@ -59,18 +59,20 @@ public class SelectionManager implements MouseListener, MouseMotionListener, Pro
          * @param e The mouse event.
          * @see InputEvent#getModifiersEx()
          */
-        public void selectionEnded(Rectangle r, MouseEvent e);
+        void selectionEnded(Rectangle r, MouseEvent e);
+
         /**
          * Called to register the selection manager for "active" property.
          * @param listener The listener to register
          */
-        public void addPropertyChangeListener(PropertyChangeListener listener);
+        void addPropertyChangeListener(PropertyChangeListener listener);
+
         /**
          * Called to remove the selection manager from the listener list
          * for "active" property.
          * @param listener The listener to register
          */
-        public void removePropertyChangeListener(PropertyChangeListener listener);
+        void removePropertyChangeListener(PropertyChangeListener listener);
     }
     /**
      * The listener that receives the events after left mouse button is released.
@@ -123,7 +125,7 @@ public class SelectionManager implements MouseListener, MouseMotionListener, Pro
         eventSource.addMouseListener(this);
         eventSource.addMouseMotionListener(this);
         selectionEndedListener.addPropertyChangeListener(this);
-        eventSource.addPropertyChangeListener("scale", new PropertyChangeListener(){
+        eventSource.addPropertyChangeListener("scale", new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 if (mousePosStart != null) {
@@ -260,15 +262,15 @@ public class SelectionManager implements MouseListener, MouseMotionListener, Pro
         if (aspectRatio) {
             /* Keep the aspect ratio by growing the rectangle; the
              * rectangle is always under the cursor. */
-            double aspectRatio = (double)nc.getWidth()/nc.getHeight();
-            if ((double)w/h < aspectRatio) {
-                int neww = (int)(h*aspectRatio);
+            double aspectRatio = (double) nc.getWidth()/nc.getHeight();
+            if ((double) w/h < aspectRatio) {
+                int neww = (int) (h*aspectRatio);
                 if (mousePos.x < mousePosStart.x) {
                     x += w - neww;
                 }
                 w = neww;
             } else {
-                int newh = (int)(w/aspectRatio);
+                int newh = (int) (w/aspectRatio);
                 if (mousePos.y < mousePosStart.y) {
                     y += h - newh;
                 }
@@ -276,7 +278,7 @@ public class SelectionManager implements MouseListener, MouseMotionListener, Pro
             }
         }
 
-        return new Rectangle(x,y,w,h);
+        return new Rectangle(x, y, w, h);
     }
 
     /**
@@ -284,7 +286,7 @@ public class SelectionManager implements MouseListener, MouseMotionListener, Pro
      */
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if ("active".equals(evt.getPropertyName()) && !(Boolean)evt.getNewValue() && mousePosStart != null) {
+        if ("active".equals(evt.getPropertyName()) && !(Boolean) evt.getNewValue() && mousePosStart != null) {
             paintRect();
             mousePosStart = null;
             mousePos = null;
@@ -374,10 +376,13 @@ public class SelectionManager implements MouseListener, MouseMotionListener, Pro
 
     @Override
     public void mouseClicked(MouseEvent e) {}
+
     @Override
     public void mouseEntered(MouseEvent e) {}
+
     @Override
     public void mouseExited(MouseEvent e) {}
+
     @Override
     public void mouseMoved(MouseEvent e) {}
 }

@@ -255,8 +255,8 @@ public class NavigatableComponent extends JComponent implements Helpful {
     public double getDist100Pixel() {
         int w = getWidth()/2;
         int h = getHeight()/2;
-        LatLon ll1 = getLatLon(w-50,h);
-        LatLon ll2 = getLatLon(w+50,h);
+        LatLon ll1 = getLatLon(w-50, h);
+        LatLon ll2 = getLatLon(w+50, h);
         return ll1.greatCircleDistance(ll2);
     }
 
@@ -324,11 +324,11 @@ public class NavigatableComponent extends JComponent implements Helpful {
     }
 
     public LatLon getLatLon(double x, double y) {
-        return getLatLon((int)x, (int)y);
+        return getLatLon((int) x, (int) y);
     }
 
     /**
-     * @param r
+     * @param r rectangle
      * @return Minimum bounds that will cover rectangle
      */
     public Bounds getLatLonBounds(Rectangle r) {
@@ -345,7 +345,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
         double deltaEast = (eastMax - eastMin) / 10;
         double deltaNorth = (northMax - northMin) / 10;
 
-        for (int i=0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             result.extend(Main.getProjection().eastNorth2latlon(new EastNorth(eastMin + i * deltaEast, northMin)));
             result.extend(Main.getProjection().eastNorth2latlon(new EastNorth(eastMin + i * deltaEast, northMax)));
             result.extend(Main.getProjection().eastNorth2latlon(new EastNorth(eastMin, northMin  + i * deltaNorth)));
@@ -378,7 +378,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
         if (latlon == null)
             return new Point();
         else if (latlon instanceof CachedLatLon)
-            return getPoint2D(((CachedLatLon)latlon).getEastNorth());
+            return getPoint2D(((CachedLatLon) latlon).getEastNorth());
         else
             return getPoint2D(getProjection().latlon2eastNorth(latlon));
     }
@@ -446,7 +446,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
             lon = b.getMaxLon();
         }
         if (changed) {
-            newCenter = Projections.project(new LatLon(lat,lon));
+            newCenter = Projections.project(new LatLon(lat, lon));
         }
         int width = getWidth()/2;
         int height = getHeight()/2;
@@ -534,10 +534,10 @@ public class NavigatableComponent extends JComponent implements Helpful {
             final double frames = milliseconds * fps / 1000;
             final EastNorth finalNewCenter = newCenter;
 
-            new Thread(){
+            new Thread() {
                 @Override
                 public void run() {
-                    for (int i=0; i<frames; i++) {
+                    for (int i = 0; i < frames; i++) {
                         // FIXME - not use zoom history here
                         zoomTo(oldCenter.interpolate(finalNewCenter, (i+1) / frames));
                         try {
@@ -821,14 +821,15 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * node to p is returned.
      *
      * Finally, if a node is not found at all, null is returned.
-     * @since 6065
-     * @return A node within snap-distance to point p,
-     *      that is chosen by the algorithm described.
      *
      * @param p the screen point
      * @param predicate this parameter imposes a condition on the returned object, e.g.
      *        give the nearest node that is tagged.
      * @param preferredRefs primitives, whose nodes we prefer
+     *
+     * @return A node within snap-distance to point p,
+     *      that is chosen by the algorithm described.
+     * @since 6065
      */
     public final Node getNearestNode(Point p, Predicate<OsmPrimitive> predicate,
             boolean useSelected, Collection<OsmPrimitive> preferredRefs) {
@@ -937,7 +938,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
                      * -- zero out least significant 32 dual digits of mantissa..
                      */
                     double perDistSq = Double.longBitsToDouble(
-                            Double.doubleToLongBits( a - (a - b + c) * (a - b + c) / 4 / c )
+                            Double.doubleToLongBits(a - (a - b + c) * (a - b + c) / 4 / c)
                             >> 32 << 32); // resolution in numbers with large exponent not needed here..
 
                     if (perDistSq < snapDistanceSq && a < c + snapDistanceSq && b < c + snapDistanceSq) {
@@ -1008,13 +1009,13 @@ public class NavigatableComponent extends JComponent implements Helpful {
     /**
      * The *result* depends on the current map selection state IF use_selected is true.
      *
-     * @return The nearest way segment to point p,
-     *      and, depending on use_selected, prefers a selected way segment, if found.
-     * @see #getNearestWaySegments(Point, Collection, Predicate)
-     *
      * @param p the point for which to search the nearest segment.
      * @param predicate the returned object has to fulfill certain properties.
      * @param useSelected whether selected way segments should be preferred.
+     *
+     * @return The nearest way segment to point p,
+     *      and, depending on use_selected, prefers a selected way segment, if found.
+     * @see #getNearestWaySegments(Point, Collection, Predicate)
      */
     public final WaySegment getNearestWaySegment(Point p, Predicate<OsmPrimitive> predicate, boolean useSelected) {
         WaySegment wayseg = null, ntsel = null;
@@ -1039,15 +1040,17 @@ public class NavigatableComponent extends JComponent implements Helpful {
      /**
      * The *result* depends on the current map selection state IF use_selected is true.
      *
-     * @return The nearest way segment to point p,
-     *      and, depending on use_selected, prefers a selected way segment, if found.
-     * Also prefers segments of ways that are related to one of preferredRefs primitives
-     * @see #getNearestWaySegments(Point, Collection, Predicate)
-     * @since 6065
      * @param p the point for which to search the nearest segment.
      * @param predicate the returned object has to fulfill certain properties.
      * @param use_selected whether selected way segments should be preferred.
      * @param preferredRefs - prefer segments related to these primitives, may be null
+     *
+     * @return The nearest way segment to point p,
+     *      and, depending on use_selected, prefers a selected way segment, if found.
+     * Also prefers segments of ways that are related to one of preferredRefs primitives
+     *
+     * @see #getNearestWaySegments(Point, Collection, Predicate)
+     * @since 6065
      */
     public final WaySegment getNearestWaySegment(Point p, Predicate<OsmPrimitive> predicate,
             boolean use_selected,  Collection<OsmPrimitive> preferredRefs) {
@@ -1149,12 +1152,11 @@ public class NavigatableComponent extends JComponent implements Helpful {
     /**
      * The *result* depends on the current map selection state.
      *
-     * @return The nearest way to point p,
-     *      prefer a selected way if there are multiple nearest.
-     * @see #getNearestWaySegment(Point, Predicate)
-     *
      * @param p the point for which to search the nearest segment.
      * @param predicate the returned object has to fulfill certain properties.
+     *
+     * @return The nearest way to point p, prefer a selected way if there are multiple nearest.
+     * @see #getNearestWaySegment(Point, Predicate)
      */
     public final Way getNearestWay(Point p, Predicate<OsmPrimitive> predicate) {
         WaySegment nearestWaySeg = getNearestWaySegment(p, predicate);
@@ -1248,26 +1250,26 @@ public class NavigatableComponent extends JComponent implements Helpful {
      *
      * Finally, if no nearest primitive is found at all, return null.
      *
+     * @param p The point on screen.
+     * @param predicate the returned object has to fulfill certain properties.
+     * @param use_selected whether to prefer primitives that are currently selected or referred by selected primitives
+     *
      * @return A primitive within snap-distance to point p,
      *      that is chosen by the algorithm described.
      * @see #getNearestNode(Point, Predicate)
      * @see #getNearestWay(Point, Predicate)
-     *
-     * @param p The point on screen.
-     * @param predicate the returned object has to fulfill certain properties.
-     * @param use_selected whether to prefer primitives that are currently selected or referred by selected primitives
      */
     public final OsmPrimitive getNearestNodeOrWay(Point p, Predicate<OsmPrimitive> predicate, boolean use_selected) {
         Collection<OsmPrimitive> sel;
         DataSet ds = getCurrentDataSet();
-        if (use_selected && ds!=null) {
+        if (use_selected && ds != null) {
             sel = ds.getSelected();
         } else {
             sel = null;
         }
         OsmPrimitive osm = getNearestNode(p, predicate, use_selected, sel);
 
-        if (isPrecedenceNode((Node)osm, p, use_selected)) return osm;
+        if (isPrecedenceNode((Node) osm, p, use_selected)) return osm;
         WaySegment ws;
         if (use_selected) {
             ws = getNearestWaySegment(p, predicate, use_selected, sel);
@@ -1289,7 +1291,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
             // is wayseg shorter than maxWaySegLenSq and
             // is p closer to the middle of wayseg  than  to the nearest node?
             if (wp1.distanceSq(wp2) < maxWaySegLenSq &&
-                    p.distanceSq(project(0.5, wp1, wp2)) < p.distanceSq(getPoint2D((Node)osm))) {
+                    p.distanceSq(project(0.5, wp1, wp2)) < p.distanceSq(getPoint2D((Node) osm))) {
                 osm = ws.way;
             }
         }
@@ -1318,7 +1320,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
         if (pt != null && a != null && b != null) {
             double r = (
                     (pt.getX()-a.getX())*(b.getX()-a.getX()) +
-                    (pt.getY()-a.getY())*(b.getY()-a.getY()) )
+                    (pt.getY()-a.getY())*(b.getY()-a.getY()))
                     / a.distanceSq(b);
             return project(r, a, b);
         }
@@ -1345,16 +1347,15 @@ public class NavigatableComponent extends JComponent implements Helpful {
     }
 
     /**
-     * The *result* does not depend on the current map selection state,
-     * neither does the result *order*.
+     * The *result* does not depend on the current map selection state, neither does the result *order*.
      * It solely depends on the distance to point p.
-     *
-     * @return a list of all objects that are nearest to point p and
-     *          not in ignore or an empty list if nothing was found.
      *
      * @param p The point on screen.
      * @param ignore a collection of ways which are not to be returned.
      * @param predicate the returned object has to fulfill certain properties.
+     *
+     * @return a list of all objects that are nearest to point p and
+     *          not in ignore or an empty list if nothing was found.
      */
     public final List<OsmPrimitive> getAllNearest(Point p,
             Collection<OsmPrimitive> ignore, Predicate<OsmPrimitive> predicate) {
@@ -1394,16 +1395,15 @@ public class NavigatableComponent extends JComponent implements Helpful {
     }
 
     /**
-     * The *result* does not depend on the current map selection state,
-     * neither does the result *order*.
+     * The *result* does not depend on the current map selection state, neither does the result *order*.
      * It solely depends on the distance to point p.
+     *
+     * @param p The point on screen.
+     * @param predicate the returned object has to fulfill certain properties.
      *
      * @return a list of all objects that are nearest to point p
      *          or an empty list if nothing was found.
      * @see #getAllNearest(Point, Collection, Predicate)
-     *
-     * @param p The point on screen.
-     * @param predicate the returned object has to fulfill certain properties.
      */
     public final List<OsmPrimitive> getAllNearest(Point p, Predicate<OsmPrimitive> predicate) {
         return getAllNearest(p, null, predicate);
@@ -1431,7 +1431,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
                 getWidth() + "_" + getHeight() + "_" + getProjection().toString();
         CRC32 id = new CRC32();
         id.update(x.getBytes(StandardCharsets.UTF_8));
-        return (int)id.getValue();
+        return (int) id.getValue();
     }
 
     /**
@@ -1465,6 +1465,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
     private static class CursorInfo {
         private final Cursor cursor;
         private final Object object;
+
         public CursorInfo(Cursor c, Object o) {
             cursor = c;
             object = o;
@@ -1479,7 +1480,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
     public void setNewCursor(Cursor cursor, Object reference) {
         if (!cursors.isEmpty()) {
             CursorInfo l = cursors.getLast();
-            if(l != null && l.cursor == cursor && l.object == reference)
+            if (l != null && l.cursor == cursor && l.object == reference)
                 return;
             stripCursors(reference);
         }
@@ -1512,8 +1513,8 @@ public class NavigatableComponent extends JComponent implements Helpful {
 
     private void stripCursors(Object reference) {
         LinkedList<CursorInfo> c = new LinkedList<>();
-        for(CursorInfo i : cursors) {
-            if(i.object != reference) {
+        for (CursorInfo i : cursors) {
+            if (i.object != reference) {
                 c.add(i);
             }
         }

@@ -19,6 +19,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JToolTip;
+import javax.swing.SwingUtilities;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.SaveActionBase;
@@ -32,13 +33,19 @@ import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.dialogs.LayerListDialog;
 import org.openstreetmap.josm.gui.dialogs.LayerListPopup;
 import org.openstreetmap.josm.gui.dialogs.NotesDialog;
+import org.openstreetmap.josm.gui.io.AbstractIOTask;
+import org.openstreetmap.josm.gui.io.UploadNoteLayerTask;
+import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.io.NoteExporter;
+import org.openstreetmap.josm.io.OsmApi;
 import org.openstreetmap.josm.io.XmlWriter;
 import org.openstreetmap.josm.tools.ColorHelper;
+import org.openstreetmap.josm.tools.Utils;
 import org.openstreetmap.josm.tools.date.DateUtils;
 
 /**
- * A layer to hold Note objects
+ * A layer to hold Note objects.
+ * @since 7522
  */
 public class NoteLayer extends AbstractModifiableLayer implements MouseListener {
 
@@ -116,7 +123,7 @@ public class NoteLayer extends AbstractModifiableLayer implements MouseListener 
             for (NoteComment comment : noteData.getSelectedNote().getComments()) {
                 String commentText = comment.getText();
                 //closing a note creates an empty comment that we don't want to show
-                if (commentText != null && commentText.trim().length() > 0) {
+                if (commentText != null && !commentText.trim().isEmpty()) {
                     sb.append("<hr/>");
                     String userName = XmlWriter.encode(comment.getUser().getName());
                     if (userName == null || userName.trim().isEmpty()) {
@@ -138,7 +145,8 @@ public class NoteLayer extends AbstractModifiableLayer implements MouseListener 
             Point p = mv.getPoint(noteData.getSelectedNote().getLatLon());
 
             g.setColor(ColorHelper.html2color(Main.pref.get("color.selected")));
-            g.drawRect(p.x - (NotesDialog.ICON_SMALL_SIZE / 2), p.y - NotesDialog.ICON_SMALL_SIZE, NotesDialog.ICON_SMALL_SIZE - 1, NotesDialog.ICON_SMALL_SIZE - 1);
+            g.drawRect(p.x - (NotesDialog.ICON_SMALL_SIZE / 2), p.y - NotesDialog.ICON_SMALL_SIZE,
+                    NotesDialog.ICON_SMALL_SIZE - 1, NotesDialog.ICON_SMALL_SIZE - 1);
 
             int tx = p.x + (NotesDialog.ICON_SMALL_SIZE / 2) + 5;
             int ty = p.y - NotesDialog.ICON_SMALL_SIZE - 1;
@@ -219,7 +227,11 @@ public class NoteLayer extends AbstractModifiableLayer implements MouseListener 
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (e.getButton() != MouseEvent.BUTTON1) {
+        if (SwingUtilities.isRightMouseButton(e) && noteData.getSelectedNote() != null) {
+            final String url = OsmApi.getOsmApi().getBaseUrl() + "notes/" + noteData.getSelectedNote().getId();
+            Utils.copyToClipboard(url);
+            return;
+        } else if (!SwingUtilities.isLeftMouseButton(e)) {
             return;
         }
         Point clickPoint = e.getPoint();
@@ -231,7 +243,7 @@ public class NoteLayer extends AbstractModifiableLayer implements MouseListener 
             //move the note point to the center of the icon where users are most likely to click when selecting
             notePoint.setLocation(notePoint.getX(), notePoint.getY() - NotesDialog.ICON_SMALL_SIZE / 2);
             double dist = clickPoint.distanceSq(notePoint);
-            if (minDistance > dist && clickPoint.distance(notePoint) < snapDistance ) {
+            if (minDistance > dist && clickPoint.distance(notePoint) < snapDistance) {
                 minDistance = dist;
                 closestNote = note;
             }
@@ -245,14 +257,27 @@ public class NoteLayer extends AbstractModifiableLayer implements MouseListener 
     }
 
     @Override
-    public void mousePressed(MouseEvent e) { }
+    public AbstractIOTask createUploadTask(ProgressMonitor monitor) {
+        return new UploadNoteLayerTask(this, monitor);
+    }
 
     @Override
-    public void mouseReleased(MouseEvent e) { }
+    public void mousePressed(MouseEvent e) {
+        // Do nothing
+    }
 
     @Override
-    public void mouseEntered(MouseEvent e) { }
+    public void mouseReleased(MouseEvent e) {
+        // Do nothing
+    }
 
     @Override
-    public void mouseExited(MouseEvent e) { }
+    public void mouseEntered(MouseEvent e) {
+        // Do nothing
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        // Do nothing
+    }
 }

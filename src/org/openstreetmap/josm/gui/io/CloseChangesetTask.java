@@ -72,14 +72,14 @@ public class CloseChangesetTask extends PleaseWaitRunnable {
         try {
             for (Changeset cs: changesets) {
                 if (canceled) return;
-                if (cs == null || cs.getId() <= 0 || ! cs.isOpen()) {
+                if (cs == null || cs.getId() <= 0 || !cs.isOpen()) {
                     continue;
                 }
                 getProgressMonitor().subTask(tr("Closing changeset {0}", cs.getId()));
                 OsmApi.getOsmApi().closeChangeset(cs, getProgressMonitor().createSubTaskMonitor(1, false));
                 closedChangesets.add(cs);
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             if (canceled)
                 return;
             lastException = e;

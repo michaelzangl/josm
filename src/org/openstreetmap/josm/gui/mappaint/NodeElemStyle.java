@@ -91,7 +91,8 @@ public class NodeElemStyle extends ElemStyle implements StyleKeys {
     }
 
     public static final StyleList DEFAULT_NODE_STYLELIST = new StyleList(NodeElemStyle.SIMPLE_NODE_ELEMSTYLE);
-    public static final StyleList DEFAULT_NODE_STYLELIST_TEXT = new StyleList(NodeElemStyle.SIMPLE_NODE_ELEMSTYLE, BoxTextElemStyle.SIMPLE_NODE_TEXT_ELEMSTYLE);
+    public static final StyleList DEFAULT_NODE_STYLELIST_TEXT = new StyleList(NodeElemStyle.SIMPLE_NODE_ELEMSTYLE,
+            BoxTextElemStyle.SIMPLE_NODE_TEXT_ELEMSTYLE);
 
     protected NodeElemStyle(Cascade c, MapImage mapImage, Symbol symbol, float default_major_z_index, RotationAngle rotationAngle) {
         super(c, default_major_z_index);
@@ -125,6 +126,9 @@ public class NodeElemStyle extends ElemStyle implements StyleKeys {
                     try {
                         rotationAngle = RotationAngle.buildStaticRotation(rotationKW.val);
                     } catch (IllegalArgumentException ignore) {
+                        if (Main.isTraceEnabled()) {
+                            Main.trace(ignore.getMessage());
+                        }
                     }
                 }
             }

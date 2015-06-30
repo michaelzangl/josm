@@ -63,7 +63,7 @@ public class ChangesetManagementPanel extends JPanel implements ListDataListener
     protected void build() {
         setLayout(new GridBagLayout());
         GridBagConstraints gc = new GridBagConstraints();
-        setBorder(BorderFactory.createEmptyBorder(3,3,3,3));
+        setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
 
         ButtonGroup bgUseNewOrExisting = new ButtonGroup();
 
@@ -74,14 +74,15 @@ public class ChangesetManagementPanel extends JPanel implements ListDataListener
         gc.weightx = 1.0;
         gc.weighty = 0.0;
         gc.insets = new Insets(0, 0, 5, 0);
-        add(new JMultilineLabel(tr("Please decide what changeset the data is uploaded to and whether to close the changeset after the next upload.")), gc);
+        add(new JMultilineLabel(
+                tr("Please decide what changeset the data is uploaded to and whether to close the changeset after the next upload.")), gc);
 
         gc.gridwidth = 4;
         gc.gridy = 1;
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.weightx = 1.0;
         gc.weighty = 0.0;
-        gc.insets = new Insets(0,0,0,0);
+        gc.insets = new Insets(0, 0, 0, 0);
         gc.anchor = GridBagConstraints.FIRST_LINE_START;
         rbUseNew = new JRadioButton(tr("Upload to a new changeset"));
         rbUseNew.setToolTipText(tr("Open a new changeset and use it in the next upload"));
@@ -122,7 +123,7 @@ public class ChangesetManagementPanel extends JPanel implements ListDataListener
         gc.gridwidth = 1;
         gc.weightx = 0.0;
         JButton btnRefresh = new JButton(new RefreshAction());
-        btnRefresh.setMargin(new Insets(0,0,0,0));
+        btnRefresh.setMargin(new Insets(0, 0, 0, 0));
         add(btnRefresh, gc);
 
         gc.gridx = 3;
@@ -130,7 +131,7 @@ public class ChangesetManagementPanel extends JPanel implements ListDataListener
         gc.gridwidth = 1;
         CloseChangesetAction closeChangesetAction = new CloseChangesetAction();
         JButton btnClose = new JButton(closeChangesetAction);
-        btnClose.setMargin(new Insets(0,0,0,0));
+        btnClose.setMargin(new Insets(0, 0, 0, 0));
         cbOpenChangesets.addItemListener(closeChangesetAction);
         rbExisting.addItemListener(closeChangesetAction);
         add(btnClose, gc);
@@ -187,7 +188,7 @@ public class ChangesetManagementPanel extends JPanel implements ListDataListener
      */
     public void setSelectedChangesetForNextUpload(Changeset cs) {
         int idx  = model.getIndexOf(cs);
-        if (idx >=0) {
+        if (idx >= 0) {
             rbExisting.setSelected(true);
             model.setSelectedItem(cs);
         }
@@ -203,7 +204,7 @@ public class ChangesetManagementPanel extends JPanel implements ListDataListener
     public Changeset getSelectedChangeset() {
         if (rbUseNew.isSelected())
             return null;
-        return (Changeset)cbOpenChangesets.getSelectedItem();
+        return (Changeset) cbOpenChangesets.getSelectedItem();
     }
 
     /**
@@ -240,7 +241,7 @@ public class ChangesetManagementPanel extends JPanel implements ListDataListener
     class ChangesetListItemStateListener implements ItemListener {
         @Override
         public void itemStateChanged(ItemEvent e) {
-            Changeset cs = (Changeset)cbOpenChangesets.getSelectedItem();
+            Changeset cs = (Changeset) cbOpenChangesets.getSelectedItem();
             if (cs == null) return;
             if (rbExisting.isSelected()) {
                 firePropertyChange(SELECTED_CHANGESET_PROP, null, cs);
@@ -286,7 +287,7 @@ public class ChangesetManagementPanel extends JPanel implements ListDataListener
                 if (cbOpenChangesets.getSelectedItem() == null) {
                     model.selectFirstChangeset();
                 }
-                Changeset cs = (Changeset)cbOpenChangesets.getSelectedItem();
+                Changeset cs = (Changeset) cbOpenChangesets.getSelectedItem();
                 if (cs == null) return;
                 changesetCommentModel.setComment(cs.get("comment"));
                 firePropertyChange(SELECTED_CHANGESET_PROP, null, cs);
@@ -324,7 +325,7 @@ public class ChangesetManagementPanel extends JPanel implements ListDataListener
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            Changeset cs = (Changeset)cbOpenChangesets.getSelectedItem();
+            Changeset cs = (Changeset) cbOpenChangesets.getSelectedItem();
             if (cs == null) return;
             CloseChangesetTask task = new CloseChangesetTask(Collections.singletonList(cs));
             Main.worker.submit(task);

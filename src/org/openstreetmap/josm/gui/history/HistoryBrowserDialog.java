@@ -124,7 +124,7 @@ public class HistoryBrowserDialog extends JDialog implements HistoryDataSetListe
 
     /**
      * Sets the current history.
-     * @param history
+     * @param history current history
      */
     protected void setHistory(History history) {
         browser.populate(history);
@@ -151,7 +151,6 @@ public class HistoryBrowserDialog extends JDialog implements HistoryDataSetListe
     public void historyDataSetCleared(HistoryDataSet source) {
         closeAction.run();
     }
-
 
     class CloseAction extends AbstractAction {
         public CloseAction() {

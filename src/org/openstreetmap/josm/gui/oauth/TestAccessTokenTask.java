@@ -69,7 +69,7 @@ public class TestAccessTokenTask extends PleaseWaitRunnable {
     @Override
     protected void cancel() {
         canceled = true;
-        synchronized(this) {
+        synchronized (this) {
             if (connection != null) {
                 connection.disconnect();
             }
@@ -79,7 +79,7 @@ public class TestAccessTokenTask extends PleaseWaitRunnable {
     @Override
     protected void finish() {}
 
-    protected void sign(HttpURLConnection con) throws OAuthException{
+    protected void sign(HttpURLConnection con) throws OAuthException {
         OAuthConsumer consumer = oauthParameters.buildConsumer();
         consumer.setTokenWithSecret(token.getKey(), token.getSecret());
         consumer.sign(con);
@@ -90,7 +90,7 @@ public class TestAccessTokenTask extends PleaseWaitRunnable {
         url = url.trim();
 
         // remove trailing slashes
-        while(url.endsWith("/")) {
+        while (url.endsWith("/")) {
             url = url.substring(0, url.lastIndexOf('/'));
         }
         return url;
@@ -102,7 +102,7 @@ public class TestAccessTokenTask extends PleaseWaitRunnable {
             URL url = new URL(normalizeApiUrl(apiUrl) + "/0.6/user/details");
             authenticatorEnabled = DefaultAuthenticator.getInstance().isEnabled();
             DefaultAuthenticator.getInstance().setEnabled(false);
-            synchronized(this) {
+            synchronized (this) {
                 connection = Utils.openHttpConnection(url);
             }
 
@@ -112,20 +112,22 @@ public class TestAccessTokenTask extends PleaseWaitRunnable {
             connection.connect();
 
             if (connection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED)
-                throw new OsmApiException(HttpURLConnection.HTTP_UNAUTHORIZED, tr("Retrieving user details with Access Token Key ''{0}'' was rejected.", token.getKey()), null);
+                throw new OsmApiException(HttpURLConnection.HTTP_UNAUTHORIZED,
+                        tr("Retrieving user details with Access Token Key ''{0}'' was rejected.", token.getKey()), null);
 
             if (connection.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN)
-                throw new OsmApiException(HttpURLConnection.HTTP_FORBIDDEN, tr("Retrieving user details with Access Token Key ''{0}'' was forbidden.", token.getKey()), null);
+                throw new OsmApiException(HttpURLConnection.HTTP_FORBIDDEN,
+                        tr("Retrieving user details with Access Token Key ''{0}'' was forbidden.", token.getKey()), null);
 
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK)
-                throw new OsmApiException(connection.getResponseCode(),connection.getHeaderField("Error"), null);
+                throw new OsmApiException(connection.getResponseCode(), connection.getHeaderField("Error"), null);
             Document d = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(connection.getInputStream());
             return OsmServerUserInfoReader.buildFromXML(d);
-        } catch(SAXException | ParserConfigurationException e) {
+        } catch (SAXException | ParserConfigurationException e) {
             throw new XmlParsingException(e);
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new OsmTransferException(e);
-        } catch(OAuthException e) {
+        } catch (OAuthException e) {
             throw new OsmOAuthAuthorizationException(e);
         } finally {
             DefaultAuthenticator.getInstance().setEnabled(authenticatorEnabled);
@@ -246,11 +248,11 @@ public class TestAccessTokenTask extends PleaseWaitRunnable {
             UserInfo userInfo = getUserDetails();
             if (canceled) return;
             notifySuccess(userInfo);
-        }catch(OsmOAuthAuthorizationException e) {
+        } catch (OsmOAuthAuthorizationException e) {
             if (canceled) return;
             Main.error(e);
             alertFailedSigning();
-        } catch(OsmApiException e) {
+        } catch (OsmApiException e) {
             if (canceled) return;
             Main.error(e);
             if (e.getResponseCode() == HttpURLConnection.HTTP_INTERNAL_ERROR) {
@@ -264,7 +266,7 @@ public class TestAccessTokenTask extends PleaseWaitRunnable {
                 return;
             }
             alertFailedConnection();
-        } catch(OsmTransferException e) {
+        } catch (OsmTransferException e) {
             if (canceled) return;
             Main.error(e);
             alertFailedConnection();

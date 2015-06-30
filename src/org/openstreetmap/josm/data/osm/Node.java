@@ -39,17 +39,17 @@ public final class Node extends OsmPrimitive implements INode {
      * @return {@code true} if this node has valid coordinates
      * @since 7828
      */
-    public final boolean isLatLonKnown() {
+    public boolean isLatLonKnown() {
         return !Double.isNaN(lat) && !Double.isNaN(lon);
     }
 
     @Override
-    public final void setCoor(LatLon coor) {
+    public void setCoor(LatLon coor) {
         updateCoor(coor, null);
     }
 
     @Override
-    public final void setEastNorth(EastNorth eastNorth) {
+    public void setEastNorth(EastNorth eastNorth) {
         updateCoor(null, eastNorth);
     }
 
@@ -67,9 +67,9 @@ public final class Node extends OsmPrimitive implements INode {
     }
 
     @Override
-    public final LatLon getCoor() {
+    public LatLon getCoor() {
         if (!isLatLonKnown()) return null;
-        return new LatLon(lat,lon);
+        return new LatLon(lat, lon);
     }
 
     /**
@@ -88,7 +88,7 @@ public final class Node extends OsmPrimitive implements INode {
      *
      */
     @Override
-    public final EastNorth getEastNorth() {
+    public EastNorth getEastNorth() {
         if (!isLatLonKnown()) return null;
 
         if (getDataSet() == null)
@@ -163,7 +163,8 @@ public final class Node extends OsmPrimitive implements INode {
     /**
      * Constructs an identical clone of the argument.
      * @param clone The node to clone
-     * @param clearMetadata If {@code true}, clears the OSM id and other metadata as defined by {@link #clearOsmMetadata}. If {@code false}, does nothing
+     * @param clearMetadata If {@code true}, clears the OSM id and other metadata as defined by {@link #clearOsmMetadata}.
+     * If {@code false}, does nothing
      */
     public Node(Node clone, boolean clearMetadata) {
         super(clone.getUniqueId(), true /* allow negative IDs */);
@@ -221,7 +222,7 @@ public final class Node extends OsmPrimitive implements INode {
         boolean locked = writeLock();
         try {
             super.cloneFrom(osm);
-            setCoor(((Node)osm).getCoor());
+            setCoor(((Node) osm).getCoor());
         } finally {
             writeUnlock(locked);
         }
@@ -244,7 +245,7 @@ public final class Node extends OsmPrimitive implements INode {
         try {
             super.mergeFrom(other);
             if (!other.isIncomplete()) {
-                setCoor(((Node)other).getCoor());
+                setCoor(((Node) other).getCoor());
             }
         } finally {
             writeUnlock(locked);
@@ -255,7 +256,7 @@ public final class Node extends OsmPrimitive implements INode {
         boolean locked = writeLock();
         try {
             super.load(data);
-            setCoor(((NodeData)data).getCoor());
+            setCoor(((NodeData) data).getCoor());
         } finally {
             writeUnlock(locked);
         }
@@ -280,9 +281,9 @@ public final class Node extends OsmPrimitive implements INode {
     public boolean hasEqualSemanticAttributes(OsmPrimitive other) {
         if (!(other instanceof Node))
             return false;
-        if (! super.hasEqualSemanticAttributes(other))
+        if (!super.hasEqualSemanticAttributes(other))
             return false;
-        Node n = (Node)other;
+        Node n = (Node) other;
         LatLon coor = getCoor();
         LatLon otherCoor = n.getCoor();
         if (coor == null && otherCoor == null)
@@ -372,7 +373,8 @@ public final class Node extends OsmPrimitive implements INode {
                 for (final Node n : w.getNodes()) {
                     final boolean containsN = visited.contains(n);
                     visited.add(n);
-                    if (!containsN && (predicate == null || predicate.evaluate(n)) && n.isConnectedTo(otherNodes, hops - 1, predicate, visited)) {
+                    if (!containsN && (predicate == null || predicate.evaluate(n))
+                            && n.isConnectedTo(otherNodes, hops - 1, predicate, visited)) {
                         return true;
                     }
                 }

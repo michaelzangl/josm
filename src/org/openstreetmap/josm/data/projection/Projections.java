@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +37,7 @@ import org.openstreetmap.josm.gui.preferences.projection.ProjectionChoice;
 import org.openstreetmap.josm.gui.preferences.projection.ProjectionPreference;
 import org.openstreetmap.josm.io.CachedFile;
 import org.openstreetmap.josm.tools.Pair;
+import org.openstreetmap.josm.tools.Utils;
 
 /**
  * Class to handle projections
@@ -61,11 +64,11 @@ public final class Projections {
      *
      * should be compatible to PROJ.4
      */
-    public static final Map<String, ProjFactory> projs = new HashMap<>();
-    public static final Map<String, Ellipsoid> ellipsoids = new HashMap<>();
-    public static final Map<String, Datum> datums = new HashMap<>();
-    public static final Map<String, NTV2GridShiftFileWrapper> nadgrids = new HashMap<>();
-    public static final Map<String, Pair<String, String>> inits = new HashMap<>();
+    static final Map<String, ProjFactory> projs = new HashMap<>();
+    static final Map<String, Ellipsoid> ellipsoids = new HashMap<>();
+    static final Map<String, Datum> datums = new HashMap<>();
+    static final Map<String, NTV2GridShiftFileWrapper> nadgrids = new HashMap<>();
+    static final Map<String, Pair<String, String>> inits = new HashMap<>();
 
     static {
         registerBaseProjection("lonlat", LonLat.class, "core");
@@ -74,13 +77,19 @@ public final class Projections {
         registerBaseProjection("somerc", SwissObliqueMercator.class, "core");
         registerBaseProjection("tmerc", TransverseMercator.class, "core");
 
-        ellipsoids.put("clrk66", Ellipsoid.clarke1866);
-        ellipsoids.put("clarkeIGN", Ellipsoid.clarkeIGN);
-        ellipsoids.put("intl", Ellipsoid.hayford);
+        ellipsoids.put("airy", Ellipsoid.Airy);
+        ellipsoids.put("mod_airy", Ellipsoid.AiryMod);
+        ellipsoids.put("aust_SA", Ellipsoid.AustSA);
+        ellipsoids.put("bessel", Ellipsoid.Bessel1841);
+        ellipsoids.put("clrk66", Ellipsoid.Clarke1866);
+        ellipsoids.put("clarkeIGN", Ellipsoid.ClarkeIGN);
+        ellipsoids.put("intl", Ellipsoid.Hayford);
+        ellipsoids.put("helmert", Ellipsoid.Helmert);
+        ellipsoids.put("krass", Ellipsoid.Krassowsky);
         ellipsoids.put("GRS67", Ellipsoid.GRS67);
         ellipsoids.put("GRS80", Ellipsoid.GRS80);
+        ellipsoids.put("WGS72", Ellipsoid.WGS72);
         ellipsoids.put("WGS84", Ellipsoid.WGS84);
-        ellipsoids.put("bessel", Ellipsoid.Bessel1841);
 
         datums.put("WGS84", WGS84Datum.INSTANCE);
         datums.put("GRS80", GRS80Datum.INSTANCE);
@@ -208,5 +217,47 @@ public final class Projections {
 
     public static Collection<String> getAllProjectionCodes() {
         return Collections.unmodifiableCollection(allCodes);
+    }
+
+    private static String listKeys(Map<String, ?> map) {
+        List<String> keys = new ArrayList<>(map.keySet());
+        Collections.sort(keys);
+        return Utils.join(", ", keys);
+    }
+
+    /**
+     * Replies the list of projections as string (comma separated).
+     * @return the list of projections as string (comma separated)
+     * @since 8533
+     */
+    public static String listProjs() {
+        return listKeys(projs);
+    }
+
+    /**
+     * Replies the list of ellipsoids as string (comma separated).
+     * @return the list of ellipsoids as string (comma separated)
+     * @since 8533
+     */
+    public static String listEllipsoids() {
+        return listKeys(ellipsoids);
+    }
+
+    /**
+     * Replies the list of datums as string (comma separated).
+     * @return the list of datums as string (comma separated)
+     * @since 8533
+     */
+    public static String listDatums() {
+        return listKeys(datums);
+    }
+
+    /**
+     * Replies the list of nadgrids as string (comma separated).
+     * @return the list of nadgrids as string (comma separated)
+     * @since 8533
+     */
+    public static String listNadgrids() {
+        return listKeys(nadgrids);
     }
 }

@@ -33,11 +33,11 @@ public class ApiPreconditionCheckerHook implements UploadHook {
             api.initialize(NullProgressMonitor.INSTANCE);
             long maxNodes = api.getCapabilities().getMaxWayNodes();
             if (maxNodes > 0) {
-                if( !checkMaxNodes(apiData.getPrimitivesToAdd(), maxNodes))
+                if (!checkMaxNodes(apiData.getPrimitivesToAdd(), maxNodes))
                     return false;
-                if( !checkMaxNodes(apiData.getPrimitivesToUpdate(), maxNodes))
+                if (!checkMaxNodes(apiData.getPrimitivesToUpdate(), maxNodes))
                     return false;
-                if( !checkMaxNodes(apiData.getPrimitivesToDelete(), maxNodes))
+                if (!checkMaxNodes(apiData.getPrimitivesToDelete(), maxNodes))
                     return false;
             }
         } catch (OsmTransferCanceledException e) {
@@ -78,11 +78,11 @@ public class ApiPreconditionCheckerHook implements UploadHook {
             }
 
             if (osmPrimitive instanceof Way &&
-                    ((Way)osmPrimitive).getNodesCount() > maxNodes) {
+                    ((Way) osmPrimitive).getNodesCount() > maxNodes) {
                 JOptionPane.showMessageDialog(
                         Main.parent,
                         tr("{0} nodes in way {1} exceed the max. allowed number of nodes {2}",
-                                ((Way)osmPrimitive).getNodesCount(),
+                                ((Way) osmPrimitive).getNodesCount(),
                                 Long.toString(osmPrimitive.getId()),
                                 maxNodes
                         ),

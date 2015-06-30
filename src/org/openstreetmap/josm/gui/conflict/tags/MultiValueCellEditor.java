@@ -40,7 +40,7 @@ public class MultiValueCellEditor extends AbstractCellEditor implements TableCel
     /**
      * Defines the interface for an object implementing navigation between rows
      */
-    public static interface NavigationListener {
+    public interface NavigationListener {
         /** Call when need to go to next row */
         void gotoNextDecision();
         /** Call when need to go to previous row */
@@ -90,20 +90,21 @@ public class MultiValueCellEditor extends AbstractCellEditor implements TableCel
         editor = new JosmComboBox<Object>(editorModel) {
             @Override
             public void processKeyEvent(KeyEvent e) {
-                if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                int keyCode = e.getKeyCode();
+                if (e.getID() == KeyEvent.KEY_PRESSED && keyCode == KeyEvent.VK_ENTER) {
                     fireGotoNextDecision();
-                } else if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_TAB) {
+                } else if (e.getID() == KeyEvent.KEY_PRESSED && keyCode == KeyEvent.VK_TAB) {
                     if (e.isShiftDown()) {
                         fireGotoPreviousDecision();
                     } else {
                         fireGotoNextDecision();
                     }
-                } else if ( e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_DELETE  || e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+                } else if (e.getID() == KeyEvent.KEY_PRESSED && keyCode == KeyEvent.VK_DELETE || keyCode == KeyEvent.VK_BACK_SPACE) {
                     if (editorModel.getIndexOf(MultiValueDecisionType.KEEP_NONE) > 0) {
                         editorModel.setSelectedItem(MultiValueDecisionType.KEEP_NONE);
                         fireGotoNextDecision();
                     }
-                } else if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                } else if (e.getID() == KeyEvent.KEY_PRESSED && keyCode == KeyEvent.VK_ESCAPE) {
                     cancelCellEditing();
                 }
                 super.processKeyEvent(e);
@@ -121,7 +122,7 @@ public class MultiValueCellEditor extends AbstractCellEditor implements TableCel
                 new ItemListener() {
                     @Override
                     public void itemStateChanged(ItemEvent e) {
-                        if(e.getStateChange() == ItemEvent.SELECTED)
+                        if (e.getStateChange() == ItemEvent.SELECTED)
                             fireEditingStopped();
                     }
                 }
@@ -174,7 +175,7 @@ public class MultiValueCellEditor extends AbstractCellEditor implements TableCel
 
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-        MultiValueResolutionDecision decision = (MultiValueResolutionDecision)value;
+        MultiValueResolutionDecision decision = (MultiValueResolutionDecision) value;
         initEditor(decision);
         editor.requestFocus();
         return editor;

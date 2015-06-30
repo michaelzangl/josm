@@ -21,7 +21,7 @@ public final class Cascade implements Cloneable {
 
     public static final Cascade EMPTY_CASCADE = new Cascade();
 
-    protected Map<String, Object> prop = new HashMap<>();
+    private Map<String, Object> prop = new HashMap<>();
 
     private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})");
 
@@ -163,7 +163,7 @@ public final class Cascade implements Cloneable {
         if (o instanceof List) {
             List<?> l = (List<?>) o;
             float[] a = new float[l.size()];
-            for (int i=0; i<l.size(); ++i) {
+            for (int i = 0; i < l.size(); ++i) {
                 Float f = toFloat(l.get(i));
                 if (f == null)
                     return null;
@@ -174,7 +174,7 @@ public final class Cascade implements Cloneable {
         }
         Float f = toFloat(o);
         if (f != null)
-            return new float[] { f };
+            return new float[] {f};
         return null;
     }
 
@@ -212,7 +212,7 @@ public final class Cascade implements Cloneable {
             if (val instanceof float[]) {
                 res.append(Arrays.toString((float[]) val));
             } else if (val instanceof Color) {
-                res.append(Utils.toString((Color)val));
+                res.append(Utils.toString((Color) val));
             } else if (val != null) {
                 res.append(val);
             }

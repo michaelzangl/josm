@@ -500,11 +500,11 @@ public abstract class Main {
             panel.add(gettingStarted, BorderLayout.CENTER);
         }
         panel.setVisible(true);
-        redoUndoListener.commandChanged(0,0);
+        redoUndoListener.commandChanged(0, 0);
 
         Main.map = map;
 
-        for (MapFrameListener listener : mapFrameListeners ) {
+        for (MapFrameListener listener : mapFrameListeners) {
             listener.mapFrameInitialized(old, map);
         }
         if (map == null && currentProgressMonitor != null) {
@@ -528,12 +528,15 @@ public abstract class Main {
 
     private static volatile InitStatusListener initListener = null;
 
-    public static interface InitStatusListener {
+    public interface InitStatusListener {
 
-        void updateStatus(String event);
+        Object updateStatus(String event);
+
+        void finish(Object status);
     }
 
     public static void setInitStatusListener(InitStatusListener listener) {
+        CheckParameterUtil.ensureParameterNotNull(listener);
         initListener = listener;
     }
 
@@ -544,17 +547,22 @@ public abstract class Main {
         main = this;
         isOpenjdk = System.getProperty("java.vm.name").toUpperCase(Locale.ENGLISH).indexOf("OPENJDK") != -1;
 
-        if (initListener != null) {
-            initListener.updateStatus(tr("Executing platform startup hook"));
-        }
-        platform.startupHook();
+        new InitializationTask(tr("Executing platform startup hook")) {
+            @Override
+            public void initialize() {
+                platform.startupHook();
+            }
+        }.call();
 
-        if (initListener != null) {
-            initListener.updateStatus(tr("Building main menu"));
-        }
-        contentPanePrivate.add(panel, BorderLayout.CENTER);
-        panel.add(gettingStarted, BorderLayout.CENTER);
-        menu = new MainMenu();
+        new InitializationTask(tr("Building main menu")) {
+
+            @Override
+            public void initialize() {
+                contentPanePrivate.add(panel, BorderLayout.CENTER);
+                panel.add(gettingStarted, BorderLayout.CENTER);
+                menu = new MainMenu();
+            }
+        }.call();
 
         undoRedo.addCommandQueueListener(redoUndoListener);
 
@@ -570,7 +578,7 @@ public abstract class Main {
         tasks.add(new InitializationTask(tr("Initializing OSM API")) {
 
             @Override
-            public void initialize() throws Exception {
+            public void initialize() {
                 // We try to establish an API connection early, so that any API
                 // capabilities are already known to the editor instance. However
                 // if it goes wrong that's not critical at this stage.
@@ -585,7 +593,7 @@ public abstract class Main {
         tasks.add(new InitializationTask(tr("Initializing validator")) {
 
             @Override
-            public void initialize() throws Exception {
+            public void initialize() {
                 validator = new OsmValidator();
                 MapView.addLayerChangeListener(validator);
             }
@@ -594,7 +602,7 @@ public abstract class Main {
         tasks.add(new InitializationTask(tr("Initializing presets")) {
 
             @Override
-            public void initialize() throws Exception {
+            public void initialize() {
                 TaggingPresets.initialize();
             }
         });
@@ -602,7 +610,7 @@ public abstract class Main {
         tasks.add(new InitializationTask(tr("Initializing map styles")) {
 
             @Override
-            public void initialize() throws Exception {
+            public void initialize() {
                 MapPaintPreference.initialize();
             }
         });
@@ -610,7 +618,7 @@ public abstract class Main {
         tasks.add(new InitializationTask(tr("Loading imagery preferences")) {
 
             @Override
-            public void initialize() throws Exception {
+            public void initialize() {
                 ImageryPreference.initialize();
             }
         });
@@ -669,14 +677,15 @@ public abstract class Main {
             }
         });
 
-        if (initListener != null) {
-            initListener.updateStatus(tr("Updating user interface"));
-        }
+        new InitializationTask(tr("Updating user interface")) {
 
-        toolbar.refreshToolbarControl();
-
-        toolbar.control.updateUI();
-        contentPanePrivate.updateUI();
+            @Override
+            public void initialize() {
+                toolbar.refreshToolbarControl();
+                toolbar.control.updateUI();
+                contentPanePrivate.updateUI();
+            }
+        }.call();
     }
 
     private abstract class InitializationTask implements Callable<Void> {
@@ -687,18 +696,17 @@ public abstract class Main {
             this.name = name;
         }
 
-        public abstract void initialize() throws Exception;
+        public abstract void initialize();
 
         @Override
-        public Void call() throws Exception {
+        public Void call() {
+            Object status = null;
             if (initListener != null) {
-                initListener.updateStatus(name);
+                status = initListener.updateStatus(name);
             }
-            final long startTime = System.currentTimeMillis();
             initialize();
-            if (isDebugEnabled()) {
-                final long elapsedTime = System.currentTimeMillis() - startTime;
-                Main.debug(tr("{0} completed in {1}", name, Utils.getDurationString(elapsedTime)));
+            if (initListener != null) {
+                initListener.finish(status);
             }
             return null;
         }
@@ -760,7 +768,7 @@ public abstract class Main {
         MapFrame mapFrame = new MapFrame(contentPanePrivate, viewportData);
         setMapFrame(mapFrame);
         if (firstLayer != null) {
-            mapFrame.selectMapMode((MapMode)mapFrame.getDefaultButtonAction(), firstLayer);
+            mapFrame.selectMapMode((MapMode) mapFrame.getDefaultButtonAction(), firstLayer);
         }
         mapFrame.initializeDialogsPane();
         // bootstrapping problem: make sure the layer list dialog is going to
@@ -896,7 +904,7 @@ public abstract class Main {
     protected static volatile WindowGeometry geometry;
     protected static int windowState = JFrame.NORMAL;
 
-    private final CommandQueueListener redoUndoListener = new CommandQueueListener(){
+    private final CommandQueueListener redoUndoListener = new CommandQueueListener() {
         @Override
         public void commandChanged(final int queueSize, final int redoSize) {
             menu.undo.setEnabled(queueSize > 0);
@@ -925,6 +933,9 @@ public abstract class Main {
                         break;
                     } catch (ClassNotFoundException ex) {
                         // Do nothing
+                        if (Main.isTraceEnabled()) {
+                            Main.trace(ex.getMessage());
+                        }
                     }
                 }
                 if (klass != null && LookAndFeel.class.isAssignableFrom(klass)) {
@@ -990,7 +1001,7 @@ public abstract class Main {
                                 JOptionPane.WARNING_MESSAGE
                                 );
                     }
-                    if (f!=null) {
+                    if (f != null) {
                         fileList.add(f);
                     }
                     break;
@@ -1000,7 +1011,7 @@ public abstract class Main {
                     break;
                 }
             }
-            if(!fileList.isEmpty()) {
+            if (!fileList.isEmpty()) {
                 OpenFileAction.openFiles(fileList, true);
             }
         }
@@ -1032,8 +1043,10 @@ public abstract class Main {
     }
 
     /**
-     * Asks user to perform "save layer" operations (save on disk and/or upload data to server) for all {@link AbstractModifiableLayer} before JOSM exits.
-     * @return {@code true} if there was nothing to save, or if the user wants to proceed to save operations. {@code false} if the user cancels.
+     * Asks user to perform "save layer" operations (save on disk and/or upload data to server) for all
+     * {@link AbstractModifiableLayer} before JOSM exits.
+     * @return {@code true} if there was nothing to save, or if the user wants to proceed to save operations.
+     *         {@code false} if the user cancels.
      * @since 2025
      */
     public static boolean saveUnsavedModifications() {
@@ -1046,7 +1059,8 @@ public abstract class Main {
      *
      * @param selectedLayers The layers to check. Only instances of {@link AbstractModifiableLayer} are considered.
      * @param exit {@code true} if JOSM is exiting, {@code false} otherwise.
-     * @return {@code true} if there was nothing to save, or if the user wants to proceed to save operations. {@code false} if the user cancels.
+     * @return {@code true} if there was nothing to save, or if the user wants to proceed to save operations.
+     *         {@code false} if the user cancels.
      * @since 5519
      */
     public static boolean saveUnsavedModifications(Iterable<? extends Layer> selectedLayers, boolean exit) {
@@ -1056,7 +1070,7 @@ public abstract class Main {
             if (!(l instanceof AbstractModifiableLayer)) {
                 continue;
             }
-            AbstractModifiableLayer odl = (AbstractModifiableLayer)l;
+            AbstractModifiableLayer odl = (AbstractModifiableLayer) l;
             if ((odl.requiresSaveToFile() || (odl.requiresUploadToServer() && !odl.isUploadDiscouraged())) && odl.isModified()) {
                 layersWithUnmodifiedChanges.add(odl);
             }
@@ -1127,10 +1141,10 @@ public abstract class Main {
      * @return The guessed parameter type
      */
     private static DownloadParamType paramType(String s) {
-        if(s.startsWith("http:") || s.startsWith("https:")) return DownloadParamType.httpUrl;
-        if(s.startsWith("file:")) return DownloadParamType.fileUrl;
+        if (s.startsWith("http:") || s.startsWith("https:")) return DownloadParamType.httpUrl;
+        if (s.startsWith("file:")) return DownloadParamType.fileUrl;
         String coorPattern = "\\s*[+-]?[0-9]+(\\.[0-9]+)?\\s*";
-        if(s.matches(coorPattern+"(,"+coorPattern+"){3}")) return DownloadParamType.bounds;
+        if (s.matches(coorPattern+"(,"+coorPattern+") {3}")) return DownloadParamType.bounds;
         // everything else must be a file name
         return DownloadParamType.fileName;
     }
@@ -1163,8 +1177,8 @@ public abstract class Main {
         final StringTokenizer st = new StringTokenizer(s, ",");
         if (st.countTokens() == 4) {
             Bounds b = new Bounds(
-                    new LatLon(Double.parseDouble(st.nextToken()),Double.parseDouble(st.nextToken())),
-                    new LatLon(Double.parseDouble(st.nextToken()),Double.parseDouble(st.nextToken()))
+                    new LatLon(Double.parseDouble(st.nextToken()), Double.parseDouble(st.nextToken())),
+                    new LatLon(Double.parseDouble(st.nextToken()), Double.parseDouble(st.nextToken()))
                     );
             downloadFromParamBounds(rawGps, b);
         }
@@ -1236,7 +1250,7 @@ public abstract class Main {
         private void handleComponentEvent(ComponentEvent e) {
             Component c = e.getComponent();
             if (c instanceof JFrame && c.isVisible()) {
-                if(Main.windowState == JFrame.NORMAL) {
+                if (Main.windowState == JFrame.NORMAL) {
                     Main.geometry = new WindowGeometry((JFrame) c);
                 } else {
                     Main.geometry.fixScreen((JFrame) c);
@@ -1247,7 +1261,7 @@ public abstract class Main {
 
     protected static void addListener() {
         parent.addComponentListener(new WindowPositionSizeListener());
-        ((JFrame)parent).addWindowStateListener(new WindowPositionSizeListener());
+        ((JFrame) parent).addWindowStateListener(new WindowPositionSizeListener());
     }
 
     /**
@@ -1345,9 +1359,9 @@ public abstract class Main {
         if (newValue == null ^ oldValue == null
                 || (newValue != null && oldValue != null && !Objects.equals(newValue.toCode(), oldValue.toCode()))) {
 
-            synchronized(Main.class) {
+            synchronized (Main.class) {
                 Iterator<WeakReference<ProjectionChangeListener>> it = listeners.iterator();
-                while (it.hasNext()){
+                while (it.hasNext()) {
                     WeakReference<ProjectionChangeListener> wr = it.next();
                     ProjectionChangeListener listener = wr.get();
                     if (listener == null) {
@@ -1387,9 +1401,9 @@ public abstract class Main {
      */
     public static void removeProjectionChangeListener(ProjectionChangeListener listener) {
         if (listener == null) return;
-        synchronized(Main.class){
+        synchronized (Main.class) {
             Iterator<WeakReference<ProjectionChangeListener>> it = listeners.iterator();
-            while (it.hasNext()){
+            while (it.hasNext()) {
                 WeakReference<ProjectionChangeListener> wr = it.next();
                 // remove the listener - and any other listener which got garbage
                 // collected in the meantime
@@ -1407,7 +1421,7 @@ public abstract class Main {
      * or comes back to JOSM. Window switches from one JOSM window to another
      * are not reported.
      */
-    public static interface WindowSwitchListener {
+    public interface WindowSwitchListener {
         /**
          * Called when the user activates a window of another application.
          */
@@ -1451,9 +1465,9 @@ public abstract class Main {
      */
     public static void removeWindowSwitchListener(WindowSwitchListener listener) {
         if (listener == null) return;
-        synchronized (Main.class){
+        synchronized (Main.class) {
             Iterator<WeakReference<WindowSwitchListener>> it = windowSwitchListeners.iterator();
-            while (it.hasNext()){
+            while (it.hasNext()) {
                 WeakReference<WindowSwitchListener> wr = it.next();
                 // remove the listener - and any other listener which got garbage
                 // collected in the meantime
@@ -1525,7 +1539,7 @@ public abstract class Main {
                 // fire WindowSwitchListeners
                 synchronized (Main.class) {
                     Iterator<WeakReference<WindowSwitchListener>> it = windowSwitchListeners.iterator();
-                    while (it.hasNext()){
+                    while (it.hasNext()) {
                         WeakReference<WindowSwitchListener> wr = it.next();
                         WindowSwitchListener listener = wr.get();
                         if (listener == null) {
@@ -1554,7 +1568,7 @@ public abstract class Main {
                 // fire WindowSwitchListeners
                 synchronized (Main.class) {
                     Iterator<WeakReference<WindowSwitchListener>> it = windowSwitchListeners.iterator();
-                    while (it.hasNext()){
+                    while (it.hasNext()) {
                         WeakReference<WindowSwitchListener> wr = it.next();
                         WindowSwitchListener listener = wr.get();
                         if (listener == null) {
@@ -1748,6 +1762,16 @@ public abstract class Main {
      */
     public static boolean setOffline(OnlineResource r) {
         return OFFLINE_RESOURCES.add(r);
+    }
+
+    /**
+     * Sets the given online resource to online state.
+     * @param r the online resource
+     * @return {@code true} if {@code r} was offline
+     * @since 8506
+     */
+    public static boolean setOnline(OnlineResource r) {
+        return OFFLINE_RESOURCES.remove(r);
     }
 
     /**

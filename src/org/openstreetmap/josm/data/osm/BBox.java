@@ -32,8 +32,8 @@ public class BBox {
      * Constructs a new {@code BBox} defined by points <code>a</code> and <code>b</code>.
      * Result is minimal BBox containing both points.
      *
-     * @param a
-     * @param b
+     * @param a first point
+     * @param b second point
      */
     public BBox(LatLon a, LatLon b) {
         this(a.lon(), a.lat(), b.lon(), b.lat());
@@ -266,13 +266,13 @@ public class BBox {
 
     @Override
     public int hashCode() {
-        return (int)(ymin * xmin);
+        return (int) (ymin * xmin);
     }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof BBox) {
-            BBox b = (BBox)o;
+            BBox b = (BBox) o;
             return b.xmax == xmax && b.ymax == ymax
                     && b.xmin == xmin && b.ymin == ymin;
         } else

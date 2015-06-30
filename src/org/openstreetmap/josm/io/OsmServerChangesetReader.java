@@ -78,9 +78,9 @@ public class OsmServerChangesetReader extends OsmServerReader {
             } catch (IOException e) {
                 Main.warn(e);
             }
-        } catch(OsmTransferException e) {
+        } catch (OsmTransferException e) {
             throw e;
-        } catch(IllegalDataException e) {
+        } catch (IllegalDataException e) {
             throw new OsmTransferException(e);
         } finally {
             monitor.finishTask();
@@ -107,7 +107,7 @@ public class OsmServerChangesetReader extends OsmServerReader {
         }
         Changeset result = null;
         try {
-            monitor.beginTask(tr("Reading changeset {0} ...",id));
+            monitor.beginTask(tr("Reading changeset {0} ...", id));
             try (InputStream in = getChangesetInputStream(id, includeDiscussion, monitor)) {
                 if (in == null)
                     return null;
@@ -119,9 +119,9 @@ public class OsmServerChangesetReader extends OsmServerReader {
             } catch (IOException e) {
                 Main.warn(e);
             }
-        } catch(OsmTransferException e) {
+        } catch (OsmTransferException e) {
             throw e;
-        } catch(IllegalDataException e) {
+        } catch (IllegalDataException e) {
             throw new OsmTransferException(e);
         } finally {
             monitor.finishTask();
@@ -140,17 +140,18 @@ public class OsmServerChangesetReader extends OsmServerReader {
      * @throws IllegalArgumentException if id &lt;= 0
      * @since 7704
      */
-    public List<Changeset> readChangesets(Collection<Integer> ids, boolean includeDiscussion, ProgressMonitor monitor) throws OsmTransferException {
+    public List<Changeset> readChangesets(Collection<Integer> ids, boolean includeDiscussion, ProgressMonitor monitor)
+            throws OsmTransferException {
         if (ids == null)
             return Collections.emptyList();
         if (monitor == null) {
             monitor = NullProgressMonitor.INSTANCE;
         }
         try {
-            monitor.beginTask(trn("Downloading {0} changeset ...", "Downloading {0} changesets ...",ids.size(),ids.size()));
+            monitor.beginTask(trn("Downloading {0} changeset ...", "Downloading {0} changesets ...", ids.size(), ids.size()));
             monitor.setTicksCount(ids.size());
             List<Changeset> ret = new ArrayList<>();
-            int i=0;
+            int i = 0;
             for (int id : ids) {
                 if (id <= 0) {
                     continue;
@@ -171,9 +172,9 @@ public class OsmServerChangesetReader extends OsmServerReader {
                 monitor.worked(1);
             }
             return ret;
-        } catch(OsmTransferException e) {
+        } catch (OsmTransferException e) {
             throw e;
-        } catch(IllegalDataException e) {
+        } catch (IllegalDataException e) {
             throw new OsmTransferException(e);
         } finally {
             monitor.finishTask();
@@ -191,7 +192,8 @@ public class OsmServerChangesetReader extends OsmServerReader {
      */
     public ChangesetDataSet downloadChangeset(int id, ProgressMonitor monitor) throws OsmTransferException {
         if (id <= 0)
-            throw new IllegalArgumentException(MessageFormat.format("Expected value of type integer > 0 for parameter ''{0}'', got {1}", "id", id));
+            throw new IllegalArgumentException(
+                    MessageFormat.format("Expected value of type integer > 0 for parameter ''{0}'', got {1}", "id", id));
         if (monitor == null) {
             monitor = NullProgressMonitor.INSTANCE;
         }
@@ -209,7 +211,7 @@ public class OsmServerChangesetReader extends OsmServerReader {
             } catch (IOException e) {
                 Main.warn(e);
             }
-        } catch(XmlParsingException e) {
+        } catch (XmlParsingException e) {
             throw new OsmTransferException(e);
         } finally {
             monitor.finishTask();

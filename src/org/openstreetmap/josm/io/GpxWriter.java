@@ -170,7 +170,7 @@ public class GpxWriter extends XmlWriter implements GpxConstants {
         Bounds bounds = data.recalculateBounds();
         if (bounds != null) {
             String b = "minlat=\"" + bounds.getMinLat() + "\" minlon=\"" + bounds.getMinLon() +
-            "\" maxlat=\"" + bounds.getMaxLat() + "\" maxlon=\"" + bounds.getMaxLon() + "\"" ;
+            "\" maxlat=\"" + bounds.getMaxLat() + "\" maxlon=\"" + bounds.getMaxLon() + "\"";
             inline("bounds", b);
         }
 
@@ -249,7 +249,7 @@ public class GpxWriter extends XmlWriter implements GpxConstants {
      * else do nothing.
      */
     private void simpleTag(String tag, String content) {
-        if (content != null && content.length() > 0) {
+        if (content != null && !content.isEmpty()) {
             open(tag);
             out.print(encode(content));
             out.println("</" + tag + ">");

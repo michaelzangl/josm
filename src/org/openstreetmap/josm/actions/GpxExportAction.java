@@ -42,7 +42,7 @@ public class GpxExportAction extends DiskAccessAction {
      * @return The layer to export, either a {@link GpxLayer} or {@link OsmDataLayer}.
      */
     protected Layer getLayer() {
-        if(!Main.isDisplayingMapView())
+        if (!Main.isDisplayingMapView())
             return null;
         Layer layer = Main.map.mapView.getActiveLayer();
         return (layer instanceof GpxLayer || layer instanceof OsmDataLayer) ? layer : null;
@@ -78,8 +78,9 @@ public class GpxExportAction extends DiskAccessAction {
      */
     public void export(Layer layer) {
         CheckParameterUtil.ensureParameterNotNull(layer, "layer");
-        if (! (layer instanceof OsmDataLayer) && ! (layer instanceof GpxLayer))
-            throw new IllegalArgumentException(MessageFormat.format("Expected instance of OsmDataLayer or GpxLayer. Got ''{0}''.", layer.getClass().getName()));
+        if (!(layer instanceof OsmDataLayer) && !(layer instanceof GpxLayer))
+            throw new IllegalArgumentException(MessageFormat.format("Expected instance of OsmDataLayer or GpxLayer. Got ''{0}''.",
+                    layer.getClass().getName()));
 
         File file = createAndOpenSaveFileChooser(tr("Export GPX file"), GpxImporter.FILE_FILTER);
         if (file == null)

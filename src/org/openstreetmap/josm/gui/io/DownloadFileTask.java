@@ -76,7 +76,6 @@ public class DownloadFileTask extends PleaseWaitRunnable{
         downloadConnection = null;
     }
 
-
     @Override
     protected void cancel() {
         this.canceled = true;
@@ -101,7 +100,7 @@ public class DownloadFileTask extends PleaseWaitRunnable{
 
             URL url = new URL(address);
             int size;
-            synchronized(this) {
+            synchronized (this) {
                 downloadConnection = Utils.openHttpConnection(url);
                 downloadConnection.setRequestProperty("Cache-Control", "no-cache");
                 downloadConnection.connect();
@@ -109,23 +108,23 @@ public class DownloadFileTask extends PleaseWaitRunnable{
             }
 
             progressMonitor.setTicksCount(100);
-            progressMonitor.subTask(tr("Downloading File {0}: {1} bytes...", file.getName(),size));
+            progressMonitor.subTask(tr("Downloading File {0}: {1} bytes...", file.getName(), size));
 
             try (
                 InputStream in = downloadConnection.getInputStream();
                 OutputStream out = new FileOutputStream(file)
             ) {
                 byte[] buffer = new byte[32768];
-                int count=0;
-                int p1=0, p2=0;
+                int count = 0;
+                int p1 = 0, p2 = 0;
                 for (int read = in.read(buffer); read != -1; read = in.read(buffer)) {
                     out.write(buffer, 0, read);
-                    count+=read;
+                    count += read;
                     if (canceled) break;
                     p2 = 100 * count / size;
-                    if (p2!=p1) {
+                    if (p2 != p1) {
                         progressMonitor.setTicks(p2);
-                        p1=p2;
+                        p1 = p2;
                     }
                 }
             }
@@ -137,8 +136,9 @@ public class DownloadFileTask extends PleaseWaitRunnable{
                     file.delete();
                 }
             }
-        } catch(MalformedURLException e) {
-            String msg = tr("Cannot download file ''{0}''. Its download link ''{1}'' is not a valid URL. Skipping download.", file.getName(), address);
+        } catch (MalformedURLException e) {
+            String msg = tr("Cannot download file ''{0}''. Its download link ''{1}'' is not a valid URL. Skipping download.",
+                    file.getName(), address);
             Main.warn(msg);
             throw new DownloadException(msg, e);
         } catch (IOException e) {
@@ -155,7 +155,7 @@ public class DownloadFileTask extends PleaseWaitRunnable{
         if (canceled) return;
         try {
             download();
-        } catch(DownloadException e) {
+        } catch (DownloadException e) {
             Main.error(e);
         }
     }
@@ -172,9 +172,9 @@ public class DownloadFileTask extends PleaseWaitRunnable{
     /**
      * Recursive unzipping function
      * TODO: May be placed somewhere else - Tools.Utils?
-     * @param file
-     * @param dir
-     * @throws IOException
+     * @param file zip file
+     * @param dir output directory
+     * @throws IOException if any I/O error occurs
      */
     public static void unzipFileRecursively(File file, String dir) throws IOException {
         try (ZipFile zf = new ZipFile(file, StandardCharsets.UTF_8)) {

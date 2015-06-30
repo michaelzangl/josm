@@ -12,7 +12,6 @@
 
     <property name="javacc.home" location="../tools"/>
     <property name="mapcss.dir" location="../src/org/openstreetmap/josm/gui/mappaint/mapcss"/>
-    <property name="imagerytypes.dir" location="${src.dir}/org/openstreetmap/josm/data/imagery/types"/>
     <!-- For Windows-specific stuff -->
     <condition property="isWindows">
         <os family="Windows"/>
@@ -108,9 +107,6 @@ Build-Date: ${build.tstamp}
         <uptodate property="javacc.notRequired" targetfile="${mapcss.dir}/parsergen/MapCSSParser.java" >
             <srcfiles dir="${mapcss.dir}" includes="MapCSSParser.jj"/>
         </uptodate>
-        <uptodate property="jaxb.notRequired" targetfile="${src.dir}/org/openstreetmap/josm/data/imagery/types/package-info.java" >
-            <srcfiles dir="../data_nodist" includes="wms-cache.xsd"/>
-        </uptodate>
     </target>	
     <target name="javacc" depends="check-javacc" unless="javacc.notRequired">
         <mkdir dir="${mapcss.dir}/parsergen"/>
@@ -126,22 +122,7 @@ Build-Date: ${build.tstamp}
             <arg value="${mapcss.dir}/MapCSSParser.jj"/>
         </exec>
     </target>
-    <target name="-jaxb_win" if="isWindows">
-        <property name="xjc" value="${java.home}\..\bin\xjc.exe" />
-    </target>
-    <target name="-jaxb_nix" unless="isWindows">
-        <property name="xjc" value="${java.home}/../bin/xjc" />
-    </target>
-    <target name="jaxb" depends="init, -jaxb_win, -jaxb_nix" unless="jaxb.notRequired">
-        <exec executable="${xjc}" failonerror="true">
-            <arg value="-d"/>
-            <arg value="${src.dir}"/>
-            <arg value="-encoding"/>
-            <arg value="UTF-8"/>
-            <arg value="../data_nodist/wms-cache.xsd"/>
-        </exec>
-    </target>
-    <target name="-pre-compile" depends="javacc,jaxb">
+    <target name="-pre-compile" depends="javacc">
 <!--        <javacc target="${mapcss.dir}/MapCSSParser.jj" javacchome="${javacc.home}" outputdirectory="${mapcss.dir}/parsergen"/>-->
     </target>    
 </project>

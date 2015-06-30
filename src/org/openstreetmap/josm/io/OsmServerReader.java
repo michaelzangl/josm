@@ -116,7 +116,8 @@ public abstract class OsmServerReader extends OsmConnection {
      * @throws OsmTransferException if data transfer errors occur
      */
     @SuppressWarnings("resource")
-    protected InputStream getInputStreamRaw(String urlStr, ProgressMonitor progressMonitor, String reason, boolean uncompressAccordingToContentDisposition) throws OsmTransferException {
+    protected InputStream getInputStreamRaw(String urlStr, ProgressMonitor progressMonitor, String reason,
+            boolean uncompressAccordingToContentDisposition) throws OsmTransferException {
         try {
             OnlineResource.JOSM_WEBSITE.checkOfflineAccess(urlStr, Main.getJOSMWebsite());
             OnlineResource.OSM_API.checkOfflineAccess(urlStr, Main.pref.get("osm-server.url", OsmApi.DEFAULT_API_URL));
@@ -124,13 +125,13 @@ public abstract class OsmServerReader extends OsmConnection {
             URL url = null;
             try {
                 url = new URL(urlStr.replace(" ", "%20"));
-            } catch(MalformedURLException e) {
+            } catch (MalformedURLException e) {
                 throw new OsmTransferException(e);
             }
             try {
                 // fix #7640, see http://www.tikalk.com/java/forums/httpurlconnection-disable-keep-alive
                 activeConnection = Utils.openHttpConnection(url, false);
-            } catch(Exception e) {
+            } catch (Exception e) {
                 throw new OsmTransferException(tr("Failed to open connection to API {0}.", url.toExternalForm()), e);
             }
             if (cancel) {
@@ -147,7 +148,7 @@ public abstract class OsmServerReader extends OsmConnection {
                 activeConnection.setRequestProperty("Accept-Encoding", "gzip, deflate");
             }
 
-            activeConnection.setConnectTimeout(Main.pref.getInteger("socket.timeout.connect",15)*1000);
+            activeConnection.setConnectTimeout(Main.pref.getInteger("socket.timeout.connect", 15)*1000);
 
             try {
                 if (reason != null && !reason.isEmpty()) {
@@ -158,7 +159,8 @@ public abstract class OsmServerReader extends OsmConnection {
                 activeConnection.connect();
             } catch (Exception e) {
                 Main.error(e);
-                OsmTransferException ote = new OsmTransferException(tr("Could not connect to the OSM server. Please check your internet connection."), e);
+                OsmTransferException ote = new OsmTransferException(
+                        tr("Could not connect to the OSM server. Please check your internet connection."), e);
                 ote.setUrl(url.toString());
                 throw ote;
             }
@@ -167,7 +169,7 @@ public abstract class OsmServerReader extends OsmConnection {
                     Main.debug("RESPONSE: "+activeConnection.getHeaderFields());
                 }
                 if (activeConnection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED)
-                    throw new OsmApiException(HttpURLConnection.HTTP_UNAUTHORIZED,null,null);
+                    throw new OsmApiException(HttpURLConnection.HTTP_UNAUTHORIZED, null, null);
 
                 if (activeConnection.getResponseCode() == HttpURLConnection.HTTP_PROXY_AUTH)
                     throw new OsmTransferCanceledException("Proxy Authentication Required");
@@ -181,12 +183,12 @@ public abstract class OsmServerReader extends OsmConnection {
                         if (i != null) {
                             BufferedReader in = new BufferedReader(new InputStreamReader(i, StandardCharsets.UTF_8));
                             String s;
-                            while((s = in.readLine()) != null) {
+                            while ((s = in.readLine()) != null) {
                                 errorBody.append(s);
                                 errorBody.append('\n');
                             }
                         }
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         errorBody.append(tr("Reading error text failed."));
                     }
 
@@ -365,9 +367,9 @@ public abstract class OsmServerReader extends OsmConnection {
     /**
      * Downloads notes from a given raw URL. The URL is assumed to be complete and no API limits are added
      *
-     * @param progressMonitor
+     * @param progressMonitor progress monitor
      * @return A list of notes parsed from the URL
-     * @throws OsmTransferException
+     * @throws OsmTransferException if any error occurs during dialog with OSM API
      */
     public List<Note> parseRawNotes(final ProgressMonitor progressMonitor) throws OsmTransferException {
         return null;
@@ -375,9 +377,9 @@ public abstract class OsmServerReader extends OsmConnection {
 
     /**
      * Download notes from a URL that contains a bzip2 compressed notes dump file
-     * @param progressMonitor
+     * @param progressMonitor progress monitor
      * @return A list of notes parsed from the URL
-     * @throws OsmTransferException
+     * @throws OsmTransferException if any error occurs during dialog with OSM API
      */
     public List<Note> parseRawNotesBzip2(final ProgressMonitor progressMonitor) throws OsmTransferException {
         return null;

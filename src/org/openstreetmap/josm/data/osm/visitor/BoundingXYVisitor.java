@@ -64,7 +64,7 @@ public class BoundingXYVisitor extends AbstractVisitor {
     public void visit(LatLon latlon) {
         if (latlon != null) {
             if (latlon instanceof CachedLatLon) {
-                visit(((CachedLatLon)latlon).getEastNorth());
+                visit(((CachedLatLon) latlon).getEastNorth());
             } else {
                 visit(Main.getProjection().latlon2eastNorth(latlon));
             }
@@ -106,7 +106,7 @@ public class BoundingXYVisitor extends AbstractVisitor {
      * If the bounding box has not been set (<code>min</code> or <code>max</code>
      * equal <code>null</code>) this method does not do anything.
      *
-     * @param enlargeDegree
+     * @param enlargeDegree number of degrees to enlarge on each side
      */
     public void enlargeBoundingBox(double enlargeDegree) {
         if (bounds == null)
@@ -140,7 +140,7 @@ public class BoundingXYVisitor extends AbstractVisitor {
      * If the bounding box has not been set (<code>min</code> or <code>max</code>
      * equal <code>null</code>) this method does not do anything.
      *
-     * @param maxEnlargePercent
+     * @param maxEnlargePercent maximum enlargement in percentage (100.0 for 100%)
      */
     public void enlargeBoundingBoxLogarithmically(double maxEnlargePercent) {
         if (bounds == null)
@@ -178,8 +178,8 @@ public class BoundingXYVisitor extends AbstractVisitor {
         visit(bounds.getMax().add(+en_size/2, +en_size/2));
     }
 
-
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "BoundingXYVisitor["+bounds+"]";
     }
 

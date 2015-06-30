@@ -14,25 +14,40 @@ import org.openstreetmap.josm.data.coor.LatLon;
 public final class Ellipsoid {
 
     /**
+     * Airy 1830
+     */
+    public static final Ellipsoid Airy = Ellipsoid.create_a_b(6377563.396, 6356256.910);
+
+    /**
+     * Modified Airy 1849
+     */
+    public static final Ellipsoid AiryMod = Ellipsoid.create_a_b(6377340.189, 6356034.446);
+
+    /**
+     * Australian National Spheroid (Australian Natl & S. Amer. 1969)
+     * same as GRS67 Modified
+     */
+    public static final Ellipsoid AustSA = Ellipsoid.create_a_rf(6378160.0, 298.25);
+
+    /**
+     * Bessel 1841 ellipsoid
+     */
+    public static final Ellipsoid Bessel1841 = Ellipsoid.create_a_rf(6377397.155, 299.1528128);
+
+    /**
      * Clarke 1866 ellipsoid
      */
-    public static final Ellipsoid clarke1866 = Ellipsoid.create_a_b(6378206.4, 6356583.8);
+    public static final Ellipsoid Clarke1866 = Ellipsoid.create_a_b(6378206.4, 6356583.8);
 
     /**
      * Clarke 1880 IGN (French national geographic institute)
      */
-    public static final Ellipsoid clarkeIGN = Ellipsoid.create_a_b(6378249.2, 6356515.0);
-
-    /**
-     * Hayford's ellipsoid 1909 (ED50 system)<br>
-     * Proj.4 code: intl
-     */
-    public static final Ellipsoid hayford = Ellipsoid.create_a_rf(6378388.0, 297.0);
+    public static final Ellipsoid ClarkeIGN = Ellipsoid.create_a_b(6378249.2, 6356515.0);
 
     /**
      * GRS67 ellipsoid
      */
-    public static final Ellipsoid GRS67 = Ellipsoid.create_a_rf(6378160.0, 298.247167472);
+    public static final Ellipsoid GRS67 = Ellipsoid.create_a_rf(6378160.0, 298.247167427);
 
     /**
      * GRS80 ellipsoid
@@ -40,14 +55,32 @@ public final class Ellipsoid {
     public static final Ellipsoid GRS80 = Ellipsoid.create_a_rf(6378137.0, 298.257222101);
 
     /**
+     * Hayford's ellipsoid 1909 (ED50 system)
+     * Also known as International 1924
+     * Proj.4 code: intl
+     */
+    public static final Ellipsoid Hayford = Ellipsoid.create_a_rf(6378388.0, 297.0);
+
+    /**
+     * Helmert 1906
+     */
+    public static final Ellipsoid Helmert = Ellipsoid.create_a_rf(6378200.0, 298.3);
+
+    /**
+     * Krassowsky 1940 ellipsoid
+     */
+    public static final Ellipsoid Krassowsky = Ellipsoid.create_a_rf(6378245.0, 298.3);
+
+    /**
+     * WGS72 ellipsoid
+     */
+    public static final Ellipsoid WGS72 = Ellipsoid.create_a_rf(6378135.0, 298.26);
+
+    /**
      * WGS84 ellipsoid
      */
     public static final Ellipsoid WGS84 = Ellipsoid.create_a_rf(6378137.0, 298.257223563);
 
-    /**
-     * Bessel 1841 ellipsoid
-     */
-    public static final Ellipsoid Bessel1841 = Ellipsoid.create_a_rf(6377397.155, 299.1528128);
 
     /**
      * half long axis
@@ -217,7 +250,7 @@ public final class Ellipsoid {
     public double latitudeIsometric(double phi, double e) {
         double v1 = 1-e*Math.sin(phi);
         double v2 = 1+e*Math.sin(phi);
-        return Math.log(Math.tan(Math.PI/4+phi/2)*Math.pow(v1/v2,e/2));
+        return Math.log(Math.tan(Math.PI/4+phi/2)*Math.pow(v1/v2, e/2));
     }
 
     /**
@@ -228,7 +261,7 @@ public final class Ellipsoid {
     public double latitudeIsometric(double phi) {
         double v1 = 1-e*Math.sin(phi);
         double v2 = 1+e*Math.sin(phi);
-        return Math.log(Math.tan(Math.PI/4+phi/2)*Math.pow(v1/v2,e/2));
+        return Math.log(Math.tan(Math.PI/4+phi/2)*Math.pow(v1/v2, e/2));
     }
 
     /**
@@ -241,11 +274,11 @@ public final class Ellipsoid {
         double lat0 = 2*Math.atan(Math.exp(latIso))-Math.PI/2;
         double lati = lat0;
         double lati1 = 1.0; // random value to start the iterative processus
-        while(Math.abs(lati1-lati)>=epsilon) {
+        while (Math.abs(lati1-lati) >= epsilon) {
             lati = lati1;
             double v1 = 1+e*Math.sin(lati);
             double v2 = 1-e*Math.sin(lati);
-            lati1 = 2*Math.atan(Math.pow(v1/v2,e/2)*Math.exp(latIso))-Math.PI/2;
+            lati1 = 2*Math.atan(Math.pow(v1/v2, e/2)*Math.exp(latIso))-Math.PI/2;
         }
         return lati1;
     }

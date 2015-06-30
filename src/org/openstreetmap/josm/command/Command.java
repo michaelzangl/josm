@@ -44,10 +44,12 @@ public abstract class Command extends PseudoCommand {
         public void visit(Node n) {
             orig.put(n, n.save());
         }
+
         @Override
         public void visit(Way w) {
             orig.put(w, w.save());
         }
+
         @Override
         public void visit(Relation e) {
             orig.put(e, e.save());
@@ -67,7 +69,7 @@ public abstract class Command extends PseudoCommand {
          * Constructs a new {@code OldNodeState} for the given node.
          * @param node The node whose state has to be remembered
          */
-        public OldNodeState(Node node){
+        public OldNodeState(Node node) {
             latlon = node.getCoor();
             eastNorth = node.getEastNorth();
             modified = node.isModified();
@@ -98,6 +100,40 @@ public abstract class Command extends PseudoCommand {
          */
         public final boolean isModified() {
             return modified;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((eastNorth == null) ? 0 : eastNorth.hashCode());
+            result = prime * result + ((latlon == null) ? 0 : latlon.hashCode());
+            result = prime * result + (modified ? 1231 : 1237);
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            OldNodeState other = (OldNodeState) obj;
+            if (eastNorth == null) {
+                if (other.eastNorth != null)
+                    return false;
+            } else if (!eastNorth.equals(other.eastNorth))
+                return false;
+            if (latlon == null) {
+                if (other.latlon != null)
+                    return false;
+            } else if (!latlon.equals(other.latlon))
+                return false;
+            if (modified != other.modified)
+                return false;
+            return true;
         }
     }
 
@@ -245,7 +281,7 @@ public abstract class Command extends PseudoCommand {
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE,
                     JOptionPane.YES_OPTION);
-            if(!answer)
+            if (!answer)
                 return false;
         }
         if (incomplete) {
@@ -259,10 +295,40 @@ public abstract class Command extends PseudoCommand {
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE,
                     JOptionPane.YES_OPTION);
-            if(!answer)
+            if (!answer)
                 return false;
         }
         return true;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((cloneMap == null) ? 0 : cloneMap.hashCode());
+        result = prime * result + ((layer == null) ? 0 : layer.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Command other = (Command) obj;
+        if (cloneMap == null) {
+            if (other.cloneMap != null)
+                return false;
+        } else if (!cloneMap.equals(other.cloneMap))
+            return false;
+        if (layer == null) {
+            if (other.layer != null)
+                return false;
+        } else if (!layer.equals(other.layer))
+            return false;
+        return true;
+    }
 }

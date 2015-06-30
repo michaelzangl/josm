@@ -69,7 +69,8 @@ public class HistoryRelation extends HistoryOsmPrimitive{
      *
      * @throws IllegalArgumentException if preconditions are violated
      */
-    public HistoryRelation(long id, long version, boolean visible, User user, long changesetId, Date timestamp, List<RelationMemberData> members) {
+    public HistoryRelation(long id, long version, boolean visible, User user, long changesetId, Date timestamp,
+            List<RelationMemberData> members) {
         this(id, version, visible, user, changesetId, timestamp);
         if (members != null) {
             this.members.addAll(members);
@@ -111,7 +112,8 @@ public class HistoryRelation extends HistoryOsmPrimitive{
      */
     public RelationMemberData getRelationMember(int idx) throws IndexOutOfBoundsException  {
         if (idx < 0 || idx >= members.size())
-            throw new IndexOutOfBoundsException(MessageFormat.format("Parameter {0} not in range 0..{1}. Got ''{2}''.", "idx", members.size(),idx));
+            throw new IndexOutOfBoundsException(
+                    MessageFormat.format("Parameter {0} not in range 0..{1}. Got ''{2}''.", "idx", members.size(), idx));
         return members.get(idx);
     }
 

@@ -34,7 +34,7 @@ import org.openstreetmap.josm.tools.CheckParameterUtil;
  *     try {
  *        // wait for the task to complete
  *        taskFuture.get();
- *     } catch(Exception e) {
+ *     } catch (Exception e) {
  *        e.printStackTracek();
  *     }
  * </pre>
@@ -87,22 +87,21 @@ public class UploadLayerTask extends AbstractIOTask implements Runnable {
      * @param monitor a progress monitor
      * @throws OsmTransferException if we can't recover from the exception
      */
-    protected void recoverFromGoneOnServer(OsmApiPrimitiveGoneException e, ProgressMonitor monitor) throws OsmTransferException{
+    protected void recoverFromGoneOnServer(OsmApiPrimitiveGoneException e, ProgressMonitor monitor) throws OsmTransferException {
         if (!e.isKnownPrimitive()) throw e;
         OsmPrimitive p = getPrimitive(e.getPrimitiveType(), e.getPrimitiveId());
         if (p == null) throw e;
         if (p.isDeleted()) {
             // we tried to delete an already deleted primitive.
-            //
-            Main.warn(tr("Object ''{0}'' is already deleted on the server. Skipping this object and retrying to upload.", p.getDisplayName(DefaultNameFormatter.getInstance())));
+            Main.warn(tr("Object ''{0}'' is already deleted on the server. Skipping this object and retrying to upload.",
+                    p.getDisplayName(DefaultNameFormatter.getInstance())));
             processedPrimitives.addAll(writer.getProcessedPrimitives());
             processedPrimitives.add(p);
             toUpload.removeAll(processedPrimitives);
             return;
         }
-        // exception was thrown because we tried to *update* an already deleted
-        // primitive. We can't resolve this automatically. Re-throw exception,
-        // a conflict is going to be created later.
+        // exception was thrown because we tried to *update* an already deleted primitive. We can't resolve this automatically.
+        // Re-throw exception, a conflict is going to be created later.
         throw e;
     }
 
@@ -112,7 +111,7 @@ public class UploadLayerTask extends AbstractIOTask implements Runnable {
         APIDataSet ds = new APIDataSet(layer.data);
         try {
             ds.adjustRelationUploadOrder();
-        } catch(CyclicUploadDependencyException e) {
+        } catch (CyclicUploadDependencyException e) {
             setLastException(e);
             return;
         }
@@ -121,14 +120,14 @@ public class UploadLayerTask extends AbstractIOTask implements Runnable {
             return;
         writer = new OsmServerWriter();
         try {
-            while(true) {
+            while (true) {
                 try {
                     ProgressMonitor m = monitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false);
                     if (isCanceled()) return;
                     writer.uploadOsm(strategy, toUpload, changeset, m);
                     processedPrimitives.addAll(writer.getProcessedPrimitives()); // OsmPrimitive in => OsmPrimitive out
                     break;
-                } catch(OsmApiPrimitiveGoneException e) {
+                } catch (OsmApiPrimitiveGoneException e) {
                     recoverFromGoneOnServer(e, monitor);
                 }
             }

@@ -63,7 +63,7 @@ public class BasicChangesetQueryPanel extends JPanel {
         // -- most recent changes
         gc.fill = GridBagConstraints.NONE;
         gc.anchor = GridBagConstraints.NORTHWEST;
-        gc.insets = new Insets(0,0,5,3);
+        gc.insets = new Insets(0, 0, 5, 3);
         pnl.add(rbQueries.get(BasicQuery.MOST_RECENT_CHANGESETS), gc);
 
         gc.gridx = 1;
@@ -99,17 +99,18 @@ public class BasicChangesetQueryPanel extends JPanel {
         gc.gridx = 0;
         gc.gridy = 3;
         gc.gridwidth = 2;
-        gc.insets = new Insets(5,0,3,3);
+        gc.insets = new Insets(5, 0, 3, 3);
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.weightx = 1.0;
         pnl.add(cbMyChangesetsOnly = new JCheckBox(tr("Download my changesets only")), gc);
-        cbMyChangesetsOnly.setToolTipText(tr("<html>Select to restrict the query to your changesets only.<br>Unselect to include all changesets in the query.</html>"));
+        cbMyChangesetsOnly.setToolTipText(
+                tr("<html>Select to restrict the query to your changesets only.<br>Unselect to include all changesets in the query.</html>"));
 
         // grab remaining space
         gc.gridx = 0;
         gc.gridy = 4;
         gc.gridwidth = 2;
-        gc.insets = new Insets(5,0,3,3);
+        gc.insets = new Insets(5, 0, 3, 3);
         gc.fill = GridBagConstraints.BOTH;
         gc.weightx = 1.0;
         gc.weighty = 1.0;
@@ -129,8 +130,8 @@ public class BasicChangesetQueryPanel extends JPanel {
     }
 
     protected final void build() {
-        setLayout(new BorderLayout(0,5));
-        setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        setLayout(new BorderLayout(0, 5));
+        setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         add(buildInfoPanel(), BorderLayout.NORTH);
         add(buildQueriesPanel(), BorderLayout.CENTER);
     }
@@ -151,7 +152,8 @@ public class BasicChangesetQueryPanel extends JPanel {
         lbl = lblQueries.get(BasicQuery.MY_OPEN_CHANGESETS);
         if (JosmUserIdentityManager.getInstance().isAnonymous()) {
             rbQueries.get(BasicQuery.MY_OPEN_CHANGESETS).setEnabled(false);
-            lbl.setText(tr("<html>Download my open changesets<br><em>Disabled. Please enter your OSM user name in the preferences first.</em></html>"));
+            lbl.setText(tr("<html>Download my open changesets<br><em>Disabled. " +
+                    "Please enter your OSM user name in the preferences first.</em></html>"));
         } else {
             rbQueries.get(BasicQuery.MY_OPEN_CHANGESETS).setEnabled(true);
             lbl.setText(tr("<html>Download my open changesets</html>"));
@@ -162,7 +164,8 @@ public class BasicChangesetQueryPanel extends JPanel {
         lbl = lblQueries.get(BasicQuery.CHANGESETS_IN_MAP_VIEW);
         if (!Main.isDisplayingMapView()) {
             rbQueries.get(BasicQuery.CHANGESETS_IN_MAP_VIEW).setEnabled(false);
-            lbl.setText(tr("<html>Download changesets in the current map view.<br><em>Disabled. There is currently no map view active.</em></html>"));
+            lbl.setText(tr("<html>Download changesets in the current map view.<br><em>Disabled. " +
+                    "There is currently no map view active.</em></html>"));
         } else {
             rbQueries.get(BasicQuery.CHANGESETS_IN_MAP_VIEW).setEnabled(true);
             lbl.setText(tr("<html>Download changesets in the current map view</html>"));
@@ -189,8 +192,9 @@ public class BasicChangesetQueryPanel extends JPanel {
         } else {
             try {
                 q = BasicQuery.valueOf(BasicQuery.class, value);
-            } catch(IllegalArgumentException e) {
-                Main.warn(tr("Unexpected value for preference ''{0}'', got ''{1}''. Resetting to default query.","changeset-query.basic.query", value));
+            } catch (IllegalArgumentException e) {
+                Main.warn(tr("Unexpected value for preference ''{0}'', got ''{1}''. Resetting to default query.",
+                        "changeset-query.basic.query", value));
                 q = BasicQuery.MOST_RECENT_CHANGESETS;
             }
         }
@@ -252,7 +256,7 @@ public class BasicChangesetQueryPanel extends JPanel {
                 cbMyChangesetsOnly.setSelected(true);
                 cbMyChangesetsOnly.setEnabled(false);
             } else {
-                if (! cbMyChangesetsOnly.isEnabled()) {
+                if (!cbMyChangesetsOnly.isEnabled()) {
                     cbMyChangesetsOnly.setEnabled(true);
                 }
             }

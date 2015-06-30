@@ -57,7 +57,7 @@ public class WayNodesConflictResolverCommand extends ConflictResolveCommand {
         // replace the list of nodes of 'my' way by the list of merged nodes
         //
         for (Node n:mergedNodeList) {
-            if (! getLayer().data.getNodes().contains(n)) {
+            if (!getLayer().data.getNodes().contains(n)) {
                 Main.warn(tr("Main dataset does not include node {0}", n.toString()));
             }
         }
@@ -70,5 +70,36 @@ public class WayNodesConflictResolverCommand extends ConflictResolveCommand {
     public void fillModifiedData(Collection<OsmPrimitive> modified, Collection<OsmPrimitive> deleted,
             Collection<OsmPrimitive> added) {
         modified.add(conflict.getMy());
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((conflict == null) ? 0 : conflict.hashCode());
+        result = prime * result + ((mergedNodeList == null) ? 0 : mergedNodeList.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        WayNodesConflictResolverCommand other = (WayNodesConflictResolverCommand) obj;
+        if (conflict == null) {
+            if (other.conflict != null)
+                return false;
+        } else if (!conflict.equals(other.conflict))
+            return false;
+        if (mergedNodeList == null) {
+            if (other.mergedNodeList != null)
+                return false;
+        } else if (!mergedNodeList.equals(other.mergedNodeList))
+            return false;
+        return true;
     }
 }

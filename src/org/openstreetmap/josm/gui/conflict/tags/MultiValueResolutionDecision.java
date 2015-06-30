@@ -56,7 +56,8 @@ public class MultiValueResolutionDecision {
         if (tags.isEmpty())
             throw new IllegalArgumentException(MessageFormat.format("Parameter ''{0}'' must not be empty.", "tags"));
         if (tags.getKeys().size() != 1)
-            throw new IllegalArgumentException(MessageFormat.format("Parameter ''{0}'' with tags for exactly one key expected. Got {1}.", "tags", tags.getKeys().size()));
+            throw new IllegalArgumentException(MessageFormat.format("Parameter ''{0}'' with tags for exactly one key expected. Got {1}.",
+                    "tags", tags.getKeys().size()));
         this.tags = tags;
         autoDecide();
     }
@@ -305,7 +306,7 @@ public class MultiValueResolutionDecision {
         switch(type) {
         case SUM_ALL_NUMERIC: return new Tag(getKey(), tags.getSummedValues(getKey()));
         case KEEP_ALL: return new Tag(getKey(), tags.getJoinedValues(getKey()));
-        case KEEP_ONE: return new Tag(getKey(),value);
+        case KEEP_ONE: return new Tag(getKey(), value);
         case KEEP_NONE: return new Tag(getKey(), "");
         case UNDECIDED:
         default: return null;

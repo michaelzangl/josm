@@ -33,7 +33,7 @@ import org.openstreetmap.josm.data.preferences.IntegerProperty;
  * Static configuration for now assumes some small LRU cache in memory and larger LRU cache on disk
  * @since 8168
  */
-public class JCSCacheManager {
+public final class JCSCacheManager {
     private static final Logger log = FeatureAdapter.getLogger(JCSCacheManager.class.getCanonicalName());
 
     private static volatile CompositeCacheManager cacheManager = null;
@@ -46,6 +46,10 @@ public class JCSCacheManager {
      * default objects to be held in memory by JCS caches (per region)
      */
     public static final IntegerProperty DEFAULT_MAX_OBJECTS_IN_MEMORY  = new IntegerProperty(PREFERENCE_PREFIX + ".max_objects_in_memory", 1000);
+
+    private JCSCacheManager() {
+        // Hide implicit public constructor for utility classes
+    }
 
     @SuppressWarnings("resource")
     private static void initialize() throws IOException {
@@ -68,8 +72,7 @@ public class JCSCacheManager {
         Logger jcsLog = Logger.getLogger("org.apache.commons.jcs");
         jcsLog.setLevel(Level.INFO);
         jcsLog.setUseParentHandlers(false);
-        //Logger.getLogger("org.apache.common").setUseParentHandlers(false);
-        // we need a separate handler from Main's, as we  downgrade LEVEL.INFO to DEBUG level
+        // we need a separate handler from Main's, as we downgrade LEVEL.INFO to DEBUG level
         jcsLog.addHandler(new Handler() {
             @Override
             public void publish(LogRecord record) {
@@ -95,24 +98,22 @@ public class JCSCacheManager {
             }
         });
 
-
-        CompositeCacheManager cm  = CompositeCacheManager.getUnconfiguredInstance();
         // this could be moved to external file
         Properties props = new Properties();
         // these are default common to all cache regions
         // use of auxiliary cache and sizing of the caches is done with giving proper geCache(...) params
-        props.setProperty("jcs.default.cacheattributes",                            org.apache.commons.jcs.engine.CompositeCacheAttributes.class.getCanonicalName());
-        props.setProperty("jcs.default.cacheattributes.MaxObjects",                 DEFAULT_MAX_OBJECTS_IN_MEMORY.get().toString());
-        props.setProperty("jcs.default.cacheattributes.UseMemoryShrinker",          "true");
-        props.setProperty("jcs.default.cacheattributes.DiskUsagePatternName",       "UPDATE"); // store elements on disk on put
-        props.setProperty("jcs.default.elementattributes",                          CacheEntryAttributes.class.getCanonicalName());
-        props.setProperty("jcs.default.elementattributes.IsEternal",                "false");
-        props.setProperty("jcs.default.elementattributes.MaxLife",                  Long.toString(maxObjectTTL));
-        props.setProperty("jcs.default.elementattributes.IdleTime",                 Long.toString(maxObjectTTL));
-        props.setProperty("jcs.default.elementattributes.IsSpool",                  "true");
+        props.setProperty("jcs.default.cacheattributes",                      CompositeCacheAttributes.class.getCanonicalName());
+        props.setProperty("jcs.default.cacheattributes.MaxObjects",           DEFAULT_MAX_OBJECTS_IN_MEMORY.get().toString());
+        props.setProperty("jcs.default.cacheattributes.UseMemoryShrinker",    "true");
+        props.setProperty("jcs.default.cacheattributes.DiskUsagePatternName", "UPDATE"); // store elements on disk on put
+        props.setProperty("jcs.default.elementattributes",                    CacheEntryAttributes.class.getCanonicalName());
+        props.setProperty("jcs.default.elementattributes.IsEternal",          "false");
+        props.setProperty("jcs.default.elementattributes.MaxLife",            Long.toString(maxObjectTTL));
+        props.setProperty("jcs.default.elementattributes.IdleTime",           Long.toString(maxObjectTTL));
+        props.setProperty("jcs.default.elementattributes.IsSpool",            "true");
+        CompositeCacheManager cm = CompositeCacheManager.getUnconfiguredInstance();
         cm.configure(props);
         cacheManager = cm;
-
     }
 
     /**
@@ -121,7 +122,7 @@ public class JCSCacheManager {
      * @return cache access object
      * @throws IOException if directory is not found
      */
-    public static <K,V> CacheAccess<K, V> getCache(String cacheName) throws IOException {
+    public static <K, V> CacheAccess<K, V> getCache(String cacheName) throws IOException {
         return getCache(cacheName, DEFAULT_MAX_OBJECTS_IN_MEMORY.get().intValue(), 0, null);
     }
 
@@ -134,7 +135,8 @@ public class JCSCacheManager {
      * @return cache access object
      * @throws IOException if directory is not found
      */
-    public static <K,V> CacheAccess<K, V> getCache(String cacheName, int maxMemoryObjects, int maxDiskObjects, String cachePath) throws IOException {
+    public static <K, V> CacheAccess<K, V> getCache(String cacheName, int maxMemoryObjects, int maxDiskObjects, String cachePath)
+            throws IOException {
         if (cacheManager != null)
             return getCacheInner(cacheName, maxMemoryObjects, maxDiskObjects, cachePath);
 
@@ -145,9 +147,8 @@ public class JCSCacheManager {
         }
     }
 
-
     @SuppressWarnings("unchecked")
-    private static <K,V> CacheAccess<K, V> getCacheInner(String cacheName, int maxMemoryObjects, int maxDiskObjects, String cachePath) {
+    private static <K, V> CacheAccess<K, V> getCacheInner(String cacheName, int maxMemoryObjects, int maxDiskObjects, String cachePath) {
         CompositeCache<K, V> cc = cacheManager.getCache(cacheName, getCacheAttributes(maxMemoryObjects));
 
         if (cachePath != null && cacheDirLock != null) {

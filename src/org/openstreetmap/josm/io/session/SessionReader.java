@@ -57,7 +57,8 @@ import org.xml.sax.SAXException;
  */
 public class SessionReader {
 
-    private static Map<String, Class<? extends SessionLayerImporter>> sessionLayerImporters = new HashMap<>();
+    private static final Map<String, Class<? extends SessionLayerImporter>> sessionLayerImporters = new HashMap<>();
+
     static {
         registerSessionLayerImporter("osm-data", OsmDataSessionImporter.class);
         registerSessionLayerImporter("imagery", ImagerySessionImporter.class);
@@ -306,7 +307,8 @@ public class SessionReader {
             Element centerEl = getElementByTagName(viewportEl, "center");
             if (centerEl != null && centerEl.hasAttribute("lat") && centerEl.hasAttribute("lon")) {
                 try {
-                    LatLon centerLL = new LatLon(Double.parseDouble(centerEl.getAttribute("lat")), Double.parseDouble(centerEl.getAttribute("lon")));
+                    LatLon centerLL = new LatLon(Double.parseDouble(centerEl.getAttribute("lat")),
+                            Double.parseDouble(centerEl.getAttribute("lon")));
                     center = Projections.project(centerLL);
                 } catch (NumberFormatException ex) {
                     Main.warn(ex);
@@ -351,7 +353,7 @@ public class SessionReader {
 
         NodeList nodes = layersEl.getChildNodes();
 
-        for (int i=0; i<nodes.getLength(); ++i) {
+        for (int i = 0; i < nodes.getLength(); ++i) {
             Node node = nodes.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element e = (Element) node;
@@ -530,7 +532,7 @@ public class SessionReader {
                         ExtendedDialog dlg = new ExtendedDialog(
                                 Main.parent,
                                 title,
-                                new String[] { tr("Cancel"), tr("Skip layer and continue") }
+                                new String[] {tr("Cancel"), tr("Skip layer and continue")}
                                 );
                         dlg.setButtonIcons(new String[] {"cancel", "dialogs/next"});
                         dlg.setIcon(icon);
@@ -592,7 +594,8 @@ public class SessionReader {
         return zipFile.getInputStream(josEntry);
     }
 
-    private void loadSession(InputStream josIS, URI sessionFileURI, boolean zip, ProgressMonitor progressMonitor) throws IOException, IllegalDataException {
+    private void loadSession(InputStream josIS, URI sessionFileURI, boolean zip, ProgressMonitor progressMonitor)
+            throws IOException, IllegalDataException {
 
         this.sessionFileURI = sessionFileURI;
         this.zip = zip;

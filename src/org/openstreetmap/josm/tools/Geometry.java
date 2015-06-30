@@ -69,7 +69,7 @@ public final class Geometry {
         Set<Node> intersectionNodes = new LinkedHashSet<>();
 
         //copy node arrays for local usage.
-        for (int pos = 0; pos < n; pos ++) {
+        for (int pos = 0; pos < n; pos++) {
             newNodes[pos] = new ArrayList<>(ways.get(pos).getNodes());
             wayBounds[pos] = getNodesBounds(newNodes[pos]);
             changedWays[pos] = false;
@@ -77,8 +77,8 @@ public final class Geometry {
 
         //iterate over all way pairs and introduce the intersections
         Comparator<Node> coordsComparator = new NodePositionComparator();
-        for (int seg1Way = 0; seg1Way < n; seg1Way ++) {
-            for (int seg2Way = seg1Way; seg2Way < n; seg2Way ++) {
+        for (int seg1Way = 0; seg1Way < n; seg1Way++) {
+            for (int seg2Way = seg1Way; seg2Way < n; seg2Way++) {
 
                 //do not waste time on bounds that do not intersect
                 if (!wayBounds[seg1Way].intersects(wayBounds[seg2Way])) {
@@ -89,12 +89,12 @@ public final class Geometry {
                 List<Node> way2Nodes = newNodes[seg2Way];
 
                 //iterate over primary segmemt
-                for (int seg1Pos = 0; seg1Pos + 1 < way1Nodes.size(); seg1Pos ++) {
+                for (int seg1Pos = 0; seg1Pos + 1 < way1Nodes.size(); seg1Pos++) {
 
                     //iterate over secondary segment
-                    int seg2Start = seg1Way != seg2Way ? 0: seg1Pos + 2;//skip the adjacent segment
+                    int seg2Start = seg1Way != seg2Way ? 0 : seg1Pos + 2; //skip the adjacent segment
 
-                    for (int seg2Pos = seg2Start; seg2Pos + 1< way2Nodes.size(); seg2Pos ++) {
+                    for (int seg2Pos = seg2Start; seg2Pos + 1 < way2Nodes.size(); seg2Pos++) {
 
                         //need to get them again every time, because other segments may be changed
                         Node seg1Node1 = way1Nodes.get(seg1Pos);
@@ -105,7 +105,7 @@ public final class Geometry {
                         int commonCount = 0;
                         //test if we have common nodes to add.
                         if (seg1Node1 == seg2Node1 || seg1Node1 == seg2Node2) {
-                            commonCount ++;
+                            commonCount++;
 
                             if (seg1Way == seg2Way &&
                                     seg1Pos == 0 &&
@@ -117,7 +117,7 @@ public final class Geometry {
                         }
 
                         if (seg1Node2 == seg2Node1 || seg1Node2 == seg2Node2) {
-                            commonCount ++;
+                            commonCount++;
 
                             intersectionNodes.add(seg1Node2);
                         }
@@ -164,7 +164,7 @@ public final class Geometry {
 
                                     //fix seg2 position, as indexes have changed, seg2Pos is always bigger than seg1Pos on the same segment.
                                     if (seg2Way == seg1Way) {
-                                        seg2Pos ++;
+                                        seg2Pos++;
                                     }
                                 }
 
@@ -173,7 +173,7 @@ public final class Geometry {
                                     changedWays[seg2Way] = true;
 
                                     //Do not need to compare again to already split segment
-                                    seg2Pos ++;
+                                    seg2Pos++;
                                 }
 
                                 intersectionNodes.add(intNode);
@@ -190,7 +190,7 @@ public final class Geometry {
         }
 
 
-        for (int pos = 0; pos < ways.size(); pos ++) {
+        for (int pos = 0; pos < ways.size(); pos++) {
             if (!changedWays[pos]) {
                 continue;
             }
@@ -226,7 +226,7 @@ public final class Geometry {
      * @param lineP1 first point in path
      * @param lineP2 second point in path
      * @param lineP3 third point in path
-     * @param testPoint
+     * @param testPoint point to test
      * @return true if to the right side, false otherwise
      */
     public static boolean isToTheRightSideOfLine(Node lineP1, Node lineP2, Node lineP3, Node testPoint) {
@@ -291,15 +291,15 @@ public final class Geometry {
         // Solve the equations
         double det = a1*b2 - a2*b1;
 
-        double uu = b2*c1 - b1*c2 ;
+        double uu = b2*c1 - b1*c2;
         double vv = a1*c2 - a2*c1;
         double mag = Math.abs(uu)+Math.abs(vv);
 
         if (Math.abs(det) > 1e-12 * mag) {
             double u = uu/det, v = vv/det;
-            if (u>-1e-8 && u < 1+1e-8 && v>-1e-8 && v < 1+1e-8 ) {
-                if (u<0) u=0;
-                if (u>1) u=1.0;
+            if (u > -1e-8 && u < 1+1e-8 && v > -1e-8 && v < 1+1e-8) {
+                if (u < 0) u = 0;
+                if (u > 1) u = 1.0;
                 return new EastNorth(x1+a1*u, y1+a2*u);
             } else {
                 return null;
@@ -354,7 +354,7 @@ public final class Geometry {
         if (det == 0)
             return null; // Lines are parallel
 
-        return new EastNorth(b1 * c2 / det + p1.getX(),  - a1 * c2 / det + p1.getY());
+        return new EastNorth(b1 * c2 / det + p1.getX(), -a1 * c2 / det + p1.getY());
     }
 
     public static boolean segmentsParallel(EastNorth p1, EastNorth p2, EastNorth p3, EastNorth p4) {
@@ -410,8 +410,8 @@ public final class Geometry {
      * @param point Point for which a closest point is searched on line segment [P1,P2]
      * @return segmentP1 if it is the closest point, segmentP2 if it is the closest point,
      * a new point if closest point is between segmentP1 and segmentP2.
-     * @since 3650
      * @see #closestPointToLine
+     * @since 3650
      */
     public static EastNorth closestPointToSegment(EastNorth segmentP1, EastNorth segmentP2, EastNorth point) {
         return closestPointTo(segmentP1, segmentP2, point, true);
@@ -653,7 +653,7 @@ public final class Geometry {
         return 6367000 * c;
     }
 
-    protected static double calcY(Node p1){
+    protected static double calcY(Node p1) {
         double lat1, lon1, lat2, lon2;
         double dlon, dlat;
 
@@ -713,8 +713,8 @@ public final class Geometry {
     /**
      * Returns angle of a segment defined with 2 point coordinates.
      *
-     * @param p1
-     * @param p2
+     * @param p1 first point
+     * @param p2 second point
      * @return Angle in radians (-pi, pi]
      */
     public static double getSegmentAngle(EastNorth p1, EastNorth p2) {
@@ -728,9 +728,9 @@ public final class Geometry {
     /**
      * Returns angle of a corner defined with 3 point coordinates.
      *
-     * @param p1
+     * @param p1 first point
      * @param p2 Common endpoint
-     * @param p3
+     * @param p3 third point
      * @return Angle in radians (-pi, pi]
      */
     public static double getCornerAngle(EastNorth p1, EastNorth p2, EastNorth p3) {
@@ -812,7 +812,7 @@ public final class Geometry {
      */
     public static EastNorth getCenter(List<Node> nodes) {
         int nc = nodes.size();
-        if(nc < 3) return null;
+        if (nc < 3) return null;
         /**
          * Equation of each bisector ax + by + c = 0
          */
@@ -820,13 +820,13 @@ public final class Geometry {
         double[] b = new double[nc];
         double[] c = new double[nc];
         // Compute equation of bisector
-        for(int i = 0; i < nc; i++) {
+        for (int i = 0; i < nc; i++) {
             EastNorth pt1 = nodes.get(i).getEastNorth();
             EastNorth pt2 = nodes.get((i+1) % nc).getEastNorth();
             a[i] = pt1.east() - pt2.east();
             b[i] = pt1.north() - pt2.north();
             double d = Math.sqrt(a[i]*a[i] + b[i]*b[i]);
-            if(d == 0) return null;
+            if (d == 0) return null;
             a[i] /= d;
             b[i] /= d;
             double xC = (pt1.east() + pt2.east()) / 2;
@@ -837,7 +837,7 @@ public final class Geometry {
         double a11 = 0, a12 = 0, a22 = 0;
         // At.Y = [bi]
         double b1 = 0, b2 = 0;
-        for(int i = 0; i < nc; i++) {
+        for (int i = 0; i < nc; i++) {
             a11 += a[i]*a[i];
             a12 += a[i]*b[i];
             a22 += b[i]*b[i];
@@ -846,7 +846,7 @@ public final class Geometry {
         }
         // (At.A)^-1 = [invij]
         double det = a11*a22 - a12*a12;
-        if(Math.abs(det) < 1e-5) return null;
+        if (Math.abs(det) < 1e-5) return null;
         double inv11 = a22/det;
         double inv12 = -a12/det;
         double inv22 = a11/det;
@@ -904,7 +904,8 @@ public final class Geometry {
         for (MultipolygonBuilder.JoinedPolygon out : outerRings) {
             if (nodes.size() == 1
                     ? nodeInsidePolygon(nodes.get(0), out.getNodes())
-                    : EnumSet.of(PolygonIntersection.FIRST_INSIDE_SECOND, PolygonIntersection.CROSSING).contains(polygonIntersection(nodes, out.getNodes()))) {
+                    : EnumSet.of(PolygonIntersection.FIRST_INSIDE_SECOND, PolygonIntersection.CROSSING).contains(
+                            polygonIntersection(nodes, out.getNodes()))) {
                 boolean insideInner = false;
                 // If inside an outer, check it is not inside an inner
                 for (MultipolygonBuilder.JoinedPolygon in : innerRings) {
@@ -919,7 +920,8 @@ public final class Geometry {
                 // Inside outer but not inside inner -> the polygon appears to be inside a the multipolygon
                 if (!insideInner) {
                     // Final check using predicate
-                    if (isOuterWayAMatch == null || isOuterWayAMatch.evaluate(out.ways.get(0) /* TODO give a better representation of the outer ring to the predicate */)) {
+                    if (isOuterWayAMatch == null || isOuterWayAMatch.evaluate(out.ways.get(0)
+                            /* TODO give a better representation of the outer ring to the predicate */)) {
                         return true;
                     }
                 }

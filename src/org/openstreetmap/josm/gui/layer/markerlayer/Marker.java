@@ -90,7 +90,8 @@ public class Marker implements TemplateEngineDataProvider {
         private static final Map<String, TemplateEntryProperty> CACHE = new HashMap<>();
 
         // Legacy code - convert label from int to template engine expression
-        private static final IntegerProperty PROP_LABEL = new IntegerProperty("draw.rawgps.layer.wpt", 0 );
+        private static final IntegerProperty PROP_LABEL = new IntegerProperty("draw.rawgps.layer.wpt", 0);
+
         private static String getDefaultLabelPattern() {
             switch (PROP_LABEL.get()) {
             case 1:
@@ -112,7 +113,7 @@ public class Marker implements TemplateEngineDataProvider {
             }
             TemplateEntryProperty result = CACHE.get(key);
             if (result == null) {
-                String defaultValue = layerName == null ? getDefaultLabelPattern():"";
+                String defaultValue = layerName == null ? getDefaultLabelPattern() : "";
                 TemplateEntryProperty parent = layerName == null ? null : forMarker(null);
                 result = new TemplateEntryProperty(key, defaultValue, parent);
                 CACHE.put(key, result);
@@ -127,7 +128,7 @@ public class Marker implements TemplateEngineDataProvider {
             }
             TemplateEntryProperty result = CACHE.get(key);
             if (result == null) {
-                String defaultValue = layerName == null?"?{ '{name}' | '{desc}' | '{" + Marker.MARKER_FORMATTED_OFFSET + "}' }":"";
+                String defaultValue = layerName == null ? "?{ '{name}' | '{desc}' | '{" + Marker.MARKER_FORMATTED_OFFSET + "}' }" : "";
                 TemplateEntryProperty parent = layerName == null ? null : forAudioMarker(null);
                 result = new TemplateEntryProperty(key, defaultValue, parent);
                 CACHE.put(key, result);
@@ -183,11 +184,10 @@ public class Marker implements TemplateEngineDataProvider {
             @Override
             public Marker createMarker(WayPoint wpt, File relativePath, MarkerLayer parentLayer, double time, double offset) {
                 String uri = null;
-                // cheapest way to check whether "link" object exists and is a non-empty
-                // collection of GpxLink objects...
+                // cheapest way to check whether "link" object exists and is a non-empty collection of GpxLink objects...
                 Collection<GpxLink> links = wpt.<GpxLink>getCollection(GpxConstants.META_LINKS);
                 if (links != null) {
-                    for (GpxLink oneLink : links ) {
+                    for (GpxLink oneLink : links) {
                         uri = oneLink.uri;
                         break;
                     }
@@ -205,25 +205,25 @@ public class Marker implements TemplateEngineDataProvider {
                     }
                 }
 
+                String urlStr = url == null ? "" : url.toString();
                 if (url == null) {
                     String symbolName = wpt.getString("symbol");
                     if (symbolName == null) {
                         symbolName = wpt.getString(GpxConstants.PT_SYM);
                     }
                     return new Marker(wpt.getCoor(), wpt, symbolName, parentLayer, time, offset);
-                } else if (url.toString().endsWith(".wav")) {
+                } else if (urlStr.endsWith(".wav")) {
                     AudioMarker audioMarker = new AudioMarker(wpt.getCoor(), wpt, url, parentLayer, time, offset);
                     Extensions exts = (Extensions) wpt.get(GpxConstants.META_EXTENSIONS);
                     if (exts != null && exts.containsKey("offset")) {
                         try {
-                            double syncOffset = Double.parseDouble(exts.get("sync-offset"));
-                            audioMarker.syncOffset = syncOffset;
+                            audioMarker.syncOffset = Double.parseDouble(exts.get("sync-offset"));
                         } catch (NumberFormatException nfe) {
                             Main.warn(nfe);
                         }
                     }
                     return audioMarker;
-                } else if (url.toString().endsWith(".png") || url.toString().endsWith(".jpg") || url.toString().endsWith(".jpeg") || url.toString().endsWith(".gif")) {
+                } else if (urlStr.endsWith(".png") || urlStr.endsWith(".jpg") || urlStr.endsWith(".jpeg") || urlStr.endsWith(".gif")) {
                     return new ImageMarker(wpt.getCoor(), url, parentLayer, time, offset);
                 } else {
                     return new WebMarker(wpt.getCoor(), url, parentLayer, time, offset);
@@ -279,7 +279,8 @@ public class Marker implements TemplateEngineDataProvider {
 
     private boolean erroneous = false;
 
-    public Marker(LatLon ll, TemplateEngineDataProvider dataProvider, String iconName, MarkerLayer parentLayer, double time, double offset) {
+    public Marker(LatLon ll, TemplateEngineDataProvider dataProvider, String iconName, MarkerLayer parentLayer,
+            double time, double offset) {
         this(ll, dataProvider, null, iconName, parentLayer, time, offset);
     }
 
@@ -287,7 +288,8 @@ public class Marker implements TemplateEngineDataProvider {
         this(ll, null, text, iconName, parentLayer, time, offset);
     }
 
-    private Marker(LatLon ll, TemplateEngineDataProvider dataProvider, String text, String iconName, MarkerLayer parentLayer, double time, double offset) {
+    private Marker(LatLon ll, TemplateEngineDataProvider dataProvider, String text, String iconName, MarkerLayer parentLayer,
+            double time, double offset) {
         timeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         setCoor(ll);
 
@@ -296,7 +298,7 @@ public class Marker implements TemplateEngineDataProvider {
         /* tell icon checking that we expect these names to exist */
         // /* ICON(markers/) */"Bridge"
         // /* ICON(markers/) */"Crossing"
-        this.symbol = iconName != null ? ImageProvider.getIfAvailable("markers",iconName) : null;
+        this.symbol = iconName != null ? ImageProvider.getIfAvailable("markers", iconName) : null;
         this.parentLayer = parentLayer;
 
         this.dataProvider = dataProvider;
@@ -459,7 +461,7 @@ public class Marker implements TemplateEngineDataProvider {
     }
 
     private String formatOffset() {
-        int wholeSeconds = (int)(offset + 0.5);
+        int wholeSeconds = (int) (offset + 0.5);
         if (wholeSeconds < 60)
             return Integer.toString(wholeSeconds);
         else if (wholeSeconds < 3600)

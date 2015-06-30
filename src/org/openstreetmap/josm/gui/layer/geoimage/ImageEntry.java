@@ -57,11 +57,13 @@ public final class ImageEntry implements Comparable<ImageEntry>, Cloneable {
             return tmp.pos;
         return pos;
     }
+
     public Double getSpeed() {
         if (tmp != null)
             return tmp.speed;
         return speed;
     }
+
     public Double getElevation() {
         if (tmp != null)
             return tmp.elevation;
@@ -79,7 +81,7 @@ public final class ImageEntry implements Comparable<ImageEntry>, Cloneable {
      * @return {@code true} if this entry has a GPS time
      * @since 6450
      */
-    public final boolean hasGpsTime() {
+    public boolean hasGpsTime() {
         return (tmp != null && tmp.gpsTime != null) || gpsTime != null;
     }
 
@@ -89,9 +91,11 @@ public final class ImageEntry implements Comparable<ImageEntry>, Cloneable {
     public File getFile() {
         return file;
     }
+
     public Integer getExifOrientation() {
         return exifOrientation;
     }
+
     public Date getExifTime() {
         return getDefensiveDate(exifTime);
     }
@@ -101,7 +105,7 @@ public final class ImageEntry implements Comparable<ImageEntry>, Cloneable {
      * @return {@code true} if this entry has a EXIF time
      * @since 6450
      */
-    public final boolean hasExifTime() {
+    public boolean hasExifTime() {
         return exifTime != null;
     }
 
@@ -110,7 +114,7 @@ public final class ImageEntry implements Comparable<ImageEntry>, Cloneable {
      * @return the EXIF GPS time
      * @since 6392
      */
-    public final Date getExifGpsTime() {
+    public Date getExifGpsTime() {
         return getDefensiveDate(exifGpsTime);
     }
 
@@ -119,7 +123,7 @@ public final class ImageEntry implements Comparable<ImageEntry>, Cloneable {
      * @return {@code true} if this entry has a EXIF GPS time
      * @since 6450
      */
-    public final boolean hasExifGpsTime() {
+    public boolean hasExifGpsTime() {
         return exifGpsTime != null;
     }
 
@@ -132,6 +136,7 @@ public final class ImageEntry implements Comparable<ImageEntry>, Cloneable {
     public LatLon getExifCoor() {
         return exifCoor;
     }
+
     public Double getExifImgDir() {
         return exifImgDir;
     }
@@ -146,21 +151,27 @@ public final class ImageEntry implements Comparable<ImageEntry>, Cloneable {
     public void setPos(CachedLatLon pos) {
         this.pos = pos;
     }
+
     public void setPos(LatLon pos) {
         this.pos = new CachedLatLon(pos);
     }
+
     public void setSpeed(Double speed) {
         this.speed = speed;
     }
+
     public void setElevation(Double elevation) {
         this.elevation = elevation;
     }
+
     public void setFile(File file) {
         this.file = file;
     }
+
     public void setExifOrientation(Integer exifOrientation) {
         this.exifOrientation = exifOrientation;
     }
+
     public void setExifTime(Date exifTime) {
         this.exifTime = getDefensiveDate(exifTime);
     }
@@ -170,16 +181,18 @@ public final class ImageEntry implements Comparable<ImageEntry>, Cloneable {
      * @param exifGpsTime the EXIF GPS time
      * @since 6392
      */
-    public final void setExifGpsTime(Date exifGpsTime) {
+    public void setExifGpsTime(Date exifGpsTime) {
         this.exifGpsTime = getDefensiveDate(exifGpsTime);
     }
 
     public void setGpsTime(Date gpsTime) {
         this.gpsTime = getDefensiveDate(gpsTime);
     }
+
     public void setExifCoor(LatLon exifCoor) {
         this.exifCoor = exifCoor;
     }
+
     public void setExifImgDir(double exifDir) {
         this.exifImgDir = exifDir;
     }

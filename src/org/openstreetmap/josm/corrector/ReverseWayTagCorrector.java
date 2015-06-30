@@ -33,11 +33,11 @@ public class ReverseWayTagCorrector extends TagCorrector<Way> {
 
     private static final String SEPARATOR = "[:_]";
 
-    private static final Pattern getPatternFor(String s) {
+    private static Pattern getPatternFor(String s) {
         return getPatternFor(s, false);
     }
 
-    private static final Pattern getPatternFor(String s, boolean exactMatch) {
+    private static Pattern getPatternFor(String s, boolean exactMatch) {
         if (exactMatch) {
             return Pattern.compile("(^)(" + s + ")($)");
         } else {
@@ -168,7 +168,7 @@ public class ReverseWayTagCorrector extends TagCorrector<Way> {
     /**
      * Tests whether way can be reversed without semantic change, i.e., whether tags have to be changed.
      * Looks for keys like oneway, oneway:bicycle, cycleway:right:oneway, left/right.
-     * @param way
+     * @param way way to test
      * @return false if tags should be changed to keep semantic, true otherwise.
      */
     public static boolean isReversible(Way way) {
@@ -232,10 +232,10 @@ public class ReverseWayTagCorrector extends TagCorrector<Way> {
 
         Collection<OsmPrimitive> referrers = oldway.getReferrers();
         for (OsmPrimitive referrer: referrers) {
-            if (! (referrer instanceof Relation)) {
+            if (!(referrer instanceof Relation)) {
                 continue;
             }
-            Relation relation = (Relation)referrer;
+            Relation relation = (Relation) referrer;
             int position = 0;
             for (RelationMember member : relation.getMembers()) {
                 if (!member.getMember().hasEqualSemanticAttributes(oldway)

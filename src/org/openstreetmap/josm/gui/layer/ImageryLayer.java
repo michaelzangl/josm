@@ -62,7 +62,7 @@ public abstract class ImageryLayer extends Layer {
 
     public static Color getFadeColorWithAlpha() {
         Color c = PROP_FADE_COLOR.get();
-        return new Color(c.getRed(),c.getGreen(),c.getBlue(),PROP_FADE_AMOUNT.get()*255/100);
+        return new Color(c.getRed(), c.getGreen(), c.getBlue(), PROP_FADE_AMOUNT.get()*255/100);
     }
 
     protected final ImageryInfo info;
@@ -78,6 +78,7 @@ public abstract class ImageryLayer extends Layer {
 
     /**
      * Constructs a new {@code ImageryLayer}.
+     * @param info imagery info
      */
     public ImageryLayer(ImageryInfo info) {
         super(info.getName());
@@ -151,15 +152,17 @@ public abstract class ImageryLayer extends Layer {
     }
 
     public static ImageryLayer create(ImageryInfo info) {
-        if (info.getImageryType() == ImageryType.WMS || info.getImageryType() == ImageryType.HTML)
+        ImageryType type = info.getImageryType();
+        if (type == ImageryType.WMS || type == ImageryType.HTML)
             return new WMSLayer(info);
-        else if (info.getImageryType() == ImageryType.TMS || info.getImageryType() == ImageryType.BING || info.getImageryType() == ImageryType.SCANEX)
+        else if (type == ImageryType.TMS || type == ImageryType.BING || type == ImageryType.SCANEX)
             return new TMSLayer(info);
         else throw new AssertionError();
     }
 
     class ApplyOffsetAction extends AbstractAction {
         private transient OffsetBookmark b;
+
         ApplyOffsetAction(OffsetBookmark b) {
             super(b.name);
             this.b = b;
@@ -192,7 +195,7 @@ public abstract class ImageryLayer extends Layer {
     public JMenuItem getOffsetMenuItem() {
         JMenu subMenu = new JMenu(trc("layer", "Offset"));
         subMenu.setIcon(ImageProvider.get("mapmode", "adjustimg"));
-        return (JMenuItem)getOffsetMenuItem(subMenu);
+        return (JMenuItem) getOffsetMenuItem(subMenu);
     }
 
     public JComponent getOffsetMenuItem(JComponent subMenu) {
@@ -219,7 +222,7 @@ public abstract class ImageryLayer extends Layer {
             if (subMenu instanceof JMenu) {
                 MenuScroller.setScrollerFor((JMenu) subMenu);
             } else if (subMenu instanceof JPopupMenu) {
-                MenuScroller.setScrollerFor((JPopupMenu)subMenu);
+                MenuScroller.setScrollerFor((JPopupMenu) subMenu);
             }
         }
         return hasBookmarks ? subMenu : adjustMenuItem;
@@ -233,9 +236,9 @@ public abstract class ImageryLayer extends Layer {
         tmp.getGraphics().drawImage(img, 0, 0, null);
         Kernel kernel;
         if (sharpenLevel == 1) {
-            kernel = new Kernel(3, 3, new float[] { -0.25f, -0.5f, -0.25f, -0.5f, 4, -0.5f, -0.25f, -0.5f, -0.25f});
+            kernel = new Kernel(3, 3, new float[] {-0.25f, -0.5f, -0.25f, -0.5f, 4, -0.5f, -0.25f, -0.5f, -0.25f});
         } else {
-            kernel = new Kernel(3, 3, new float[] { -0.5f, -1, -0.5f, -1, 7, -1, -0.5f, -1, -0.5f});
+            kernel = new Kernel(3, 3, new float[] {-0.5f, -1, -0.5f, -1, 7, -1, -0.5f, -1, -0.5f});
         }
         BufferedImageOp op = new ConvolveOp(kernel, ConvolveOp.EDGE_NO_OP, null);
         return op.filter(tmp, null);
@@ -259,7 +262,7 @@ public abstract class ImageryLayer extends Layer {
             float drawPosY = 2.5f*g.getFontMetrics().getHeight()+10;
             if (!message.contains(" ")) {
                 g.setFont(g.getFont().deriveFont(Font.PLAIN).deriveFont(18.0f));
-                g.drawString(message, 5, (int)drawPosY);
+                g.drawString(message, 5, (int) drawPosY);
             } else {
                 // Draw message on several lines
                 Map<TextAttribute, Object> map = new Hashtable<TextAttribute, Object>();

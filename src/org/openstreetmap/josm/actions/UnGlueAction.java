@@ -148,7 +148,7 @@ public class UnGlueAction extends JosmAction {
                 "own copy and all nodes will be selected.");
         }
 
-        if(errMsg != null) {
+        if (errMsg != null) {
             new Notification(
                     errMsg)
                     .setIcon(JOptionPane.ERROR_MESSAGE)
@@ -176,7 +176,7 @@ public class UnGlueAction extends JosmAction {
         Node n = new Node(selectedNode, true);
 
         // If this wasn't called from menu, place it where the cursor is/was
-        if(e.getSource() instanceof JPanel) {
+        if (e.getSource() instanceof JPanel) {
             MapView mv = Main.map.mapView;
             n.setCoor(mv.getLatLon(mv.lastMEvent.getX(), mv.lastMEvent.getY()));
         }
@@ -410,10 +410,11 @@ public class UnGlueAction extends JosmAction {
         // According to previous check, only one valid way through that node
         List<Command> cmds = new LinkedList<>();
         Way way = null;
-        for (Way w: OsmPrimitive.getFilteredList(selectedNode.getReferrers(), Way.class))
+        for (Way w: OsmPrimitive.getFilteredList(selectedNode.getReferrers(), Way.class)) {
             if (w.isUsable() && w.getNodesCount() >= 1) {
                 way = w;
             }
+        }
         List<Node> oldNodes = way.getNodes();
         List<Node> newNodes = new ArrayList<>(oldNodes.size());
         List<Node> addNodes = new ArrayList<>();
@@ -463,7 +464,8 @@ public class UnGlueAction extends JosmAction {
         cmds.add(new ChangeCommand(selectedWay, tmpWay)); // only one changeCommand for a way, else garbage will happen
 
         Main.main.undoRedo.add(new SequenceCommand(
-                trn("Dupe {0} node into {1} nodes", "Dupe {0} nodes into {1} nodes", selectedNodes.size(), selectedNodes.size(), selectedNodes.size()+allNewNodes.size()), cmds));
+                trn("Dupe {0} node into {1} nodes", "Dupe {0} nodes into {1} nodes",
+                        selectedNodes.size(), selectedNodes.size(), selectedNodes.size()+allNewNodes.size()), cmds));
         getCurrentDataSet().setSelected(allNewNodes);
     }
 

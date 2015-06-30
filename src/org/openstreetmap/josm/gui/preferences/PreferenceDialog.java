@@ -53,11 +53,11 @@ public class PreferenceDialog extends JDialog {
         });
 
         JPanel btns = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        btns.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        btns.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         btns.add(new SideButton(new OKAction()));
         btns.add(new SideButton(new CancelAction()));
         btns.add(new SideButton(new ContextSensitiveHelpAction(HelpUtil.ht("/Action/Preferences"))));
-        pnl.add(expert, GBC.std().insets(5,0,0,0));
+        pnl.add(expert, GBC.std().insets(5, 0, 0, 0));
         pnl.add(btns, GBC.std().fill(GBC.HORIZONTAL));
         return pnl;
     }
@@ -67,7 +67,7 @@ public class PreferenceDialog extends JDialog {
         c.setLayout(new BorderLayout());
         c.add(tpPreferences = new PreferenceTabbedPane(), BorderLayout.CENTER);
         tpPreferences.buildGui();
-        tpPreferences.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        tpPreferences.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         c.add(buildActionPanel(), BorderLayout.SOUTH);
 
         addWindowListener(new WindowEventHandler());
@@ -83,7 +83,7 @@ public class PreferenceDialog extends JDialog {
         this.setMinimumSize(new Dimension(600, 350));
         // set the maximum width to the current screen. If the dialog is opened on a
         // smaller screen than before, this will reset the stored preference.
-        this.setMaximumSize( Toolkit.getDefaultToolkit().getScreenSize());
+        this.setMaximumSize(Toolkit.getDefaultToolkit().getScreenSize());
     }
 
     /**

@@ -1,6 +1,7 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.actions;
 
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.awt.geom.Area;
@@ -97,9 +98,8 @@ public final class CreateCircleActionTest {
 
         // Expected result: Dataset contain one closed way, clockwise
         Collection<Way> resultingWays = dataSet.getWays();
-        assertTrue(String.format("Expect one way after perform action. %d found",
-                                 resultingWays.size()),
-                   resultingWays.size() == 1);
+        assertSame(String.format("Expect one way after perform action. %d found", resultingWays.size()),
+                   resultingWays.size(), 1);
         Way resultingWay = resultingWays.iterator().next();
         assertTrue("Resulting way is not closed",
                    resultingWay.isClosed());
@@ -112,13 +112,16 @@ public final class CreateCircleActionTest {
      */
     private static class ConstantTrafficHand implements GeoProperty<Boolean> {
         boolean isLeft;
+
         ConstantTrafficHand(boolean isLeft) {
             this.isLeft = isLeft;
         }
+
         @Override
         public Boolean get(LatLon ll) {
             return isLeft;
         }
+
         @Override
         public Boolean get(BBox box) {
             return isLeft;
@@ -173,9 +176,8 @@ public final class CreateCircleActionTest {
 
         // Expected result: Dataset contain one closed way, clockwise
         Collection<Way> resultingWays = dataSet.getWays();
-        assertTrue(String.format("Expect one way after perform action. %d found",
-                                 resultingWays.size()),
-                   resultingWays.size() == 1);
+        assertSame(String.format("Expect one way after perform action. %d found", resultingWays.size()),
+                   resultingWays.size(), 1);
         Way resultingWay = resultingWays.iterator().next();
         assertTrue("Resulting way is not closed",
                    resultingWay.isClosed());

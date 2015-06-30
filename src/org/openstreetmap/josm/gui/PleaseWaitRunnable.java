@@ -77,7 +77,7 @@ public abstract class PleaseWaitRunnable implements Runnable, CancelListener {
      */
     public PleaseWaitRunnable(String title, ProgressMonitor progressMonitor, boolean ignoreException) {
         this.title = title;
-        this.progressMonitor = progressMonitor == null?new PleaseWaitProgressMonitor(title):progressMonitor;
+        this.progressMonitor = progressMonitor == null ? new PleaseWaitProgressMonitor(title) : progressMonitor;
         this.ignoreException = ignoreException;
     }
 
@@ -108,7 +108,7 @@ public abstract class PleaseWaitRunnable implements Runnable, CancelListener {
                 progressMonitor.removeCancelListener(this);
                 progressMonitor.setProgressTaskId(oldTaskId);
                 if (progressMonitor instanceof PleaseWaitProgressMonitor) {
-                    ((PleaseWaitProgressMonitor)progressMonitor).close();
+                    ((PleaseWaitProgressMonitor) progressMonitor).close();
                 }
                 if (EventQueue.isDispatchThread()) {
                     afterFinish();
@@ -196,7 +196,8 @@ public abstract class PleaseWaitRunnable implements Runnable, CancelListener {
     /**
      * Task can run in background if returned value != null. Note that it's tasks responsibility
      * to ensure proper synchronization, PleaseWaitRunnable doesn't with it.
-     * @return If returned value is != null then task can run in background. TaskId could be used in future for "Always run in background" checkbox
+     * @return If returned value is != null then task can run in background.
+     * TaskId could be used in future for "Always run in background" checkbox
      */
     public ProgressTaskId canRunInBackground() {
         return null;

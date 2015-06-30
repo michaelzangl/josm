@@ -34,7 +34,8 @@ public class UpdateSelectionAction extends JosmAction {
      * handle an exception thrown because a primitive was deleted on the server
      *
      * @param id the primitive id
-     * @param type The primitive type. Must be one of {@link OsmPrimitiveType#NODE NODE}, {@link OsmPrimitiveType#WAY WAY}, {@link OsmPrimitiveType#RELATION RELATION}
+     * @param type The primitive type. Must be one of {@link OsmPrimitiveType#NODE NODE},
+     * {@link OsmPrimitiveType#WAY WAY}, {@link OsmPrimitiveType#RELATION RELATION}
      */
     public static void handlePrimitiveGoneException(long id, OsmPrimitiveType type) {
         MultiFetchServerObjectReader reader = new MultiFetchServerObjectReader();
@@ -42,7 +43,7 @@ public class UpdateSelectionAction extends JosmAction {
         try {
             DataSet ds = reader.parseOsm(NullProgressMonitor.INSTANCE);
             Main.main.getEditLayer().mergeFrom(ds);
-        } catch(Exception e) {
+        } catch (Exception e) {
             ExceptionDialogUtil.explainException(e);
         }
     }
@@ -55,7 +56,7 @@ public class UpdateSelectionAction extends JosmAction {
      *
      */
     public static void updatePrimitives(final Collection<OsmPrimitive> selection) {
-        UpdatePrimitivesTask task = new UpdatePrimitivesTask(Main.main.getEditLayer(),selection);
+        UpdatePrimitivesTask task = new UpdatePrimitivesTask(Main.main.getEditLayer(), selection);
         Main.worker.submit(task);
     }
 
@@ -125,7 +126,7 @@ public class UpdateSelectionAction extends JosmAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (! isEnabled())
+        if (!isEnabled())
             return;
         Collection<OsmPrimitive> toUpdate = getData();
         if (toUpdate.isEmpty()) {

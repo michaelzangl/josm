@@ -52,7 +52,7 @@ public class AddWayHandler extends RequestHandler {
 
     @Override
     public String[] getOptionalParams() {
-        return new String[] { "addtags" };
+        return new String[] {"addtags"};
     }
 
     @Override
@@ -63,8 +63,10 @@ public class AddWayHandler extends RequestHandler {
     @Override
     public String[] getUsageExamples() {
         return new String[] {
+            // CHECKSTYLE.OFF: LineLength
             "/add_way?way=53.2,13.3;53.3,13.3;53.3,13.2",
             "/add_way?&addtags=building=yes&way=45.437213,-2.810792;45.437988,-2.455983;45.224080,-2.455036;45.223302,-2.809845;45.437213,-2.810792"
+            // CHECKSTYLE.ON: LineLength
         };
     }
 
@@ -126,7 +128,7 @@ public class AddWayHandler extends RequestHandler {
         if (Main.isDisplayingMapView()) {
             Point p = Main.map.mapView.getPoint(ll);
             nd = Main.map.mapView.getNearestNode(p, OsmPrimitive.isUsablePredicate);
-            if (nd!=null && nd.getCoor().greatCircleDistance(ll) > Main.pref.getDouble("remote.tolerance", 0.1)) {
+            if (nd != null && nd.getCoor().greatCircleDistance(ll) > Main.pref.getDouble("remote.tolerance", 0.1)) {
                 nd = null; // node is too far
             }
         }
@@ -140,9 +142,9 @@ public class AddWayHandler extends RequestHandler {
             }
         }
 
-        if (prev!=null) {
+        if (prev != null) {
             nd = prev;
-        } else if (nd==null) {
+        } else if (nd == null) {
             nd = new Node(ll);
             // Now execute the commands to add this node.
             commands.add(new AddCommand(nd));
