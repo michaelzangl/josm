@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
@@ -61,6 +62,8 @@ import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.layer.geoimage.GeoImageLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.MarkerLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.PlayHeadMarker;
+import org.openstreetmap.josm.gui.navigate.NavigationModel;
+import org.openstreetmap.josm.gui.navigate.NavigationModel.ZoomData;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.AudioPlayer;
 import org.openstreetmap.josm.tools.BugReportExceptionHandler;
@@ -279,7 +282,6 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
     // Layers that wasn't changed since last paint
     private final transient List<Layer> nonChangedLayers = new ArrayList<>();
     private transient Layer changedLayer;
-    private int lastViewID;
     private boolean paintPreferencesChanged = true;
     private Rectangle lastClipBounds = new Rectangle();
     private transient MapMover mapMover;
@@ -304,7 +306,10 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
                     MapView.this.add(c);
                 }
 
-                mapMover = new MapMover(MapView.this, contentPane);
+                mapMover = new MapMover(getNavigationModel(), cursorManager, contentPane);
+                mapMover.registerMouseEvents(MapView.this);
+                // Notify the map view that it has changed.
+                repaint();
             }
         });
 
@@ -331,7 +336,7 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
             }
         });
 
-        if (Shortcut.findShortcut(KeyEvent.VK_TAB, 0) != null) {
+        if (Shortcut.findShortcut(KeyEvent.VK_TAB, 0)!=null) {
             setFocusTraversalKeysEnabled(false);
         }
     }
@@ -727,8 +732,7 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
             canUseBuffer = !paintPreferencesChanged;
             paintPreferencesChanged = false;
         }
-        canUseBuffer = canUseBuffer && nonChangedLayers.size() <= nonChangedLayersCount &&
-        lastViewID == getViewID() && lastClipBounds.contains(g.getClipBounds());
+        canUseBuffer = canUseBuffer && nonChangedLayers.size() <= nonChangedLayersCount && lastClipBounds.contains(g.getClipBounds());
         if (canUseBuffer) {
             for (int i = 0; i < nonChangedLayers.size(); i++) {
                 if (visibleLayers.get(i) != nonChangedLayers.get(i)) {
@@ -775,7 +779,6 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
         for (int i = 0; i < nonChangedLayersCount; i++) {
             nonChangedLayers.add(visibleLayers.get(i));
         }
-        lastViewID = getViewID();
         lastClipBounds = g.getClipBounds();
 
         tempG.drawImage(nonChangedLayersBuffer, 0, 0, null);
@@ -1019,7 +1022,6 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
         if (layer == activeLayer)
             return false;
 
-        Layer old = activeLayer;
         activeLayer = layer;
         if (setEditLayer) {
             setEditLayer(layers);
@@ -1175,6 +1177,17 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
         }
     }
 
+    @Override
+    public void zoomChanged(NavigationModel navigationModel, ZoomData oldZoom, ZoomData newZoom) {
+        super.zoomChanged(navigationModel, oldZoom, newZoom);
+        synchronized (this) {
+            paintPreferencesChanged = true;
+        }
+    }
+
+    /**
+     * A selection listener that fires a repaint as soon as the selection changes.
+     */
     private transient SelectionChangedListener repaintSelectionChangedListener = new SelectionChangedListener() {
         @Override
         public void selectionChanged(Collection<? extends OsmPrimitive> newSelection) {
