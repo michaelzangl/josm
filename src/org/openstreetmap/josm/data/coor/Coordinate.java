@@ -60,9 +60,7 @@ abstract class Coordinate implements Serializable {
      * @since 6166
      */
     public final double distance(final double px, final double py) {
-        final double dx = this.x-px;
-        final double dy = this.y-py;
-        return Math.sqrt(dx*dx + dy*dy);
+        return Math.sqrt(distanceSq(px, py));
     }
 
     /**
