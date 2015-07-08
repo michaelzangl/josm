@@ -376,7 +376,7 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
                         return; // exit, if new parent.
 
                     // Do nothing, if required data is missing
-                    if (ms.mousePos == null || mv.center == null) {
+                    if (ms.mousePos == null || mv.getCenter() == null) {
                         continue;
                     }
 
@@ -822,7 +822,7 @@ public class MapStatus extends JPanel implements Helpful, Destroyable, Preferenc
 
             @Override
             public void mouseMoved(MouseEvent e) {
-                if (mv.center == null)
+                if (mv.getCenter() == null)
                     return;
                 // Do not update the view if ctrl is pressed.
                 if ((e.getModifiersEx() & MouseEvent.CTRL_DOWN_MASK) == 0) {
