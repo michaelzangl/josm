@@ -1,10 +1,15 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.Comparator;
+
+import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.data.coor.LatLon;
 
 /**
  * Various utils, useful for unit tests.
@@ -105,5 +110,37 @@ public final class TestUtils {
         .append("\nCompared\no1: ").append(o1).append("\no3: ").append(o3).append("\ngave: ").append(c)
         .append("\nCompared\no2: ").append(o2).append("\no3: ").append(o3).append("\ngave: ").append(d)
         .toString();
+    }
+
+
+    /**
+     * An assertion that fails if the provided coordinates are not the same (within the default server precision).
+     * @param expected The expected EastNorth coordinate.
+     * @param actual The actual value.
+     */
+    public static void assertEastNorthEquals(EastNorth expected, EastNorth actual) {
+        assertEquals("Wrong x coordinate.", expected.getX(), actual.getX(), LatLon.MAX_SERVER_PRECISION);
+        assertEquals("Wrong y coordinate.", expected.getY(), actual.getY(), LatLon.MAX_SERVER_PRECISION);
+    }
+
+    /**
+     * An assertion that fails if the provided coordinates are not the same (within the default server precision).
+     * @param expected The expected LatLon coordinate.
+     * @param actual The actual value.
+     */
+    public static void assertLatLonEquals(LatLon expected, LatLon actual) {
+        assertEquals("Wrong lat coordinate.", expected.getX(), actual.getX(), LatLon.MAX_SERVER_PRECISION);
+        assertEquals("Wrong lon coordinate.", expected.getY(), actual.getY(), LatLon.MAX_SERVER_PRECISION);
+    }
+
+    /**
+     * An assertion that fails if the provided points are not the same.
+     * @param expected The expected Point2D
+     * @param actual The actual value.
+     */
+    public static void assertPointEquals(Point2D expected, Point2D actual) {
+        if (expected.distance(actual) > 0.0000001) {
+            throw new AssertionError("Expected " + expected + " but got " + actual);
+        }
     }
 }
