@@ -187,10 +187,10 @@ public class StyledMapRenderer extends AbstractMapRenderer {
         }
     }
 
-    private static class StyleRecord implements Comparable<StyleRecord> {
-        private final ElemStyle style;
-        private final OsmPrimitive osm;
-        private final int flags;
+    public static class StyleRecord implements Comparable<StyleRecord> {
+        public final ElemStyle style;
+        public final OsmPrimitive osm;
+        public final int flags;
 
         public StyleRecord(ElemStyle style, OsmPrimitive osm, int flags) {
             this.style = style;
@@ -286,15 +286,15 @@ public class StyledMapRenderer extends AbstractMapRenderer {
 
     private double circum;
 
-    private MapPaintSettings paintSettings;
+    protected MapPaintSettings paintSettings;
 
     private Color highlightColorTransparent;
 
-    private static final int FLAG_NORMAL = 0;
-    private static final int FLAG_DISABLED = 1;
-    private static final int FLAG_MEMBER_OF_SELECTED = 2;
-    private static final int FLAG_SELECTED = 4;
-    private static final int FLAG_OUTERMEMBER_OF_SELECTED = 8;
+    protected static final int FLAG_NORMAL = 0;
+    protected static final int FLAG_DISABLED = 1;
+    protected static final int FLAG_MEMBER_OF_SELECTED = 2;
+    protected static final int FLAG_SELECTED = 4;
+    protected static final int FLAG_OUTERMEMBER_OF_SELECTED = 8;
 
     private static final double PHI = Math.toRadians(20);
     private static final double cosPHI = Math.cos(PHI);
@@ -355,7 +355,7 @@ public class StyledMapRenderer extends AbstractMapRenderer {
         return polygon;
     }
 
-    private void displaySegments(GeneralPath path, GeneralPath orientationArrows, GeneralPath onewayArrows, GeneralPath onewayArrowsCasing,
+    protected void displaySegments(GeneralPath path, GeneralPath orientationArrows, GeneralPath onewayArrows, GeneralPath onewayArrowsCasing,
             Color color, BasicStroke line, BasicStroke dashes, Color dashedColor) {
         g.setColor(isInactiveMode ? inactiveColor : color);
         if (useStrokes) {
@@ -1664,16 +1664,7 @@ public class StyledMapRenderer extends AbstractMapRenderer {
 
             Collections.sort(allStyleElems); // TODO: try parallel sort when switching to Java 8
 
-            for (StyleRecord r : allStyleElems) {
-                r.style.paintPrimitive(
-                        r.osm,
-                        paintSettings,
-                        StyledMapRenderer.this,
-                        (r.flags & FLAG_SELECTED) != 0,
-                        (r.flags & FLAG_OUTERMEMBER_OF_SELECTED) != 0,
-                        (r.flags & FLAG_MEMBER_OF_SELECTED) != 0
-                );
-            }
+            renderStyled(allStyleElems);
 
             if (Main.isTraceEnabled()) {
                 timeFinished = System.currentTimeMillis();
@@ -1685,6 +1676,19 @@ public class StyledMapRenderer extends AbstractMapRenderer {
             drawVirtualNodes(data, bbox);
         } finally {
             data.getReadLock().unlock();
+        }
+    }
+
+    protected void renderStyled(final List<StyleRecord> allStyleElems) {
+        for (StyleRecord r : allStyleElems) {
+            r.style.paintPrimitive(
+                    r.osm,
+                    paintSettings,
+                    StyledMapRenderer.this,
+                    (r.flags & FLAG_SELECTED) != 0,
+                    (r.flags & FLAG_OUTERMEMBER_OF_SELECTED) != 0,
+                    (r.flags & FLAG_MEMBER_OF_SELECTED) != 0
+            );
         }
     }
 }
