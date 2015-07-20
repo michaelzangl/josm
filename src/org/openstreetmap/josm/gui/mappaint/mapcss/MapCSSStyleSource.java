@@ -153,7 +153,6 @@ public class MapCSSStyleSource extends StyleSource {
 
             private RuleCandidatesIterator(BitSet ruleCandidates) {
                 this.ruleCandidates = ruleCandidates;
-                next = ruleCandidates.nextSetBit(0);
             }
 
             @Override
@@ -180,6 +179,10 @@ public class MapCSSStyleSource extends StyleSource {
                     BitSet rs = v.get(value);
                     ruleCandidates.or(rs);
                 }
+            }
+
+            public void start() {
+                next = ruleCandidates.nextSetBit(0);
             }
         }
 
@@ -330,6 +333,7 @@ public class MapCSSStyleSource extends StyleSource {
             ruleCandidates.or(remaining);
             RuleCandidatesIterator iterator = new RuleCandidatesIterator(ruleCandidates);
             osm.getKeys(iterator);
+            iterator.start();
             return iterator;
         }
 
