@@ -496,6 +496,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
     }
 
     public void getKeys(OsmTagVisitor visitor) {
+        final String[] keys = this.keys;
         if (keys != null) {
             for (int i = 0; i < keys.length; i += 2) {
                 visitor.visitTag(keys[i], keys[i + 1]);
