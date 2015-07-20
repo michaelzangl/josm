@@ -31,6 +31,7 @@ import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.Version;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.OsmPrimitive.OsmTagVisitor;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.mappaint.Cascade;
@@ -141,10 +142,12 @@ public class MapCSSStyleSource extends StyleSource {
     public static class MapCSSRuleIndex {
         /**
          * This is an iterator over all rules that are marked as possible in the bitset.
+         * <p>
+         * For efficiency reasons, it is used in the collection phase of the rules as collector of the rules.
          *
          * @author Michael Zangl
          */
-        private final class RuleCandidatesIterator implements Iterator<MapCSSRule> {
+        private final class RuleCandidatesIterator implements Iterator<MapCSSRule>, OsmTagVisitor {
             private final BitSet ruleCandidates;
             private int next;
 
@@ -168,6 +171,15 @@ public class MapCSSStyleSource extends StyleSource {
             @Override
             public void remove() {
                 throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void visitTag(String key, String value) {
+                MapCSSKeyRules v = index.get(key);
+                if (v != null) {
+                    BitSet rs = v.get(value);
+                    ruleCandidates.or(rs);
+                }
             }
         }
 
@@ -316,15 +328,9 @@ public class MapCSSStyleSource extends StyleSource {
         public Iterator<MapCSSRule> getRuleCandidates(OsmPrimitive osm) {
             final BitSet ruleCandidates = new BitSet(rules.size());
             ruleCandidates.or(remaining);
-
-            for (Map.Entry<String, String> e : osm.getKeys().entrySet()) {
-                MapCSSKeyRules v = index.get(e.getKey());
-                if (v != null) {
-                    BitSet rs = v.get(e.getValue());
-                    ruleCandidates.or(rs);
-                }
-            }
-            return new RuleCandidatesIterator(ruleCandidates);
+            RuleCandidatesIterator iterator = new RuleCandidatesIterator(ruleCandidates);
+            osm.getKeys(iterator);
+            return iterator;
         }
 
         /**

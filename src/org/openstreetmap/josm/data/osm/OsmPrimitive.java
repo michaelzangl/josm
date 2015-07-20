@@ -239,6 +239,10 @@ public abstract class OsmPrimitive extends AbstractPrimitive implements Comparab
         }
     };
 
+    public interface OsmTagVisitor {
+        public void visitTag(String key, String value);
+    }
+
     /**
      * Creates a new primitive for the given id.
      *

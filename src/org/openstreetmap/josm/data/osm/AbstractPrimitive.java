@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.openstreetmap.josm.data.osm.OsmPrimitive.OsmTagVisitor;
 import org.openstreetmap.josm.tools.LanguageInfo;
 import org.openstreetmap.josm.tools.Utils;
 
@@ -492,6 +493,14 @@ public abstract class AbstractPrimitive implements IPrimitive {
         }
 
         return result;
+    }
+
+    public void getKeys(OsmTagVisitor visitor) {
+        if (keys != null) {
+            for (int i = 0; i < keys.length; i += 2) {
+                visitor.visitTag(keys[i], keys[i + 1]);
+            }
+        }
     }
 
     /**
