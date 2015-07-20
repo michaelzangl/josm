@@ -60,7 +60,6 @@ public class MapCSSStyleSourceFilterTest {
         public CssGenerator addIsTrueRules(int count) {
             for (int i = 0; i < count; i++) {
                 String key = generator.randomKey();
-                // TODO
                 addRule("node[\"" + key + "\"?]");
             }
             return this;
@@ -75,7 +74,7 @@ public class MapCSSStyleSourceFilterTest {
         }
     }
 
-    private static final int APPLY_CALLS = 1000000;
+    private static final int APPLY_CALLS = 100000;
 
     /**
      * Prepare the test.
@@ -135,7 +134,7 @@ public class MapCSSStyleSourceFilterTest {
         source.loadStyleSource();
         timer.done();
 
-        timer = PerformanceTestUtils.startTimer("MapCSSStyleSource#apply(...) for " + description);
+        timer = PerformanceTestUtils.startTimer(APPLY_CALLS + "x MapCSSStyleSource#apply(...) for " + description);
         for (int i = 0; i < APPLY_CALLS; i++) {
             MultiCascade mc = new MultiCascade();
             source.apply(mc, data.randomNode(), 1, false);
