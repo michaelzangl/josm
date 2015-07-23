@@ -18,6 +18,8 @@ public class MapCSSStyleSourceFilterTest {
 
     private static final int TEST_RULE_COUNT = 10000;
 
+    private static final int APPLY_CALLS = 20000;
+
     private class CssGenerator {
         StringBuilder sb = new StringBuilder();
         private KeyValueDataGenerator generator;
@@ -73,8 +75,6 @@ public class MapCSSStyleSourceFilterTest {
             return sb.toString();
         }
     }
-
-    private static final int APPLY_CALLS = 100000;
 
     /**
      * Prepare the test.
