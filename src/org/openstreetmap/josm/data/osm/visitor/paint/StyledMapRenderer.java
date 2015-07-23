@@ -1467,6 +1467,26 @@ public class StyledMapRenderer extends AbstractMapRenderer {
         return null;
     }
 
+    /**
+     * Computes the flags for a given OSM primitive.
+     * @param primitive The primititve to compute the flags for.
+     * @param checkOuterMember <code>true</code> if we should also add {@link #FLAG_OUTERMEMBER_OF_SELECTED}
+     * @return The flag.
+     */
+    public static int computeFlags(OsmPrimitive primitive, boolean checkOuterMember) {
+        if (primitive.isDisabled()) {
+            return FLAG_DISABLED;
+        } else if (primitive.isSelected()) {
+            return FLAG_SELECTED;
+        } else if (checkOuterMember && primitive.isOuterMemberOfSelected()) {
+            return FLAG_OUTERMEMBER_OF_SELECTED;
+        } else if (primitive.isMemberOfSelected()) {
+            return FLAG_MEMBER_OF_SELECTED;
+        } else {
+            return FLAG_NORMAL;
+        }
+    }
+
     private class ComputeStyleListWorker implements Callable<List<StyleRecord>>, Visitor {
         private final List<? extends OsmPrimitive> input;
         private final int from;
@@ -1512,45 +1532,17 @@ public class StyledMapRenderer extends AbstractMapRenderer {
 
         @Override
         public void visit(Node n) {
-            if (n.isDisabled()) {
-                add(n, FLAG_DISABLED);
-            } else if (n.isSelected()) {
-                add(n, FLAG_SELECTED);
-            } else if (n.isMemberOfSelected()) {
-                add(n, FLAG_MEMBER_OF_SELECTED);
-            } else {
-                add(n, FLAG_NORMAL);
-            }
+            add(n, computeFlags(n, false));
         }
 
         @Override
         public void visit(Way w) {
-            if (w.isDisabled()) {
-                add(w, FLAG_DISABLED);
-            } else if (w.isSelected()) {
-                add(w, FLAG_SELECTED);
-            } else if (w.isOuterMemberOfSelected()) {
-                add(w, FLAG_OUTERMEMBER_OF_SELECTED);
-            } else if (w.isMemberOfSelected()) {
-                add(w, FLAG_MEMBER_OF_SELECTED);
-            } else {
-                add(w, FLAG_NORMAL);
-            }
+            add(w, computeFlags(w, true));
         }
 
         @Override
         public void visit(Relation r) {
-            if (r.isDisabled()) {
-                add(r, FLAG_DISABLED);
-            } else if (r.isSelected()) {
-                add(r, FLAG_SELECTED);
-            } else if (r.isOuterMemberOfSelected()) {
-                add(r, FLAG_OUTERMEMBER_OF_SELECTED);
-            } else if (r.isMemberOfSelected()) {
-                add(r, FLAG_MEMBER_OF_SELECTED);
-            } else {
-                add(r, FLAG_NORMAL);
-            }
+            add(r, computeFlags(r, true));
         }
 
         @Override
