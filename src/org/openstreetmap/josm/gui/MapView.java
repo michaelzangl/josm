@@ -404,12 +404,11 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
      */
     public void addLayer(Layer layer) {
         boolean isOsmDataLayer = layer instanceof OsmDataLayer;
+        layerLock.writeLock().lock();
+        layerLock.readLock().lock();
         EnumSet<LayerListenerType> listenersToFire = EnumSet.noneOf(LayerListenerType.class);
         Layer oldActiveLayer = activeLayer;
         OsmDataLayer oldEditLayer = editLayer;
-
-        layerLock.writeLock().lock();
-        layerLock.readLock().lock();
         try {
             try {
                 if (layer instanceof MarkerLayer && playHeadMarker == null) {
@@ -530,12 +529,12 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
      * @param layer The layer to remove
      */
     public void removeLayer(Layer layer) {
+        layerLock.writeLock().lock();
+        layerLock.readLock().lock();
+
         EnumSet<LayerListenerType> listenersToFire = EnumSet.noneOf(LayerListenerType.class);
         Layer oldActiveLayer = activeLayer;
         OsmDataLayer oldEditLayer = editLayer;
-
-        layerLock.writeLock().lock();
-        layerLock.readLock().lock();
         try {
             try {
                 List<Layer> layersList = new ArrayList<>(layers);
@@ -601,12 +600,11 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
      * @param pos       The new position of the layer
      */
     public void moveLayer(Layer layer, int pos) {
+        layerLock.writeLock().lock();
+        layerLock.readLock().lock();
         EnumSet<LayerListenerType> listenersToFire;
         Layer oldActiveLayer = activeLayer;
         OsmDataLayer oldEditLayer = editLayer;
-
-        layerLock.writeLock().lock();
-        layerLock.readLock().lock();
         try {
             try {
                 int curLayerPos = layers.indexOf(layer);
