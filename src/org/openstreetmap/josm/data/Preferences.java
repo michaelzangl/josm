@@ -956,14 +956,18 @@ public class Preferences {
         } catch (Exception e) {
             Main.error(e);
             File backupFile = new File(prefDir, "preferences.xml.bak");
-            JOptionPane.showMessageDialog(
+            int backupOption = JOptionPane.showConfirmDialog(
                     Main.parent,
                     tr("<html>Preferences file had errors.<br> Making backup of old one to <br>{0}<br> " +
                             "and creating a new default preference file.</html>",
                             backupFile.getAbsoluteFile()),
                     tr("Error"),
+                    JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.ERROR_MESSAGE
             );
+            if (backupOption == JOptionPane.CANCEL_OPTION) {
+                return;
+            }
             Main.platform.rename(preferenceFile, backupFile);
             try {
                 resetToDefault();
