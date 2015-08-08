@@ -333,7 +333,7 @@ public abstract class Condition {
         public KeyCondition(String label, boolean negateResult, KeyMatchType matchType) {
             this.label = label;
             this.negateResult = negateResult;
-            this.matchType = matchType;
+            this.matchType = matchType == null ? KeyMatchType.EQ : matchType;
             this.containsPattern = KeyMatchType.REGEX.equals(matchType)
                     ? Predicates.stringContainsPattern(Pattern.compile(label))
                     : null;
