@@ -306,11 +306,30 @@ public abstract class Condition {
      */
     public static class KeyCondition extends Condition {
 
+        /**
+         * The key name.
+         */
         public final String label;
+        /**
+         * If we should negate the result of the match.
+         */
         public final boolean negateResult;
+        /**
+         * Describes how to match the label against the key.
+         * @see KeyMatchType
+         */
         public final KeyMatchType matchType;
-        public Predicate<String> containsPattern;
+        /**
+         * A predicate used to match a the regexp against the key. Only used if the match type is regexp.
+         */
+        public final Predicate<String> containsPattern;
 
+        /**
+         * Creates a new KeyCondition
+         * @param label The key name (or regexp) to use.
+         * @param negateResult If we should negate the result.,
+         * @param matchType The match type.
+         */
         public KeyCondition(String label, boolean negateResult, KeyMatchType matchType) {
             this.label = label;
             this.negateResult = negateResult;
@@ -324,13 +343,14 @@ public abstract class Condition {
         public boolean applies(Environment e) {
             switch(e.getContext()) {
             case PRIMITIVE:
-                if (KeyMatchType.TRUE.equals(matchType))
+                switch (matchType) {
+                case TRUE:
                     return e.osm.isKeyTrue(label) ^ negateResult;
-                else if (KeyMatchType.FALSE.equals(matchType))
+                case FALSE:
                     return e.osm.isKeyFalse(label) ^ negateResult;
-                else if (KeyMatchType.REGEX.equals(matchType)) {
+                case REGEX:
                     return Utils.exists(e.osm.keySet(), containsPattern) ^ negateResult;
-                } else {
+                default:
                     return e.osm.hasKey(label) ^ negateResult;
                 }
             case LINK:
@@ -340,6 +360,15 @@ public abstract class Condition {
             }
         }
 
+        /**
+         * Get the matched key and the corresponding value.
+         * <p>
+         * WARNING: This ignores {@link #negateResult}.
+         * <p>
+         * WARNING: For regexp, the regular expression is returned instead of a key if the match failed.
+         * @param p The primitive to get the value from.
+         * @return The tag.
+         */
         public Tag asTag(OsmPrimitive p) {
             String key = label;
             if (KeyMatchType.REGEX.equals(matchType)) {
