@@ -26,6 +26,19 @@ import org.openstreetmap.josm.tools.Utils;
 */
 public abstract class AbstractPrimitive implements IPrimitive {
 
+    /**
+     * This is a visitor that can be used to loop over the keys/values of this primitive.
+     * @author Michael Zangl
+     */
+    public interface KeyValueVisitor {
+        /**
+         * This method gets called for every tag recieved.
+         * @param key The key
+         * @param value The value
+         */
+        void visitKeyValue(String key, String value);
+    }
+
     private static final AtomicLong idCounter = new AtomicLong(0);
 
     static long generateUniqueId() {
@@ -492,6 +505,19 @@ public abstract class AbstractPrimitive implements IPrimitive {
         }
 
         return result;
+    }
+
+    /**
+     * Calls the visitor for every key/value pair of this primitive.
+     * @param visitor The visitor to call.
+     */
+    public void visitKeys(KeyValueVisitor visitor) {
+        final String[] keys = this.keys;
+        if (keys != null) {
+            for (int i = 0; i < keys.length; i += 2) {
+                visitor.visitKeyValue(keys[i], keys[i + 1]);
+            }
+        }
     }
 
     /**
