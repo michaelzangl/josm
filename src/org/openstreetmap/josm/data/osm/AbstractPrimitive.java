@@ -47,6 +47,11 @@ public abstract class AbstractPrimitive implements IPrimitive {
             }
             return set;
         }
+
+        @Override
+        public String get(Object key) {
+            return getInKeysArray(keys, key);
+        }
     }
 
     static long generateUniqueId() {
@@ -504,7 +509,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
         if (keys == null) {
             return Collections.emptyMap();
         } else {
-            return new KeyMap(keys);
+            return new KeyMap(Arrays.copyOf(keys, keys.length));
         }
     }
 
@@ -618,7 +623,10 @@ public abstract class AbstractPrimitive implements IPrimitive {
      */
     @Override
     public final String get(String key) {
-        String[] keys = this.keys;
+        return getInKeysArray(this.keys, key);
+    }
+
+    protected static String getInKeysArray(String[] keys, Object key) {
         if (key == null)
             return null;
         if (keys == null)
