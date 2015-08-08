@@ -4,11 +4,11 @@ package org.openstreetmap.josm.data.osm;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.text.MessageFormat;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,6 +27,27 @@ import org.openstreetmap.josm.tools.Utils;
 public abstract class AbstractPrimitive implements IPrimitive {
 
     private static final AtomicLong idCounter = new AtomicLong(0);
+
+    /**
+     * This class wraps the keys array into a new map.
+     * @author michael
+     *
+     */
+    private static class KeyMap extends AbstractMap<String, String> {
+        private final String[] keys;
+        public KeyMap(String[] keys) {
+            this.keys = keys;
+        }
+
+        @Override
+        public Set<Entry<String, String>> entrySet() {
+            HashSet<Entry<String, String>> set = new HashSet<>();
+            for (int i = 0; i < keys.length; i += 2) {
+                set.add(new SimpleEntry<String, String>(keys[i], keys[i+1]));
+            }
+            return set;
+        }
+    }
 
     static long generateUniqueId() {
         return idCounter.decrementAndGet();
@@ -480,18 +501,11 @@ public abstract class AbstractPrimitive implements IPrimitive {
     @Override
     public Map<String, String> getKeys() {
         final String[] keys = this.keys;
-        if (keys == null || keys.length == 0) {
+        if (keys == null) {
             return Collections.emptyMap();
-        } else if (keys.length == 2) {
-            return Collections.singletonMap(keys[0], keys[1]);
+        } else {
+            return new KeyMap(keys);
         }
-
-        final Map<String, String> result = new HashMap<>(Utils.hashMapInitialCapacity(keys.length / 2));
-        for (int i = 0; i < keys.length; i += 2) {
-            result.put(keys[i], keys[i + 1]);
-        }
-
-        return result;
     }
 
     /**
