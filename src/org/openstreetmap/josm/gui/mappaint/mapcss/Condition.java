@@ -15,6 +15,7 @@ import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.search.SearchCompiler.InDataSourceArea;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.OsmUtils;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.Tag;
 import org.openstreetmap.josm.data.osm.Way;
@@ -82,12 +83,67 @@ public abstract class Condition {
         return new ExpressionCondition(e);
     }
 
+    /**
+     * This is the operation that {@link KeyValueCondition} uses to match.
+     */
     public static enum Op {
-        EQ, NEQ, GREATER_OR_EQUAL, GREATER, LESS_OR_EQUAL, LESS,
-        REGEX, NREGEX, ONE_OF, BEGINS_WITH, ENDS_WITH, CONTAINS;
+        /**
+         * The value equals the given reference.
+         */
+        EQ,
+        /**
+         * The value does not equal the reference.
+         */
+        NEQ,
+        /**
+         * The value is greater than or equal to the given reference value (as float).
+         */
+        GREATER_OR_EQUAL,
+        /**
+         * The value is greater than the given reference value (as float).
+         */
+        GREATER,
+        /**
+         * The value is less than or equal to the given reference value (as float).
+         */
+        LESS_OR_EQUAL,
+        /**
+         * The value is less than the given reference value (as float).
+         */
+        LESS,
+        /**
+         * The reference is treated as regular expression and the value needs to match it.
+         */
+        REGEX,
+        /**
+         * The reference is treated as regular expression and the value needs to not match it.
+         */
+        NREGEX,
+        /**
+         * The reference is treated as a list separated by ';'. Spaces around the ; are ignored. The value needs to be equal one of the list elements.
+         */
+        ONE_OF,
+        /**
+         * The value needs to begin with the reference string.
+         */
+        BEGINS_WITH,
+        /**
+         * The value needs to end with the reference string.
+         */
+        ENDS_WITH,
+         /**
+          * The value needs to contain the reference string.
+          */
+        CONTAINS;
 
         public static final Set<Op> NEGATED_OPS = EnumSet.of(NEQ, NREGEX);
 
+        /**
+         * Evaluates a value against a reference string.
+         * @param testString The value. May be <code>null</code>
+         * @param prototypeString The reference string-
+         * @return <code>true</code> if and only if this operation matches for the given value/reference pair.
+         */
         public boolean eval(String testString, String prototypeString) {
             if (testString == null && !NEGATED_OPS.contains(this))
                 return false;
@@ -149,14 +205,25 @@ public abstract class Condition {
     }
 
     /**
-     * Most common case of a KeyValueCondition.
+     * Most common case of a KeyValueCondition, this is the basic key=value case.
      *
      * Extra class for performance reasons.
      */
     public static class SimpleKeyValueCondition extends Condition {
+        /**
+         * The key to search for.
+         */
         public final String k;
+        /**
+         * The value to search for.
+         */
         public final String v;
 
+        /**
+         * Create a new SimpleKeyValueCondition.
+         * @param k The key
+         * @param v The value.
+         */
         public SimpleKeyValueCondition(String k, String v) {
             this.k = k;
             this.v = v;
@@ -183,10 +250,21 @@ public abstract class Condition {
      *
      */
     public static class KeyValueCondition extends Condition {
-
+        /**
+         * The key to search for.
+         */
         public final String k;
+        /**
+         * The value to search for.
+         */
         public final String v;
+        /**
+         * The key/value match operation.
+         */
         public final Op op;
+        /**
+         * If this flag is set, {@link #v} is treated as a key and the value is the value set for that key.
+         */
         public boolean considerValAsKey;
 
         /**
@@ -281,8 +359,28 @@ public abstract class Condition {
         }
     }
 
+    /**
+     * This defines how {@link KeyCondition} matches a given key.
+     */
     public static enum KeyMatchType {
-        EQ, TRUE, FALSE, REGEX
+        /**
+         * The key needs to be equal to the given label.
+         */
+        EQ,
+        /**
+         * The key needs to have a true value (yes, ...)
+         * @see OsmUtils#isTrue(String)
+         */
+        TRUE,
+        /**
+         * The key needs to have a false value (no, ...)
+         * @see OsmUtils#isFalse(String)
+         */
+        FALSE,
+        /**
+         * The key needs to match the given regular expression.
+         */
+        REGEX
     }
 
     /**
