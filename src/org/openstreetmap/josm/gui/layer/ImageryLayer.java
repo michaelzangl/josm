@@ -19,6 +19,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
+import java.awt.image.LookupOp;
+import java.awt.image.ShortLookupTable;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
 import java.util.ArrayList;
@@ -74,7 +76,7 @@ public abstract class ImageryLayer extends Layer {
     protected double dx = 0.0;
     protected double dy = 0.0;
 
-    protected int sharpenLevel;
+    protected GammaImageProcessor gammaImageProcessor = new GammaImageProcessor();
 
     private final ImageryAdjustAction adjustAction = new ImageryAdjustAction(this);
 
@@ -92,7 +94,8 @@ public abstract class ImageryLayer extends Layer {
         if (icon == null) {
             icon = ImageProvider.get("imagery_small");
         }
-        this.sharpenLevel = PROP_SHARPEN_LEVEL.get();
+        addImageProcessor(createSharpener(PROP_SHARPEN_LEVEL.get()));
+        addImageProcessor(gammaImageProcessor);
     }
 
     public double getPPD() {
@@ -237,31 +240,88 @@ public abstract class ImageryLayer extends Layer {
         return hasBookmarks ? subMenu : adjustMenuItem;
     }
 
-    public BufferedImage sharpenImage(BufferedImage img) {
-        if (sharpenLevel <= 0) return img;
-        int width = img.getWidth(null);
-        int height = img.getHeight(null);
-        BufferedImage tmp = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        tmp.getGraphics().drawImage(img, 0, 0, null);
-        Kernel kernel;
+    public ImageProcessor createSharpener(int sharpenLevel) {
+        final Kernel kernel;
         if (sharpenLevel == 1) {
-            kernel = new Kernel(3, 3, new float[] {-0.25f, -0.5f, -0.25f, -0.5f, 4, -0.5f, -0.25f, -0.5f, -0.25f});
+            kernel = new Kernel(3, 3, new float[]{-0.25f, -0.5f, -0.25f, -0.5f, 4, -0.5f, -0.25f, -0.5f, -0.25f});
+        } else if (sharpenLevel == 2) {
+            kernel = new Kernel(3, 3, new float[]{-0.5f, -1, -0.5f, -1, 7, -1, -0.5f, -1, -0.5f});
         } else {
-            kernel = new Kernel(3, 3, new float[] {-0.5f, -1, -0.5f, -1, 7, -1, -0.5f, -1, -0.5f});
+            return null;
         }
         BufferedImageOp op = new ConvolveOp(kernel, ConvolveOp.EDGE_NO_OP, null);
-        return op.filter(tmp, null);
+        return createImageProcessor(op, false);
     }
 
     /**
-     * This method adds the {@link ImageProcessor} to this Layer
+     * An image processor which adjusts the gamma value of an image.
+     */
+    public static class GammaImageProcessor implements ImageProcessor {
+        private double gamma = 1;
+        final short[] gammaChange = new short[256];
+        private LookupOp op3 = new LookupOp(new ShortLookupTable(0, new short[][]{gammaChange, gammaChange, gammaChange}), null);
+        private LookupOp op4 = new LookupOp(new ShortLookupTable(0, new short[][]{gammaChange, gammaChange, gammaChange, gammaChange}), null);
+
+        /**
+         * Returns the currently set gamma value.
+         */
+        public double getGamma() {
+            return gamma;
+        }
+
+        /**
+         * Sets a new gamma value, {@code 1} stands for no correction.
+         */
+        public void setGamma(double gamma) {
+            this.gamma = gamma;
+            for (int i = 0; i < 256; i++) {
+                gammaChange[i] = (short) (255 * Math.pow(i / 255., gamma));
+            }
+        }
+
+        private LookupOp getOp(int bands) {
+            if (gamma == 1) {
+                return null;
+            } else if (bands == 3) {
+                return op3;
+            } else if (bands == 4) {
+                return op4;
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public BufferedImage process(BufferedImage image) {
+            final LookupOp op = getOp(image.getRaster().getNumBands());
+            final BufferedImage to = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+            return op == null ? image : op.filter(image, to);
+        }
+    }
+
+    /**
+     * Returns the currently set gamma value.
+     */
+    public double getGamma() {
+        return gammaImageProcessor.getGamma();
+    }
+
+    /**
+     * Sets a new gamma value, {@code 1} stands for no correction.
+     */
+    public void setGamma(double gamma) {
+        gammaImageProcessor.setGamma(gamma);
+    }
+
+    /**
+     * This method adds the {@link ImageProcessor} to this Layer if it is not {@code null}.
      *
      * @param processor that processes the image
      *
      * @return true if processor was added, false otherwise
      */
     public boolean addImageProcessor(ImageProcessor processor) {
-        return imageProcessors.add(processor);
+        return processor != null && imageProcessors.add(processor);
     }
 
     /**
@@ -273,6 +333,22 @@ public abstract class ImageryLayer extends Layer {
      */
     public boolean removeImageProcessor(ImageProcessor processor) {
         return imageProcessors.remove(processor);
+    }
+
+    /**
+     * Wraps a {@link BufferedImageOp} to be used as {@link ImageProcessor}.
+     * @param op the {@link BufferedImageOp}
+     * @param inPlace true to apply filter in place, i.e., not create a new {@link BufferedImage} for the result
+     *                (the {@code op} needs to support this!)
+     * @return the {@link ImageProcessor} wrapper
+     */
+    public static ImageProcessor createImageProcessor(final BufferedImageOp op, final boolean inPlace) {
+        return new ImageProcessor() {
+            @Override
+            public BufferedImage process(BufferedImage image) {
+                return op.filter(image, inPlace ? image : null);
+            }
+        };
     }
 
     /**

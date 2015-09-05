@@ -3,8 +3,6 @@ package org.openstreetmap.josm.gui;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 import static org.openstreetmap.josm.tools.I18n.trn;
-import gnu.getopt.Getopt;
-import gnu.getopt.LongOpt;
 
 import java.awt.Dimension;
 import java.awt.Image;
@@ -17,7 +15,9 @@ import java.io.InputStream;
 import java.net.Authenticator;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ProxySelector;
+import java.net.Socket;
 import java.net.URL;
 import java.security.AllPermission;
 import java.security.CodeSource;
@@ -69,6 +69,9 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.OsmUrlToBounds;
 import org.openstreetmap.josm.tools.PlatformHookWindows;
 import org.openstreetmap.josm.tools.Utils;
+
+import gnu.getopt.Getopt;
+import gnu.getopt.LongOpt;
 
 /**
  * Main window class application.
@@ -207,7 +210,7 @@ public class MainApplication extends Main {
         private final String name;
         private final boolean requiresArg;
 
-        private Option(boolean requiresArgument) {
+        Option(boolean requiresArgument) {
             this.name = name().toLowerCase(Locale.ENGLISH).replace("_", "-");
             this.requiresArg = requiresArgument;
         }
@@ -556,6 +559,10 @@ public class MainApplication extends Main {
                         for (InetAddress a : InetAddress.getAllByName("josm.openstreetmap.de")) {
                             if (a instanceof Inet6Address) {
                                 if (a.isReachable(1000)) {
+                                    /* be sure it REALLY works */
+                                    Socket s = new Socket();
+                                    s.connect(new InetSocketAddress(a, 80), 1000);
+                                    s.close();
                                     Utils.updateSystemProperty("java.net.preferIPv6Addresses", "true");
                                     if (!wasv6) {
                                         Main.info(tr("Detected useable IPv6 network, prefering IPv6 over IPv4 after next restart."));

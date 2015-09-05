@@ -273,7 +273,7 @@ public final class TaggingPresetItems {
 
         private final String value;
 
-        private MatchType(String value) {
+        MatchType(String value) {
             this.value = value;
         }
 
@@ -1464,6 +1464,9 @@ public final class TaggingPresetItems {
     }
 
     public static Set<TaggingPresetType> getType(String types) throws SAXException {
+        if (types == null || types.isEmpty()) {
+            throw new SAXException(tr("Unknown type: {0}", types));
+        }
         if (TYPE_CACHE.containsKey(types))
             return TYPE_CACHE.get(types);
         Set<TaggingPresetType> result = EnumSet.noneOf(TaggingPresetType.class);

@@ -133,7 +133,19 @@ public abstract class AbstractTileSourceLayer extends ImageryLayer implements Im
     /** if layer should show errors on tiles */
     public boolean showErrors;
 
-    protected TileCache tileCache;
+    /**
+     * use fairly small memory cache, as cached objects are quite big, as they contain BufferedImages
+     */
+    public static final IntegerProperty MEMORY_CACHE_SIZE = new IntegerProperty(PREFERENCE_PREFIX + "cache.max_objects_ram", 200);
+
+    /*
+     *  use MemoryTileCache instead of tileLoader JCS cache, as tileLoader caches only content (byte[] of image)
+     *  and MemoryTileCache caches whole Tile. This gives huge performance improvement when a lot of tiles are visible
+     *  in MapView (for example - when limiting min zoom in imagery)
+     *
+     *  Use static instance so memory is shared between layers to prevent out of memory exceptions, when user is working with many layers
+     */
+    protected static TileCache tileCache = new MemoryTileCache(MEMORY_CACHE_SIZE.get());
     protected AbstractTMSTileSource tileSource;
     protected TileLoader tileLoader;
 
@@ -173,12 +185,6 @@ public abstract class AbstractTileSourceLayer extends ImageryLayer implements Im
         Map<String, String> headers = getHeaders(tileSource);
 
         tileLoader = getTileLoaderFactory().makeTileLoader(this, headers);
-        /*
-         *  use MemoryTileCache instead of tileLoader JCS cache, as tileLoader caches only content (byte[] of image)
-         *  and MemoryTileCache caches whole Tile. This gives huge performance improvement when a lot of tiles are visible
-         *  in MapView (for example - when limiting min zoom in imagery)
-         */
-        tileCache = new MemoryTileCache(AbstractCachedTileSourceLayer.MEMORY_CACHE_SIZE.get());
 
         try {
             if ("file".equalsIgnoreCase(new URL(tileSource.getBaseUrl()).getProtocol())) {
@@ -200,9 +206,6 @@ public abstract class AbstractTileSourceLayer extends ImageryLayer implements Im
         if (tile.hasError()) {
             success = false;
             tile.setImage(null);
-        }
-        if (sharpenLevel != 0 && success) {
-            tile.setImage(sharpenImage(tile.getImage()));
         }
         tile.setLoaded(success);
         needRedraw = true;
@@ -227,12 +230,7 @@ public abstract class AbstractTileSourceLayer extends ImageryLayer implements Im
         if (tileLoader instanceof CachedTileLoader) {
             ((CachedTileLoader) tileLoader).clearCache(tileSource);
         }
-        // if we use TMSCachedTileLoader, we already cleared by tile source, this is needed
-        // to prevent removal of additional objects
-        if (!(tileLoader instanceof TMSCachedTileLoader)) {
-            tileCache.clear();
-        }
-
+        tileCache.clear();
     }
 
     /**
@@ -244,6 +242,12 @@ public abstract class AbstractTileSourceLayer extends ImageryLayer implements Im
     protected void redraw() {
         needRedraw = true;
         Main.map.repaint();
+    }
+
+    @Override
+    public void setGamma(double gamma) {
+        super.setGamma(gamma);
+        redraw();
     }
 
     /**
@@ -872,7 +876,7 @@ public abstract class AbstractTileSourceLayer extends ImageryLayer implements Im
         return new TileSet(topLeft, botRight, currentZoomLevel);
     }
 
-    private void loadAllTiles(boolean force) {
+    protected void loadAllTiles(boolean force) {
         TileSet ts = getVisibleTileSet();
 
         // if there is more than 18 tiles on screen in any direction, do not load all tiles!
@@ -883,7 +887,7 @@ public abstract class AbstractTileSourceLayer extends ImageryLayer implements Im
         ts.loadAllTiles(force);
     }
 
-    private void loadAllErrorTiles(boolean force) {
+    protected void loadAllErrorTiles(boolean force) {
         TileSet ts = getVisibleTileSet();
         ts.loadAllErrorTiles(force);
     }
@@ -1298,14 +1302,15 @@ public abstract class AbstractTileSourceLayer extends ImageryLayer implements Im
         TileSetInfo result = new TileSetInfo();
         result.hasLoadingTiles = allTiles.size() < ts.size();
         for (Tile t : allTiles) {
+            if ("no-tile".equals(t.getValue("tile-info"))) {
+                result.hasOverzoomedTiles = true;
+            }
+
             if (t.isLoaded()) {
                 if (!t.hasError()) {
                     result.hasVisibleTiles = true;
                 }
-                if ("no-tile".equals(t.getValue("tile-info"))) {
-                    result.hasOverzoomedTiles = true;
-                }
-            } else {
+            } else if (t.isLoading()) {
                 result.hasLoadingTiles = true;
             }
         }
@@ -1403,12 +1408,14 @@ public abstract class AbstractTileSourceLayer extends ImageryLayer implements Im
 
             // If all tiles at displayZoomLevel is loaded, load all tiles at next zoom level
             // to make sure there're really no more zoom levels
+            // loading is done in the next if section
             if (zoom == displayZoomLevel && !tsi.hasLoadingTiles && zoom < dts.maxZoom) {
                 zoom++;
                 tsi = dts.getTileSetInfo(zoom);
             }
             // When we have overzoomed tiles and all tiles at current zoomlevel is loaded,
             // load tiles at previovus zoomlevels until we have all tiles on screen is loaded.
+            // loading is done in the next if section
             while (zoom > dts.minZoom && tsi.hasOverzoomedTiles && !tsi.hasLoadingTiles) {
                 zoom--;
                 tsi = dts.getTileSetInfo(zoom);

@@ -42,6 +42,7 @@ public class TemplatedWMSTileSource extends TMSTileSource implements TemplatedTi
     private Bounds worldBounds;
     private int[] tileXMax;
     private int[] tileYMax;
+    private double[] degreesPerTile;
 
     private static final Pattern PATTERN_HEADER  = Pattern.compile("\\{header\\(([^,]+),([^}]+)\\)\\}");
     private static final Pattern PATTERN_PROJ    = Pattern.compile("\\{proj\\}");
@@ -60,6 +61,14 @@ public class TemplatedWMSTileSource extends TMSTileSource implements TemplatedTi
         PATTERN_HEADER, PATTERN_PROJ, PATTERN_BBOX, PATTERN_W, PATTERN_S, PATTERN_E, PATTERN_N, PATTERN_WIDTH, PATTERN_HEIGHT
     };
 
+    /*
+     * Constant taken from OGC WMTS Implementation Specification (http://www.opengeospatial.org/standards/wmts)
+     * From table E.4 - Definition of Well-known scale set GoogleMapsCompatibile
+     *
+     *  As higher zoom levels have denominator divided by 2, we keep only zoom level 1 in the code
+     */
+    private static final float SCALE_DENOMINATOR_ZOOM_LEVEL_1 = 559082264.0287178f;
+
     /**
      * Creates a tile source based on imagery info
      * @param info imagery info
@@ -70,7 +79,7 @@ public class TemplatedWMSTileSource extends TMSTileSource implements TemplatedTi
         handleTemplate();
         initProjection();
         // FIXME: remove in September 2015, when ImageryPreferenceEntry.tileSize will be initialized to -1 instead to 256
-        // need to leave it as it is to keep compatiblity between tested and latest JOSM versions
+        // need to leave it as it is to keep compatibility between tested and latest JOSM versions
         tileSize = WMSLayer.PROP_IMAGE_SIZE.get();
     }
 
@@ -92,9 +101,17 @@ public class TemplatedWMSTileSource extends TMSTileSource implements TemplatedTi
         this.topLeftCorner = new EastNorth(min.east(), max.north());
 
         LatLon bottomRight = new LatLon(worldBounds.getMinLat(), worldBounds.getMaxLon());
+
+        // use 256 as "tile size" to keep the scale in line with default tiles in Mercator projection
+        double crsScale = 256 * 0.28e-03 / proj.getMetersPerUnit();
         tileXMax = new int[getMaxZoom() + 1];
         tileYMax = new int[getMaxZoom() + 1];
-        for (int zoom = getMinZoom(); zoom <= getMaxZoom(); zoom++) {
+        degreesPerTile = new double[getMaxZoom() + 1];
+
+        for (int zoom = 1; zoom <= getMaxZoom(); zoom++) {
+            // use well known scale set "GoogleCompatibile" from OGC WMTS spec to calculate number of tiles per zoom level
+            // this makes the zoom levels "glued" to standard TMS zoom levels
+            degreesPerTile[zoom] = (SCALE_DENOMINATOR_ZOOM_LEVEL_1 / Math.pow(2, zoom - 1)) * crsScale;
             TileXY maxTileIndex = latLonToTileXY(bottomRight.toCoordinate(), zoom);
             tileXMax[zoom] = maxTileIndex.getXIndex();
             tileYMax[zoom] = maxTileIndex.getYIndex();
@@ -381,15 +398,7 @@ public class TemplatedWMSTileSource extends TMSTileSource implements TemplatedTi
     }
 
     private double getDegreesPerTile(int zoom) {
-        Projection proj = Main.getProjection();
-        EastNorth min = proj.latlon2eastNorth(worldBounds.getMin());
-        EastNorth max = proj.latlon2eastNorth(worldBounds.getMax());
-
-        int tilesPerZoom = (int) Math.pow(2d, zoom - 1);
-        return Math.max(
-                Math.abs(max.getY() - min.getY()) / tilesPerZoom,
-                Math.abs(max.getX() - min.getX()) / tilesPerZoom
-                );
+        return degreesPerTile[zoom];
     }
 
     /**

@@ -332,6 +332,7 @@
 }
 
 /* see #10661, #10837, #11737 */
+*[access=restricted],
 *[barrier=yes],
 *[aerialway=yes][!public_transport],
 *[amenity=yes],
@@ -510,4 +511,26 @@ relation[/^..$/][!to] {
   suggestAlternative: "payment:bitcoin=yes";
   suggestAlternative: "payment:litecoin=yes";
   suggestAlternative: "...";
+}
+
+/* see #8717 */
+*[kp][highway=milestone],
+*[kp][railway=milestone],
+*[kp][waterway=milestone] {
+  throwWarning: tr("{0} is deprecated", "{0.key}");
+  suggestAlternative: "distance";
+  fixChangeKey: "kp => distance";
+}
+*[pk][highway=milestone],
+*[pk][railway=milestone],
+*[pk][waterway=milestone] {
+  throwWarning: tr("{0} is deprecated", "{0.key}");
+  suggestAlternative: "distance";
+  fixChangeKey: "pk => distance";
+}
+
+*[postcode] {
+  throwWarning: tr("{0} is deprecated", "{0.key}");
+  suggestAlternative: "addr:postcode";
+  suggestAlternative: "postal_code";
 }

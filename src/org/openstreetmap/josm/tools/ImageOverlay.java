@@ -1,6 +1,8 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.tools;
 
+import org.openstreetmap.josm.gui.layer.ImageProcessor;
+
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 
@@ -9,8 +11,8 @@ import javax.swing.ImageIcon;
 /** class to describe how image overlay
  * @since 8095
  */
-public class ImageOverlay {
-    /** the image ressource to use as overlay */
+public class ImageOverlay implements ImageProcessor {
+    /** the image resource to use as overlay */
     public ImageProvider image;
     /** offset of the image from left border, values between 0 and 1 */
     private double offsetLeft;
@@ -25,7 +27,7 @@ public class ImageOverlay {
      * Create an overlay info. All values are relative sizes between 0 and 1. Size of the image
      * is the result of the difference between left/right and top/bottom.
      *
-     * @param image imager provider for the overlay icon
+     * @param image image provider for the overlay icon
      * @param offsetLeft offset of the image from left border, values between 0 and 1, -1 for auto-calculation
      * @param offsetTop offset of the image from top border, values between 0 and 1, -1 for auto-calculation
      * @param offsetRight offset of the image from right border, values between 0 and 1, -1 for auto-calculation
@@ -45,7 +47,7 @@ public class ImageOverlay {
      * Size of the image is the result of the difference between left/right and top/bottom.
      * Right and bottom values are set to 1.
      *
-     * @param image imager provider for the overlay icon
+     * @param image image provider for the overlay icon
      * @see #ImageOverlay(ImageProvider, double, double, double, double)
      * @since 8095
      */
@@ -64,7 +66,8 @@ public class ImageOverlay {
      * @return the modified image (same as argument)
      * @since 8095
      */
-    public BufferedImage apply(BufferedImage ground) {
+    @Override
+    public BufferedImage process(BufferedImage ground) {
         /* get base dimensions for calculation */
         int w = ground.getWidth();
         int h = ground.getHeight();
@@ -74,7 +77,7 @@ public class ImageOverlay {
             width = (int) (w*(offsetRight-offsetLeft));
         }
         if (offsetTop > 0 && offsetBottom > 0) {
-            width = (int) (h*(offsetBottom-offsetTop));
+            height = (int) (h*(offsetBottom-offsetTop));
         }
         ImageIcon overlay;
         if (width != -1 || height != -1) {
