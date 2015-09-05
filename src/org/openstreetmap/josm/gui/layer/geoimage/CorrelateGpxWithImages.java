@@ -154,8 +154,10 @@ public class CorrelateGpxWithImages extends AbstractAction {
                 break;
             case CANCEL:
                 if (yLayer != null) {
-                    for (ImageEntry ie : yLayer.data) {
-                        ie.tmp = null;
+                    if (yLayer.data != null) {
+                        for (ImageEntry ie : yLayer.data) {
+                            ie.tmp = null;
+                        }
                     }
                     yLayer.updateBufferAndRepaint();
                 }
@@ -190,8 +192,10 @@ public class CorrelateGpxWithImages extends AbstractAction {
                     Main.map.mapView.zoomTo(bbox);
                 }
 
-                for (ImageEntry ie : yLayer.data) {
-                    ie.applyTmp();
+                if (yLayer.data != null) {
+                    for (ImageEntry ie : yLayer.data) {
+                        ie.applyTmp();
+                    }
                 }
 
                 yLayer.updateBufferAndRepaint();
