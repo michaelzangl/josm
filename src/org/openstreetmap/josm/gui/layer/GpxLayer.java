@@ -364,4 +364,9 @@ public class GpxLayer extends Layer {
         return SaveActionBase.createAndOpenSaveFileChooser(tr("Save GPX file"), GpxImporter.FILE_FILTER);
     }
 
+    @Override
+    public LayerPositionStrategy getPositionStrategy() {
+        return LayerPositionStrategy.AFTER_LAST_DATA_LAYER;
+    }
+
 }

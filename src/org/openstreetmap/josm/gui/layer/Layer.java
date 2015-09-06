@@ -506,4 +506,12 @@ public abstract class Layer implements Destroyable, MapViewPaintable, Projection
     public File createAndOpenSaveFileChooser() {
         return SaveActionBase.createAndOpenSaveFileChooser(tr("Save Layer"), "lay");
     }
+
+    /**
+     * Gets the strategy that specifies where this layer should be inserted in a layer list.
+     * @return That strategy.
+     */
+    public LayerPositionStrategy getPositionStrategy() {
+        return isBackgroundLayer() ? LayerPositionStrategy.BEFORE_FIRST_BACKGROUND_LAYER : LayerPositionStrategy.IN_FRONT;
+    }
 }

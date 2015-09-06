@@ -49,7 +49,7 @@ public class SelectActionTest {
                 };
 
         MapViewMock(DataSet dataSet, OsmDataLayer layer) {
-            super(null, null);
+            super(Main.layerManager, null, null);
             this.layer = layer;
             this.currentDataSet = dataSet;
         }
