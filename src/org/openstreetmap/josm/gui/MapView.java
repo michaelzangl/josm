@@ -539,7 +539,6 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      */
     public void moveLayer(Layer layer, int pos) {
         layerManager.moveLayer(layer, pos);
-
     }
 
     @Override

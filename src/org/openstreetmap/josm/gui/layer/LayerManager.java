@@ -192,7 +192,6 @@ public class LayerManager {
      * @param ofType The layer type.
      * @return an unmodifiable list of layers of a certain type.
      */
-    @Deprecated
     public <T extends Layer> List<T> getLayersOfType(Class<T> ofType) {
         return new ArrayList<>(Utils.filteredCollection(getLayers(), ofType));
     }
