@@ -26,7 +26,7 @@ public abstract class LayerPositionStrategy {
         @Override
         public int getPosition(LayerManager manager) {
             List<Layer> layers = manager.getLayers();
-            for (int i = layers.size()-1; i >= 0; i--) {
+            for (int i = layers.size() - 1; i >= 0; i--) {
                 if (layers.get(i) instanceof OsmDataLayer) {
                     return i + 1;
                 }
@@ -36,7 +36,7 @@ public abstract class LayerPositionStrategy {
     };
 
     /**
-     * A GPX layer is added below the lowest data layer.
+     * The default for background layers: They are added before the first background layer in the list. If there is n one, they are added at the end of the list.
      */
     public static final LayerPositionStrategy BEFORE_FIRST_BACKGROUND_LAYER = new LayerPositionStrategy() {
         @Override
