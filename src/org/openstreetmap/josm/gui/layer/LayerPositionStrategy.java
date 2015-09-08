@@ -3,7 +3,10 @@ package org.openstreetmap.josm.gui.layer;
 
 import java.util.List;
 
-
+/**
+ * This class defines a position to insert a given layer in the list of layers.
+ * @author Michael Zangl
+ */
 public abstract class LayerPositionStrategy {
 
     /**
@@ -48,5 +51,10 @@ public abstract class LayerPositionStrategy {
         }
     };
 
+    /**
+     * Gets the position where the layer should be inserted
+     * @param manager The layer manager to insert the layer in.
+     * @return The position in the range 0...layers.size
+     */
     public abstract int getPosition(LayerManager manager);
 }
