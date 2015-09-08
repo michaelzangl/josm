@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.tools.Utils;
 
 /**
  * This class handles the layer management.
@@ -53,6 +54,10 @@ public class LayerManager {
         }
     }
 
+    /**
+     * The event that is fired whenever a layer was added.
+     * @author Michael Zangl
+     */
     public static class LayerAddEvent extends LayerManagerEvent {
         private final Layer addedLayer;
 
@@ -61,11 +66,19 @@ public class LayerManager {
             this.addedLayer = addedLayer;
         }
 
+        /**
+         * Gets the layer that was added.
+         * @return The added layer.
+         */
         public Layer getAddedLayer() {
             return addedLayer;
         }
     }
 
+    /**
+     * The event that is fired before removing a layer.
+     * @author Michael Zangl
+     */
     public static class LayerRemoveEvent extends LayerManagerEvent {
         private final Layer removedLayer;
 
@@ -74,10 +87,19 @@ public class LayerManager {
             this.removedLayer = removedLayer;
         }
 
+        /**
+         * Gets the layer that is about to be removed.
+         * @return The layer.
+         */
         public Layer getRemovedLayer() {
             return removedLayer;
         }
     }
+
+    /**
+     * An event that is fired whenever the order of layers changed.
+     * @author Michael Zangl
+     */
     public static class LayerOrderChangeEvent extends LayerManagerEvent {
         LayerOrderChangeEvent(LayerManager source) {
             super(source);
@@ -102,6 +124,7 @@ public class LayerManager {
         }
         LayerPositionStrategy positionStrategy = layer.getPositionStrategy();
         int position = positionStrategy.getPosition(this);
+        checkPosition(position);
         insertLayerAt(layer, position);
         fireLayerAdded(layer);
     }
@@ -118,8 +141,15 @@ public class LayerManager {
         layers.remove(layer);
     }
 
+    /**
+     * Move a layer to a new position.
+     * @param layer The layer to move.
+     * @param position The position.
+     * @throws IndexOutOfBoundsException if the position is out of bounds.
+     */
     public synchronized void moveLayer(Layer layer, int position) {
         checkContainsLayer(layer);
+        checkPosition(position);
 
         int curLayerPos = layers.indexOf(layer);
         if (position == curLayerPos)
@@ -130,13 +160,16 @@ public class LayerManager {
     }
 
     private void insertLayerAt(Layer layer, int position) {
-        if (position < 0 || position > layers.size()) {
-            throw new IndexOutOfBoundsException("Position " + position + " out of range.");
-        }
         if (position == layers.size()) {
             layers.add(layer);
         } else {
             layers.add(position, layer);
+        }
+    }
+
+    private void checkPosition(int position) {
+        if (position < 0 || position > layers.size()) {
+            throw new IndexOutOfBoundsException("Position " + position + " out of range.");
         }
     }
 
@@ -146,6 +179,22 @@ public class LayerManager {
      */
     public List<Layer> getLayers() {
         return Collections.unmodifiableList(new ArrayList<>(layers));
+    }
+
+    /**
+     * Replies an unmodifiable list of layers of a certain type.
+     *
+     * Example:
+     * <pre>
+     *     List&lt;WMSLayer&gt; wmsLayers = getLayersOfType(WMSLayer.class);
+     * </pre>
+     *
+     * @param ofType The layer type.
+     * @return an unmodifiable list of layers of a certain type.
+     */
+    @Deprecated
+    public <T extends Layer> List<T> getLayersOfType(Class<T> ofType) {
+        return new ArrayList<>(Utils.filteredCollection(getLayers(), ofType));
     }
 
     /**
@@ -167,12 +216,18 @@ public class LayerManager {
     /**
      * Adds a layer change listener
      *
-     * @param listener the listener. Ignored if null or already registered.
+     * @param listener the listener.
      */
     public synchronized void addLayerChangeListener(LayerChangeListener listener) {
         addLayerChangeListener(listener, false);
     }
 
+    /**
+     * Adds a layer change listener
+     *
+     * @param listener the listener.
+     * @param fireAdd if we should fire an add event for every layer in this manager.
+     */
     public synchronized void addLayerChangeListener(LayerChangeListener listener, boolean fireAdd) {
         if (layerChangeListeners.contains(listener)) {
             throw new IllegalArgumentException("Listener already registered.");
@@ -194,6 +249,13 @@ public class LayerManager {
         removeLayerChangeListener(listener, false);
     }
 
+
+    /**
+     * Removes a layer change listener
+     *
+     * @param listener the listener.
+     * @param fireRemove if we should fire a remove event for every layer in this manager.
+     */
     public synchronized void removeLayerChangeListener(LayerChangeListener listener, boolean fireRemove) {
         if (!layerChangeListeners.remove(listener)) {
             //throw new IllegalArgumentException("Listener was not registered before: " + listener);

@@ -17,6 +17,11 @@ import org.openstreetmap.josm.data.osm.DataSet;
  * @author Michael Zangl
  */
 public class LayerManagerWithActive extends LayerManager {
+    /**
+     * This listener listens to changes of the active or the edit layer.
+     * @author Michael Zangl
+     *
+     */
     public interface ActiveLayerChangeListener {
         /**
          * Called whenever the active or edit layer changed.
@@ -27,23 +32,41 @@ public class LayerManagerWithActive extends LayerManager {
         public void activeOrEditLayerChanged(ActiveLayerChangeEvent e);
     }
 
+    /**
+     * This event is fired whenever the active or the edit layer changes.
+     * @author Michael Zangl
+     */
     public class ActiveLayerChangeEvent extends LayerManagerEvent {
 
         private final OsmDataLayer previousEditLayer;
 
         private final Layer previousActiveLayer;
 
-        public ActiveLayerChangeEvent(LayerManagerWithActive source, OsmDataLayer previousEditLayer,
+        /**
+         * Create a new {@link ActiveLayerChangeEvent}
+         * @param source The source
+         * @param previousEditLayer the previous edit layer
+         * @param previousActiveLayer the previous active layer
+         */
+        ActiveLayerChangeEvent(LayerManagerWithActive source, OsmDataLayer previousEditLayer,
                 Layer previousActiveLayer) {
             super(source);
             this.previousEditLayer = previousEditLayer;
             this.previousActiveLayer = previousActiveLayer;
         }
 
+        /**
+         * Gets the edit layer that was previously used.
+         * @return The old edit layer, <code>null</code> if there is none.
+         */
         public OsmDataLayer getPreviousEditLayer() {
             return previousEditLayer;
         }
 
+        /**
+         * Gets the active layer that was previously used.
+         * @return The old active layer, <code>null</code> if there is none.
+         */
         public Layer getPreviousActiveLayer() {
             return previousActiveLayer;
         }
@@ -60,16 +83,20 @@ public class LayerManagerWithActive extends LayerManager {
      * Adds a active/edit layer change listener
      *
      * @param listener the listener.
-     * @param initialFire fire an active-layer-changed-event right after adding
-     * the listener
+     * @param initialFire fire a fake active-layer-changed-event right after adding
+     * the listener. The previous layers will be null.
      */
     public void addActiveLayerChangeListener(ActiveLayerChangeListener listener, boolean initialFire) {
         activeLayerChangeListeners.add(listener);
         if (initialFire) {
-            listener.activeOrEditLayerChanged(new ActiveLayerChangeEvent(this, editLayer, activeLayer));
+            listener.activeOrEditLayerChanged(new ActiveLayerChangeEvent(this, null, null));
         }
     }
 
+    /**
+     * Removes an active/edit layer change listener.
+     * @param listener the listener.
+     */
     public void removeActiveLayerChangeListener(ActiveLayerChangeListener listener) {
         activeLayerChangeListeners.remove(listener);
     }
@@ -178,6 +205,10 @@ public class LayerManagerWithActive extends LayerManager {
         return editLayer;
     }
 
+    /**
+     * Gets the data set of the active edit layer.
+     * @return That data set, <code>null</code> if there is no edit layer.
+     */
     public synchronized DataSet getEditDataSet() {
         return editLayer != null ? editLayer.data : null;
     }

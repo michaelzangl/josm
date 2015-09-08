@@ -130,34 +130,34 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     }
 
     protected static class LayerChangeAdapter implements ActiveLayerChangeListener, LayerManager.LayerChangeListener {
-    
+
         private final LayerChangeListener wrapped;
         private boolean receiveOneInitialFire;
-    
+
         public LayerChangeAdapter(LayerChangeListener wrapped) {
             this.wrapped = wrapped;
         }
-    
+
         public LayerChangeAdapter(LayerChangeListener wrapped, boolean initialFire) {
             this(wrapped);
             this.receiveOneInitialFire = initialFire;
         }
-    
+
         @Override
         public void layerAdded(LayerAddEvent e) {
             wrapped.layerAdded(e.getAddedLayer());
         }
-    
+
         @Override
         public void layerRemoving(LayerRemoveEvent e) {
             wrapped.layerRemoved(e.getRemovedLayer());
         }
-    
+
         @Override
         public void layerOrderChanged(LayerOrderChangeEvent e) {
             // not in old API
         }
-    
+
         @Override
         public void activeOrEditLayerChanged(ActiveLayerChangeEvent e) {
             Layer oldActive = receiveOneInitialFire ? null : e.getPreviousActiveLayer();
@@ -167,7 +167,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
             }
             receiveOneInitialFire = false;
         }
-    
+
         @Override
         public int hashCode() {
             final int prime = 31;
@@ -175,7 +175,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
             result = prime * result + ((wrapped == null) ? 0 : wrapped.hashCode());
             return result;
         }
-    
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj)
@@ -192,22 +192,22 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
                 return false;
             return true;
         }
-    
+
         @Override
         public String toString() {
             return "LayerChangeAdapter [wrapped=" + wrapped + "]";
         }
-    
+
     }
 
     protected static class EditLayerChangeAdapter implements ActiveLayerChangeListener {
-    
+
         private final EditLayerChangeListener wrapped;
-    
+
         public EditLayerChangeAdapter(EditLayerChangeListener wrapped) {
             this.wrapped = wrapped;
         }
-    
+
         @Override
         public void activeOrEditLayerChanged(ActiveLayerChangeEvent e) {
             OsmDataLayer oldLayer = e.getPreviousEditLayer();
@@ -216,7 +216,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
                 wrapped.editLayerChanged(oldLayer, newLayer);
             }
         }
-    
+
         @Override
         public int hashCode() {
             final int prime = 31;
@@ -224,7 +224,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
             result = prime * result + ((wrapped == null) ? 0 : wrapped.hashCode());
             return result;
         }
-    
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj)
@@ -241,12 +241,12 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
                 return false;
             return true;
         }
-    
+
         @Override
         public String toString() {
             return "EditLayerChangeAdapter [wrapped=" + wrapped + "]";
         }
-    
+
     }
 
     /**
@@ -254,12 +254,14 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      *
      * @param listener the listener. Ignored if null or already registered.
      */
+    @Deprecated
     public static void removeLayerChangeListener(LayerChangeListener listener) {
         LayerChangeAdapter adapter = new LayerChangeAdapter(listener);
         Main.layerManager.removeLayerChangeListener(adapter);
         Main.layerManager.removeActiveLayerChangeListener(adapter);
     }
 
+    @Deprecated
     public static void removeEditLayerChangeListener(EditLayerChangeListener listener) {
         Main.layerManager.removeActiveLayerChangeListener(new EditLayerChangeAdapter(listener));
     }
@@ -269,6 +271,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      *
      * @param listener the listener. Ignored if null or already registered.
      */
+    @Deprecated
     public static void addLayerChangeListener(LayerChangeListener listener) {
         addLayerChangeListener(listener, false);
     }
@@ -280,6 +283,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      * @param initialFire fire an active-layer-changed-event right after adding
      * the listener in case there is a layer present (should be)
      */
+    @Deprecated
     public static void addLayerChangeListener(LayerChangeListener listener, boolean initialFire) {
         if (listener != null) {
             initialFire = initialFire && Main.isDisplayingMapView();
@@ -298,6 +302,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      * @param initialFire fire an edit-layer-changed-event right after adding
      * the listener in case there is an edit layer present
      */
+    @Deprecated
     public static void addEditLayerChangeListener(EditLayerChangeListener listener, boolean initialFire) {
         if (listener != null) {
             Main.layerManager.addActiveLayerChangeListener(new EditLayerChangeAdapter(listener), initialFire && Main.isDisplayingMapView() && Main.map.mapView.getEditLayer() != null);
@@ -309,6 +314,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      *
      * @param listener the listener. Ignored if null or already registered.
      */
+    @Deprecated
     public static void addEditLayerChangeListener(EditLayerChangeListener listener) {
         addEditLayerChangeListener(listener, false);
     }
@@ -482,33 +488,6 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     }
 
     /**
-     * Determines the next active data layer according to the following
-     * rules:
-     * <ul>
-     *   <li>if there is at least one {@link OsmDataLayer} the first one
-     *     becomes active</li>
-     *   <li>otherwise, the top most layer of any type becomes active</li>
-     * </ul>
-     *
-     * @return the next active data layer
-     */
-    protected Layer determineNextActiveLayer(List<Layer> layersList) {
-        // First look for data layer
-        for (Layer layer:layersList) {
-            if (layer instanceof OsmDataLayer)
-                return layer;
-        }
-
-        // Then any layer
-        if (!layersList.isEmpty())
-            return layersList.get(0);
-
-        // and then give up
-        return null;
-
-    }
-
-    /**
      * Remove the layer from the mapview. If the layer was in the list before,
      * an LayerChange event is fired.
      * @param layer The layer to remove
@@ -518,6 +497,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
         layerManager.removeLayer(layer);
     }
 
+    @Override
     public void layerRemoving(LayerRemoveEvent e) {
         Layer layer = e.getRemovedLayer();
         if (layer instanceof OsmDataLayer) {
@@ -574,6 +554,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      * @return The index in the list.
      * @throws IllegalArgumentException if that layer does not belong to this view.
      */
+    @Deprecated
     public int getLayerPos(Layer layer) {
         int curLayerPos;
             curLayerPos = getAllLayersAsList().indexOf(layer);
@@ -791,8 +772,9 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      * @param ofType The layer type.
      * @return an unmodifiable list of layers of a certain type.
      */
+    @Deprecated
     public <T extends Layer> List<T> getLayersOfType(Class<T> ofType) {
-        return new ArrayList<>(Utils.filteredCollection(getAllLayers(), ofType));
+        return layerManager.getLayersOfType(ofType);
     }
 
     /**
@@ -800,6 +782,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      *
      * @return the number of layers managed by this map view
      */
+    @Deprecated
     public int getNumLayers() {
         return getAllLayers().size();
     }
@@ -809,6 +792,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      *
      * @return true if there is at least one layer in this map view
      */
+    @Deprecated
     public boolean hasLayers() {
         return getNumLayers() > 0;
     }
