@@ -26,6 +26,24 @@ import org.openstreetmap.josm.tools.Utils;
 */
 public abstract class AbstractPrimitive implements IPrimitive {
 
+    /**
+     * This is a visitor that can be used to loop over the keys/values of this primitive.
+     *
+     * @author Michael Zangl
+     * @since 8742
+     */
+    public interface KeyValueVisitor {
+
+        /**
+         * This method gets called for every tag received.
+         *
+         * @param primitive This primitive
+         * @param key   The key
+         * @param value The value
+         */
+        void visitKeyValue(AbstractPrimitive primitive, String key, String value);
+    }
+
     private static final AtomicLong idCounter = new AtomicLong(0);
 
     static long generateUniqueId() {
@@ -476,18 +494,35 @@ public abstract class AbstractPrimitive implements IPrimitive {
      *
      * @return tags of this primitive. Changes made in returned map are not mapped
      * back to the primitive, use setKeys() to modify the keys
+     * @see #visitKeys(KeyValueVisitor)
      */
     @Override
     public Map<String, String> getKeys() {
-        final Map<String, String> result = new HashMap<>(
-                Utils.hashMapInitialCapacity(this.keys == null ? 0 : this.keys.length / 2));
         String[] keys = this.keys;
+        final Map<String, String> result = new HashMap<>(
+                Utils.hashMapInitialCapacity(keys == null ? 0 : keys.length / 2));
         if (keys != null) {
             for (int i = 0; i < keys.length; i += 2) {
                 result.put(keys[i], keys[i + 1]);
             }
         }
         return result;
+    }
+
+    /**
+     * Calls the visitor for every key/value pair of this primitive.
+     *
+     * @param visitor The visitor to call.
+     * @see #getKeys()
+     * @since 8742
+     */
+    public void visitKeys(KeyValueVisitor visitor) {
+        final String[] keys = this.keys;
+        if (keys != null) {
+            for (int i = 0; i < keys.length; i += 2) {
+                visitor.visitKeyValue(this, keys[i], keys[i + 1]);
+            }
+        }
     }
 
     /**

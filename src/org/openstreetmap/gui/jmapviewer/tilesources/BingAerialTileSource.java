@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
@@ -256,7 +256,9 @@ public class BingAerialTileSource extends AbstractTMSTileSource {
             // see http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html
             synchronized (BingAerialTileSource.class) {
                 if (attributions == null) {
-                    attributions = Executors.newSingleThreadExecutor().submit(getAttributionLoaderCallable());
+                  final FutureTask<List<Attribution>> loader = new FutureTask<>(getAttributionLoaderCallable());
+                  new Thread(loader, "bing-attribution-loader").start();
+                  attributions = loader;
                 }
             }
         }
