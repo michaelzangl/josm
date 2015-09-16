@@ -67,6 +67,8 @@ import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.layer.geoimage.GeoImageLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.MarkerLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.PlayHeadMarker;
+import org.openstreetmap.josm.gui.mapview.MapDisplayZoomHelper.ZoomData;
+import org.openstreetmap.josm.gui.navigate.NavigationModel;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.AudioPlayer;
 import org.openstreetmap.josm.tools.BugReportExceptionHandler;
@@ -345,7 +347,6 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     // Layers that wasn't changed since last paint
     private final transient List<Layer> nonChangedLayers = new ArrayList<>();
     private transient Layer changedLayer;
-    private int lastViewID;
     private boolean paintPreferencesChanged = true;
     private Rectangle lastClipBounds = new Rectangle();
     private transient MapMover mapMover;
@@ -373,7 +374,10 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
                     MapView.this.add(c);
                 }
 
-                mapMover = new MapMover(MapView.this, contentPane);
+                mapMover = new MapMover(getNavigationModel(), cursorManager, contentPane);
+                mapMover.registerMouseEvents(MapView.this);
+                // Notify the map view that it has changed.
+                repaint();
             }
         });
 
@@ -400,7 +404,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
             }
         });
 
-        if (Shortcut.findShortcut(KeyEvent.VK_TAB, 0) != null) {
+        if (Shortcut.findShortcut(KeyEvent.VK_TAB, 0)!=null) {
             setFocusTraversalKeysEnabled(false);
         }
     }
@@ -597,8 +601,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
             canUseBuffer = !paintPreferencesChanged;
             paintPreferencesChanged = false;
         }
-        canUseBuffer = canUseBuffer && nonChangedLayers.size() <= nonChangedLayersCount &&
-        lastViewID == getViewID() && lastClipBounds.contains(g.getClipBounds());
+        canUseBuffer = canUseBuffer && nonChangedLayers.size() <= nonChangedLayersCount && lastClipBounds.contains(g.getClipBounds());
         if (canUseBuffer) {
             for (int i = 0; i < nonChangedLayers.size(); i++) {
                 if (visibleLayers.get(i) != nonChangedLayers.get(i)) {
@@ -645,7 +648,6 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
         for (int i = 0; i < nonChangedLayersCount; i++) {
             nonChangedLayers.add(visibleLayers.get(i));
         }
-        lastViewID = getViewID();
         lastClipBounds = g.getClipBounds();
 
         tempG.drawImage(nonChangedLayersBuffer, 0, 0, null);
@@ -939,6 +941,17 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
         }
     }
 
+    @Override
+    public void zoomChanged(NavigationModel navigationModel, ZoomData oldZoom, ZoomData newZoom) {
+        super.zoomChanged(navigationModel, oldZoom, newZoom);
+        synchronized (this) {
+            paintPreferencesChanged = true;
+        }
+    }
+
+    /**
+     * A selection listener that fires a repaint as soon as the selection changes.
+     */
     private transient SelectionChangedListener repaintSelectionChangedListener = new SelectionChangedListener() {
         @Override
         public void selectionChanged(Collection<? extends OsmPrimitive> newSelection) {

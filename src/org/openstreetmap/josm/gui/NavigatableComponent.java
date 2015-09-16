@@ -13,26 +13,20 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.Stack;
 import java.util.TreeMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.zip.CRC32;
-
-import javax.swing.JComponent;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.ProjectionBounds;
 import org.openstreetmap.josm.data.SystemOfMeasurement;
 import org.openstreetmap.josm.data.ViewportData;
-import org.openstreetmap.josm.data.coor.CachedLatLon;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
@@ -49,8 +43,14 @@ import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.data.projection.Projections;
 import org.openstreetmap.josm.gui.download.DownloadDialog;
 import org.openstreetmap.josm.gui.help.Helpful;
+import org.openstreetmap.josm.gui.layer.LayerManagerWithActive;
 import org.openstreetmap.josm.gui.mappaint.MapPaintStyles;
 import org.openstreetmap.josm.gui.mappaint.mapcss.MapCSSStyleSource;
+import org.openstreetmap.josm.gui.mapview.MapDisplayZoomHelper.ScrollMode;
+import org.openstreetmap.josm.gui.mapview.NavigateablePanel;
+import org.openstreetmap.josm.gui.mapview.NavigationModel;
+import org.openstreetmap.josm.gui.mapview.NavigationModel.WeakZoomChangeListener;
+import org.openstreetmap.josm.gui.mapview.NavigationModel.ZoomChangeEvent;
 import org.openstreetmap.josm.gui.util.CursorManager;
 import org.openstreetmap.josm.tools.Predicate;
 import org.openstreetmap.josm.tools.Utils;
@@ -62,7 +62,7 @@ import org.openstreetmap.josm.tools.Utils;
  * @author imi
  * @since 41
  */
-public class NavigatableComponent extends JComponent implements Helpful {
+public class NavigatableComponent extends NavigateablePanel implements Helpful, NavigationModel.ZoomChangeListener {
 
     /**
      * Interface to notify listeners of the change of the zoom area.
@@ -74,19 +74,59 @@ public class NavigatableComponent extends JComponent implements Helpful {
         void zoomChanged();
     }
 
+    private static final class ZoomChangeAdapter implements NavigationModel.ZoomChangeListener {
+
+        private ZoomChangeListener listener;
+
+        public ZoomChangeAdapter(ZoomChangeListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public void zoomChanged(ZoomChangeEvent e) {
+            // FIXME: Old implementation did not fire that often.
+            listener.zoomChanged();
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((listener == null) ? 0 : listener.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            ZoomChangeAdapter other = (ZoomChangeAdapter) obj;
+            if (listener == null) {
+                if (other.listener != null)
+                    return false;
+            } else if (!listener.equals(other.listener))
+                return false;
+            return true;
+        }
+    }
+
     /**
      * Interface to notify listeners of the change of the system of measurement.
      * @since 6056
      * @deprecated use {@link org.openstreetmap.josm.data.SystemOfMeasurement.SoMChangeListener} instead.
      */
     @Deprecated
-    public interface SoMChangeListener extends SystemOfMeasurement.SoMChangeListener {
-    }
+    public interface SoMChangeListener extends SystemOfMeasurement.SoMChangeListener {}
 
     public transient Predicate<OsmPrimitive> isSelectablePredicate = new Predicate<OsmPrimitive>() {
         @Override
         public boolean evaluate(OsmPrimitive prim) {
-            if (!prim.isSelectable()) return false;
+            if (!prim.isSelectable())
+                return false;
             // if it isn't displayed on screen, you cannot click on it
             MapCSSStyleSource.STYLE_SOURCE_LOCK.readLock().lock();
             try {
@@ -100,12 +140,13 @@ public class NavigatableComponent extends JComponent implements Helpful {
     public static final IntegerProperty PROP_SNAP_DISTANCE = new IntegerProperty("mappaint.node.snap-distance", 10);
 
     public static final String PROPNAME_CENTER = "center";
-    public static final String PROPNAME_SCALE  = "scale";
+    public static final String PROPNAME_SCALE = "scale";
 
     /**
-     * the zoom listeners
+     * This is the navigation model for the one single map view.
+     * Due to backwards compatibility (zoom change listeners, ...), we use a static field here.
      */
-    private static final CopyOnWriteArrayList<ZoomChangeListener> zoomChangeListeners = new CopyOnWriteArrayList<>();
+    private static final NavigationModel defaultNavigationModel = new NavigationModel();
 
     /**
      * Removes a zoom change listener
@@ -113,7 +154,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @param listener the listener. Ignored if null or already absent
      */
     public static void removeZoomChangeListener(NavigatableComponent.ZoomChangeListener listener) {
-        zoomChangeListeners.remove(listener);
+        defaultNavigationModel.removeZoomChangeListener(new ZoomChangeAdapter(listener));
     }
 
     /**
@@ -122,17 +163,8 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @param listener the listener. Ignored if null or already registered.
      */
     public static void addZoomChangeListener(NavigatableComponent.ZoomChangeListener listener) {
-        if (listener != null) {
-            zoomChangeListeners.addIfAbsent(listener);
-        }
+        defaultNavigationModel.addZoomChangeListener(new ZoomChangeAdapter(listener));
     }
-
-    protected static void fireZoomChanged() {
-        for (ZoomChangeListener l : zoomChangeListeners) {
-            l.zoomChanged();
-        }
-    }
-
 
     /**
      * Removes a SoM change listener.
@@ -181,12 +213,6 @@ public class NavigatableComponent extends JComponent implements Helpful {
         SystemOfMeasurement.setSystemOfMeasurement(somKey);
     }
 
-    private double scale = Main.getProjection().getDefaultZoomInPPD();
-    /**
-     * Center n/e coordinate of the desired screen center.
-     */
-    protected EastNorth center = calculateDefaultCenter();
-
     private final transient Object paintRequestLock = new Object();
     private Rectangle paintRect = null;
     private Polygon paintPoly = null;
@@ -194,14 +220,31 @@ public class NavigatableComponent extends JComponent implements Helpful {
     protected transient ViewportData initialViewport;
 
     protected final transient CursorManager cursorManager = new CursorManager(this);
+    private transient final NavigationModel.ZoomChangeListener weakZoomListener = new WeakZoomChangeListener(this);
 
     /**
-     * Constructs a new {@code NavigatableComponent}.
+     * Constructs a new {@code NavigatableComponent} using the static default {@link NavigationModel} and zooming to the current bounds,
      */
     public NavigatableComponent() {
-        setLayout(null);
+        this(defaultNavigationModel);
+        getZoomer().zoomTo(calculateDefaultCenter(), Main.getProjection().getDefaultZoomInPPD(), ScrollMode.INITIAL);
     }
 
+    /**
+     * Constructs a new {@code NavigatableComponent}
+     * @param navigationModel The navigation model to use.
+     */
+    public NavigatableComponent(NavigationModel navigationModel) {
+        super(navigationModel);
+        setLayout(null);
+        navigationModel.addZoomChangeListener(weakZoomListener);
+    }
+
+    /**
+     * Use {@link Main#layerManager} and {@link LayerManagerWithActive#getEditDataSet()} instead.
+     * @return
+     */
+    @Deprecated
     protected DataSet getCurrentDataSet() {
         return Main.main.getCurrentDataSet();
     }
@@ -263,11 +306,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
     }
 
     public double getDist100Pixel() {
-        int w = getWidth()/2;
-        int h = getHeight()/2;
-        LatLon ll1 = getLatLon(w-50, h);
-        LatLon ll2 = getLatLon(w+50, h);
-        return ll1.greatCircleDistance(ll2);
+        return getState().getPixelDistance(100);
     }
 
     /**
@@ -275,11 +314,11 @@ public class NavigatableComponent extends JComponent implements Helpful {
      *      change the center by accessing the return value. Use zoomTo instead.
      */
     public EastNorth getCenter() {
-        return center;
+        return getState().getCenter().getEastNorth();
     }
 
     public double getScale() {
-        return scale;
+        return getState().getScale();
     }
 
     /**
@@ -289,37 +328,24 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @return Geographic coordinates from a specific pixel coordination on the screen.
      */
     public EastNorth getEastNorth(int x, int y) {
-        return new EastNorth(
-                center.east() + (x - getWidth()/2.0)*scale,
-                center.north() - (y - getHeight()/2.0)*scale);
+        return getState().getPoint(new Point(x, y)).getEastNorth();
     }
 
     public ProjectionBounds getProjectionBounds() {
-        return new ProjectionBounds(
-                new EastNorth(
-                        center.east() - getWidth()/2.0*scale,
-                        center.north() - getHeight()/2.0*scale),
-                        new EastNorth(
-                                center.east() + getWidth()/2.0*scale,
-                                center.north() + getHeight()/2.0*scale));
+        return new ProjectionBounds(getEastNorth(0, getHeight()), getEastNorth(getWidth(), 0));
     }
 
     /* FIXME: replace with better method - used by MapSlider */
     public ProjectionBounds getMaxProjectionBounds() {
         Bounds b = getProjection().getWorldBoundsLatLon();
-        return new ProjectionBounds(getProjection().latlon2eastNorth(b.getMin()),
-                getProjection().latlon2eastNorth(b.getMax()));
+        return new ProjectionBounds(getProjection().latlon2eastNorth(b.getMin()), getProjection().latlon2eastNorth(
+                b.getMax()));
     }
 
     /* FIXME: replace with better method - used by Main to reset Bounds when projection changes, don't use otherwise */
     public Bounds getRealBounds() {
-        return new Bounds(
-                getProjection().eastNorth2latlon(new EastNorth(
-                        center.east() - getWidth()/2.0*scale,
-                        center.north() - getHeight()/2.0*scale)),
-                        getProjection().eastNorth2latlon(new EastNorth(
-                                center.east() + getWidth()/2.0*scale,
-                                center.north() + getHeight()/2.0*scale)));
+        return new Bounds(getProjection().eastNorth2latlon(getEastNorth(0, getHeight())), getProjection()
+                .eastNorth2latlon(getEastNorth(getWidth(), 0)));
     }
 
     /**
@@ -330,11 +356,11 @@ public class NavigatableComponent extends JComponent implements Helpful {
      *      on the screen.
      */
     public LatLon getLatLon(int x, int y) {
-        return getProjection().eastNorth2latlon(getEastNorth(x, y));
+        return getState().getPoint(new Point2D.Double(x, y)).getLatLon();
     }
 
     public LatLon getLatLon(double x, double y) {
-        return getLatLon((int) x, (int) y);
+        return getState().getPoint(new Point2D.Double(x, y)).getLatLon();
     }
 
     /**
@@ -356,18 +382,17 @@ public class NavigatableComponent extends JComponent implements Helpful {
         double deltaNorth = (northMax - northMin) / 10;
 
         for (int i = 0; i < 10; i++) {
-            result.extend(Main.getProjection().eastNorth2latlon(new EastNorth(eastMin + i * deltaEast, northMin)));
-            result.extend(Main.getProjection().eastNorth2latlon(new EastNorth(eastMin + i * deltaEast, northMax)));
-            result.extend(Main.getProjection().eastNorth2latlon(new EastNorth(eastMin, northMin  + i * deltaNorth)));
-            result.extend(Main.getProjection().eastNorth2latlon(new EastNorth(eastMax, northMin  + i * deltaNorth)));
+            result.extend(getProjection().eastNorth2latlon(new EastNorth(eastMin + i * deltaEast, northMin)));
+            result.extend(getProjection().eastNorth2latlon(new EastNorth(eastMin + i * deltaEast, northMax)));
+            result.extend(getProjection().eastNorth2latlon(new EastNorth(eastMin, northMin + i * deltaNorth)));
+            result.extend(getProjection().eastNorth2latlon(new EastNorth(eastMax, northMin + i * deltaNorth)));
         }
 
         return result;
     }
 
     public AffineTransform getAffineTransform() {
-        return new AffineTransform(
-                1.0/scale, 0.0, 0.0, -1.0/scale, getWidth()/2.0 - center.east()/scale, getHeight()/2.0 + center.north()/scale);
+        return getState().getEastNorthToPixelTransoform();
     }
 
     /**
@@ -377,20 +402,11 @@ public class NavigatableComponent extends JComponent implements Helpful {
      *      to the own top/left.
      */
     public Point2D getPoint2D(EastNorth p) {
-        if (null == p)
-            return new Point();
-        double x = (p.east()-center.east())/scale + getWidth()/2d;
-        double y = (center.north()-p.north())/scale + getHeight()/2d;
-        return new Point2D.Double(x, y);
+        return getState().get(p).getOnScreen();
     }
 
     public Point2D getPoint2D(LatLon latlon) {
-        if (latlon == null)
-            return new Point();
-        else if (latlon instanceof CachedLatLon)
-            return getPoint2D(((CachedLatLon) latlon).getEastNorth());
-        else
-            return getPoint2D(getProjection().latlon2eastNorth(latlon));
+        return getState().get(latlon).getOnScreen();
     }
 
     public Point2D getPoint2D(Node n) {
@@ -436,89 +452,11 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @param initial true if this call initializes the viewport.
      */
     public void zoomTo(EastNorth newCenter, double newScale, boolean initial) {
-        Bounds b = getProjection().getWorldBoundsLatLon();
-        LatLon cl = Projections.inverseProject(newCenter);
-        boolean changed = false;
-        double lat = cl.lat();
-        double lon = cl.lon();
-        if (lat < b.getMinLat()) {
-            changed = true;
-            lat = b.getMinLat();
-        } else if (lat > b.getMaxLat()) {
-            changed = true;
-            lat = b.getMaxLat();
-        }
-        if (lon < b.getMinLon()) {
-            changed = true;
-            lon = b.getMinLon();
-        } else if (lon > b.getMaxLon()) {
-            changed = true;
-            lon = b.getMaxLon();
-        }
-        if (changed) {
-            newCenter = Projections.project(new LatLon(lat, lon));
-        }
-        int width = getWidth()/2;
-        int height = getHeight()/2;
-        LatLon l1 = new LatLon(b.getMinLat(), lon);
-        LatLon l2 = new LatLon(b.getMaxLat(), lon);
-        EastNorth e1 = getProjection().latlon2eastNorth(l1);
-        EastNorth e2 = getProjection().latlon2eastNorth(l2);
-        double d = e2.north() - e1.north();
-        if (height > 0 && d < height*newScale) {
-            double newScaleH = d/height;
-            e1 = getProjection().latlon2eastNorth(new LatLon(lat, b.getMinLon()));
-            e2 = getProjection().latlon2eastNorth(new LatLon(lat, b.getMaxLon()));
-            d = e2.east() - e1.east();
-            if (width > 0 && d < width*newScale) {
-                newScale = Math.max(newScaleH, d/width);
-            }
-        } else if (height > 0) {
-            d = d/(l1.greatCircleDistance(l2)*height*10);
-            if (newScale < d) {
-                newScale = d;
-            }
-        }
-
-        if (!newCenter.equals(center) || !Utils.equalsEpsilon(scale, newScale)) {
-            if (!initial) {
-                pushZoomUndo(center, scale);
-            }
-            zoomNoUndoTo(newCenter, newScale, initial);
-        }
-    }
-
-    /**
-     * Zoom to the given coordinate without adding to the zoom undo buffer.
-     *
-     * @param newCenter The center x-value (easting) to zoom to.
-     * @param newScale The scale to use.
-     * @param initial true if this call initializes the viewport.
-     */
-    private void zoomNoUndoTo(EastNorth newCenter, double newScale, boolean initial) {
-        if (!newCenter.equals(center)) {
-            EastNorth oldCenter = center;
-            center = newCenter;
-            if (!initial) {
-                firePropertyChange(PROPNAME_CENTER, oldCenter, newCenter);
-            }
-        }
-        if (!Utils.equalsEpsilon(scale, newScale)) {
-            double oldScale = scale;
-            scale = newScale;
-            if (!initial) {
-                firePropertyChange(PROPNAME_SCALE, oldScale, newScale);
-            }
-        }
-
-        if (!initial) {
-            repaint();
-            fireZoomChanged();
-        }
+        getZoomer().zoomTo(newCenter, newScale, initial ? ScrollMode.INITIAL : ScrollMode.DEFAULT);
     }
 
     public void zoomTo(EastNorth newCenter) {
-        zoomTo(newCenter, scale);
+        zoomTo(newCenter, getState().getScale());
     }
 
     public void zoomTo(LatLon newCenter) {
@@ -534,76 +472,47 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * animated fashion.
      */
     public void smoothScrollTo(EastNorth newCenter) {
-        // FIXME make these configurable.
-        final int fps = 20;     // animation frames per second
-        final int speed = 1500; // milliseconds for full-screen-width pan
-        if (!newCenter.equals(center)) {
-            final EastNorth oldCenter = center;
-            final double distance = newCenter.distance(oldCenter) / scale;
-            final double milliseconds = distance / getWidth() * speed;
-            final double frames = milliseconds * fps / 1000;
-            final EastNorth finalNewCenter = newCenter;
-
-            new Thread("smooth-scroller") {
-                @Override
-                public void run() {
-                    for (int i = 0; i < frames; i++) {
-                        // FIXME - not use zoom history here
-                        zoomTo(oldCenter.interpolate(finalNewCenter, (i+1) / frames));
-                        try {
-                            Thread.sleep(1000 / fps);
-                        } catch (InterruptedException ex) {
-                            Main.warn("InterruptedException in "+NavigatableComponent.class.getSimpleName()+" during smooth scrolling");
-                        }
-                    }
-                }
-            }.start();
-        }
+        getZoomer().zoomTo(newCenter, ScrollMode.ANIMATE);
     }
 
     public void zoomToFactor(double x, double y, double factor) {
-        double newScale = scale*factor;
-        // New center position so that point under the mouse pointer stays the same place as it was before zooming
-        // You will get the formula by simplifying this expression: newCenter = oldCenter + mouseCoordinatesInNewZoom - mouseCoordinatesInOldZoom
-        zoomTo(new EastNorth(
-                center.east() - (x - getWidth()/2.0) * (newScale - scale),
-                center.north() + (y - getHeight()/2.0) * (newScale - scale)),
-                newScale);
+        getZoomer().zoomToFactorAround(new Point2D.Double(x, y), factor);
     }
 
     public void zoomToFactor(EastNorth newCenter, double factor) {
-        zoomTo(newCenter, scale*factor);
+        zoomTo(newCenter, getScale() * factor);
     }
 
     public void zoomToFactor(double factor) {
-        zoomTo(center, scale*factor);
+        zoomTo(getCenter(), getScale() * factor);
     }
 
     public void zoomTo(ProjectionBounds box) {
         // -20 to leave some border
-        int w = getWidth()-20;
+        int w = getWidth() - 20;
         if (w < 20) {
             w = 20;
         }
-        int h = getHeight()-20;
+        int h = getHeight() - 20;
         if (h < 20) {
             h = 20;
         }
 
-        double scaleX = (box.maxEast-box.minEast)/w;
-        double scaleY = (box.maxNorth-box.minNorth)/h;
+        double scaleX = (box.maxEast - box.minEast) / w;
+        double scaleY = (box.maxNorth - box.minNorth) / h;
         double newScale = Math.max(scaleX, scaleY);
 
         zoomTo(box.getCenter(), newScale);
     }
 
     public void zoomTo(Bounds box) {
-        zoomTo(new ProjectionBounds(getProjection().latlon2eastNorth(box.getMin()),
-                getProjection().latlon2eastNorth(box.getMax())));
+        zoomTo(new ProjectionBounds(getProjection().latlon2eastNorth(box.getMin()), getProjection().latlon2eastNorth(
+                box.getMax())));
     }
 
     public void zoomTo(ViewportData viewport) {
-        if (viewport == null) return;
+        if (viewport == null)
+            return;
         if (viewport.getBounds() != null) {
             BoundingXYVisitor box = new BoundingXYVisitor();
             box.visit(viewport.getBounds());
@@ -630,67 +539,25 @@ public class NavigatableComponent extends JComponent implements Helpful {
         zoomTo(box.getBounds());
     }
 
-    private class ZoomData {
-        private final LatLon center;
-        private final double scale;
-
-        public ZoomData(EastNorth center, double scale) {
-            this.center = Projections.inverseProject(center);
-            this.scale = scale;
-        }
-
-        public EastNorth getCenterEastNorth() {
-            return getProjection().latlon2eastNorth(center);
-        }
-
-        public double getScale() {
-            return scale;
-        }
-    }
-
-    private Stack<ZoomData> zoomUndoBuffer = new Stack<>();
-    private Stack<ZoomData> zoomRedoBuffer = new Stack<>();
-    private Date zoomTimestamp = new Date();
-
-    private void pushZoomUndo(EastNorth center, double scale) {
-        Date now = new Date();
-        if ((now.getTime() - zoomTimestamp.getTime()) > (Main.pref.getDouble("zoom.undo.delay", 1.0) * 1000)) {
-            zoomUndoBuffer.push(new ZoomData(center, scale));
-            if (zoomUndoBuffer.size() > Main.pref.getInteger("zoom.undo.max", 50)) {
-                zoomUndoBuffer.remove(0);
-            }
-            zoomRedoBuffer.clear();
-        }
-        zoomTimestamp = now;
-    }
-
     public void zoomPrevious() {
-        if (!zoomUndoBuffer.isEmpty()) {
-            ZoomData zoom = zoomUndoBuffer.pop();
-            zoomRedoBuffer.push(new ZoomData(center, scale));
-            zoomNoUndoTo(zoom.getCenterEastNorth(), zoom.getScale(), false);
-        }
+        getZoomer().zoomPrevious();
     }
 
     public void zoomNext() {
-        if (!zoomRedoBuffer.isEmpty()) {
-            ZoomData zoom = zoomRedoBuffer.pop();
-            zoomUndoBuffer.push(new ZoomData(center, scale));
-            zoomNoUndoTo(zoom.getCenterEastNorth(), zoom.getScale(), false);
-        }
+        getZoomer().zoomNext();
     }
 
     public boolean hasZoomUndoEntries() {
-        return !zoomUndoBuffer.isEmpty();
+        return getZoomer().hasPreviousZoomEntries();
     }
 
     public boolean hasZoomRedoEntries() {
-        return !zoomRedoBuffer.isEmpty();
+        return getZoomer().hasNextZoomEntries();
     }
 
     private BBox getBBox(Point p, int snapDistance) {
-        return new BBox(getLatLon(p.x - snapDistance, p.y - snapDistance),
-                getLatLon(p.x + snapDistance, p.y + snapDistance));
+        return new BBox(getLatLon(p.x - snapDistance, p.y - snapDistance), getLatLon(p.x + snapDistance, p.y
+                + snapDistance));
     }
 
     /**
@@ -701,8 +568,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @return a sorted map with the keys representing the distance of
      *      their associated nodes to point p.
      */
-    private Map<Double, List<Node>> getNearestNodesImpl(Point p,
-            Predicate<OsmPrimitive> predicate) {
+    private Map<Double, List<Node>> getNearestNodesImpl(Point p, Predicate<OsmPrimitive> predicate) {
         Map<Double, List<Node>> nearestMap = new TreeMap<>();
         DataSet ds = getCurrentDataSet();
 
@@ -711,8 +577,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
             snapDistanceSq *= snapDistanceSq;
 
             for (Node n : ds.searchNodes(getBBox(p, PROP_SNAP_DISTANCE.get()))) {
-                if (predicate.evaluate(n)
-                        && (dist = getPoint2D(n).distanceSq(p)) < snapDistanceSq) {
+                if (predicate.evaluate(n) && (dist = getPoint2D(n).distanceSq(p)) < snapDistanceSq) {
                     List<Node> nlist;
                     if (nearestMap.containsKey(dist)) {
                         nlist = nearestMap.get(dist);
@@ -741,8 +606,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      *      dist(nearest) to dist(nearest)+4px around p and
      *      that are not in ignore.
      */
-    public final List<Node> getNearestNodes(Point p,
-            Collection<Node> ignore, Predicate<OsmPrimitive> predicate) {
+    public final List<Node> getNearestNodes(Point p, Collection<Node> ignore, Predicate<OsmPrimitive> predicate) {
         List<Node> nearestList = Collections.emptyList();
 
         if (ignore == null) {
@@ -765,7 +629,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
                         nearestList.addAll(nlist);
                     }
                 } else {
-                    if (distSq-minDistSq < (4)*(4)) {
+                    if (distSq - minDistSq < (4) * (4)) {
                         nearestList.addAll(nlist);
                     }
                 }
@@ -841,13 +705,15 @@ public class NavigatableComponent extends JComponent implements Helpful {
      *      that is chosen by the algorithm described.
      * @since 6065
      */
-    public final Node getNearestNode(Point p, Predicate<OsmPrimitive> predicate,
-            boolean useSelected, Collection<OsmPrimitive> preferredRefs) {
+    public final Node getNearestNode(Point p, Predicate<OsmPrimitive> predicate, boolean useSelected,
+            Collection<OsmPrimitive> preferredRefs) {
 
         Map<Double, List<Node>> nlists = getNearestNodesImpl(p, predicate);
-        if (nlists.isEmpty()) return null;
+        if (nlists.isEmpty())
+            return null;
 
-        if (preferredRefs != null && preferredRefs.isEmpty()) preferredRefs = null;
+        if (preferredRefs != null && preferredRefs.isEmpty())
+            preferredRefs = null;
         Node ntsel = null, ntnew = null, ntref = null;
         boolean useNtsel = useSelected;
         double minDistSq = nlists.keySet().iterator().next();
@@ -866,7 +732,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
                 }
                 if (ntref == null && preferredRefs != null && Utils.equalsEpsilon(distSq, minDistSq)) {
                     List<OsmPrimitive> ndRefs = nd.getReferrers();
-                    for (OsmPrimitive ref: preferredRefs) {
+                    for (OsmPrimitive ref : preferredRefs) {
                         if (ndRefs.contains(ref)) {
                             ntref = nd;
                             break;
@@ -875,7 +741,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
                 }
                 // find the nearest newest node that is within about the same
                 // distance as the true nearest node
-                if (ntnew == null && nd.isNew() && (distSq-minDistSq < 1)) {
+                if (ntnew == null && nd.isNew() && (distSq - minDistSq < 1)) {
                     ntnew = nd;
                 }
             }
@@ -911,8 +777,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @return a sorted map with the keys representing the perpendicular
      *      distance of their associated way segments to point p.
      */
-    private Map<Double, List<WaySegment>> getNearestWaySegmentsImpl(Point p,
-            Predicate<OsmPrimitive> predicate) {
+    private Map<Double, List<WaySegment>> getNearestWaySegmentsImpl(Point p, Predicate<OsmPrimitive> predicate) {
         Map<Double, List<WaySegment>> nearestMap = new TreeMap<>();
         DataSet ds = getCurrentDataSet();
 
@@ -947,9 +812,8 @@ public class NavigatableComponent extends JComponent implements Helpful {
                      * e.g. if identical (A and B) come about reversed in another way, values may differ
                      * -- zero out least significant 32 dual digits of mantissa..
                      */
-                    double perDistSq = Double.longBitsToDouble(
-                            Double.doubleToLongBits(a - (a - b + c) * (a - b + c) / 4 / c)
-                            >> 32 << 32); // resolution in numbers with large exponent not needed here..
+                    double perDistSq = Double.longBitsToDouble(Double.doubleToLongBits(a - (a - b + c) * (a - b + c)
+                            / 4 / c) >> 32 << 32); // resolution in numbers with large exponent not needed here..
 
                     if (perDistSq < snapDistanceSq && a < c + snapDistanceSq && b < c + snapDistanceSq) {
                         List<WaySegment> wslist;
@@ -982,8 +846,8 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @return all segments within 10px of p that are not in ignore,
      *          sorted by their perpendicular distance.
      */
-    public final List<WaySegment> getNearestWaySegments(Point p,
-            Collection<WaySegment> ignore, Predicate<OsmPrimitive> predicate) {
+    public final List<WaySegment> getNearestWaySegments(Point p, Collection<WaySegment> ignore,
+            Predicate<OsmPrimitive> predicate) {
         List<WaySegment> nearestList = new ArrayList<>();
         List<WaySegment> unselected = new LinkedList<>();
 
@@ -1047,25 +911,26 @@ public class NavigatableComponent extends JComponent implements Helpful {
         return (ntsel != null && useSelected) ? ntsel : wayseg;
     }
 
-     /**
-     * The *result* depends on the current map selection state IF use_selected is true.
-     *
-     * @param p the point for which to search the nearest segment.
-     * @param predicate the returned object has to fulfill certain properties.
-     * @param use_selected whether selected way segments should be preferred.
-     * @param preferredRefs - prefer segments related to these primitives, may be null
-     *
-     * @return The nearest way segment to point p,
-     *      and, depending on use_selected, prefers a selected way segment, if found.
-     * Also prefers segments of ways that are related to one of preferredRefs primitives
-     *
-     * @see #getNearestWaySegments(Point, Collection, Predicate)
-     * @since 6065
-     */
-    public final WaySegment getNearestWaySegment(Point p, Predicate<OsmPrimitive> predicate,
-            boolean use_selected,  Collection<OsmPrimitive> preferredRefs) {
+    /**
+    * The *result* depends on the current map selection state IF use_selected is true.
+    *
+    * @param p the point for which to search the nearest segment.
+    * @param predicate the returned object has to fulfill certain properties.
+    * @param use_selected whether selected way segments should be preferred.
+    * @param preferredRefs - prefer segments related to these primitives, may be null
+    *
+    * @return The nearest way segment to point p,
+    *      and, depending on use_selected, prefers a selected way segment, if found.
+    * Also prefers segments of ways that are related to one of preferredRefs primitives
+    *
+    * @see #getNearestWaySegments(Point, Collection, Predicate)
+    * @since 6065
+    */
+    public final WaySegment getNearestWaySegment(Point p, Predicate<OsmPrimitive> predicate, boolean use_selected,
+            Collection<OsmPrimitive> preferredRefs) {
         WaySegment wayseg = null, ntsel = null, ntref = null;
-        if (preferredRefs != null && preferredRefs.isEmpty()) preferredRefs = null;
+        if (preferredRefs != null && preferredRefs.isEmpty())
+            preferredRefs = null;
 
         searchLoop: for (List<WaySegment> wslist : getNearestWaySegmentsImpl(p, predicate).values()) {
             for (WaySegment ws : wslist) {
@@ -1078,7 +943,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
                 }
                 if (ntref == null && preferredRefs != null) {
                     // prefer ways containing given nodes
-                    for (Node nd: ws.way.getNodes()) {
+                    for (Node nd : ws.way.getNodes()) {
                         if (preferredRefs.contains(nd)) {
                             ntref = ws;
                             break searchLoop;
@@ -1086,7 +951,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
                     }
                     Collection<OsmPrimitive> wayRefs = ws.way.getReferrers();
                     // prefer member of the given relations
-                    for (OsmPrimitive ref: preferredRefs) {
+                    for (OsmPrimitive ref : preferredRefs) {
                         if (ref instanceof Relation && wayRefs.contains(ref)) {
                             ntref = ws;
                             break searchLoop;
@@ -1125,8 +990,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @return all nearest ways to the screen point given that are not in ignore.
      * @see #getNearestWaySegments(Point, Collection, Predicate)
      */
-    public final List<Way> getNearestWays(Point p,
-            Collection<Way> ignore, Predicate<OsmPrimitive> predicate) {
+    public final List<Way> getNearestWays(Point p, Collection<Way> ignore, Predicate<OsmPrimitive> predicate) {
         List<Way> nearestList = new ArrayList<>();
         Set<Way> wset = new HashSet<>();
 
@@ -1194,8 +1058,8 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @see #getNearestNodes(Point, Collection, Predicate)
      * @see #getNearestWays(Point, Collection, Predicate)
      */
-    public final List<OsmPrimitive> getNearestNodesOrWays(Point p,
-            Collection<OsmPrimitive> ignore, Predicate<OsmPrimitive> predicate) {
+    public final List<OsmPrimitive> getNearestNodesOrWays(Point p, Collection<OsmPrimitive> ignore,
+            Predicate<OsmPrimitive> predicate) {
         List<OsmPrimitive> nearestList = Collections.emptyList();
         OsmPrimitive osm = getNearestNodeOrWay(p, predicate, false);
 
@@ -1238,9 +1102,12 @@ public class NavigatableComponent extends JComponent implements Helpful {
      */
     private boolean isPrecedenceNode(Node osm, Point p, boolean use_selected) {
         if (osm != null) {
-            if (!(p.distanceSq(getPoint2D(osm)) > (4)*(4))) return true;
-            if (osm.isTagged()) return true;
-            if (use_selected && osm.isSelected()) return true;
+            if (!(p.distanceSq(getPoint2D(osm)) > (4) * (4)))
+                return true;
+            if (osm.isTagged())
+                return true;
+            if (use_selected && osm.isSelected())
+                return true;
         }
         return false;
     }
@@ -1279,29 +1146,31 @@ public class NavigatableComponent extends JComponent implements Helpful {
         }
         OsmPrimitive osm = getNearestNode(p, predicate, use_selected, sel);
 
-        if (isPrecedenceNode((Node) osm, p, use_selected)) return osm;
+        if (isPrecedenceNode((Node) osm, p, use_selected))
+            return osm;
         WaySegment ws;
         if (use_selected) {
             ws = getNearestWaySegment(p, predicate, use_selected, sel);
         } else {
             ws = getNearestWaySegment(p, predicate, use_selected);
         }
-        if (ws == null) return osm;
+        if (ws == null)
+            return osm;
 
         if ((ws.way.isSelected() && use_selected) || osm == null) {
             // either (no _selected_ nearest node found, if desired) or no nearest node was found
             osm = ws.way;
         } else {
-            int maxWaySegLenSq = 3*PROP_SNAP_DISTANCE.get();
+            int maxWaySegLenSq = 3 * PROP_SNAP_DISTANCE.get();
             maxWaySegLenSq *= maxWaySegLenSq;
 
             Point2D wp1 = getPoint2D(ws.way.getNode(ws.lowerIndex));
-            Point2D wp2 = getPoint2D(ws.way.getNode(ws.lowerIndex+1));
+            Point2D wp2 = getPoint2D(ws.way.getNode(ws.lowerIndex + 1));
 
             // is wayseg shorter than maxWaySegLenSq and
             // is p closer to the middle of wayseg  than  to the nearest node?
-            if (wp1.distanceSq(wp2) < maxWaySegLenSq &&
-                    p.distanceSq(project(0.5, wp1, wp2)) < p.distanceSq(getPoint2D((Node) osm))) {
+            if (wp1.distanceSq(wp2) < maxWaySegLenSq
+                    && p.distanceSq(project(0.5, wp1, wp2)) < p.distanceSq(getPoint2D((Node) osm))) {
                 osm = ws.way;
             }
         }
@@ -1310,9 +1179,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
 
     public static double perDist(Point2D pt, Point2D a, Point2D b) {
         if (pt != null && a != null && b != null) {
-            double pd =
-                    (a.getX()-pt.getX())*(b.getX()-a.getX()) -
-                    (a.getY()-pt.getY())*(b.getY()-a.getY());
+            double pd = (a.getX() - pt.getX()) * (b.getX() - a.getX()) - (a.getY() - pt.getY()) * (b.getY() - a.getY());
             return Math.abs(pd) / a.distance(b);
         }
         return 0d;
@@ -1328,9 +1195,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
      */
     public static Point2D project(Point2D pt, Point2D a, Point2D b) {
         if (pt != null && a != null && b != null) {
-            double r = (
-                    (pt.getX()-a.getX())*(b.getX()-a.getX()) +
-                    (pt.getY()-a.getY())*(b.getY()-a.getY()))
+            double r = ((pt.getX() - a.getX()) * (b.getX() - a.getX()) + (pt.getY() - a.getY()) * (b.getY() - a.getY()))
                     / a.distanceSq(b);
             return project(r, a, b);
         }
@@ -1350,8 +1215,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
         Point2D ret = null;
 
         if (a != null && b != null) {
-            ret = new Point2D.Double(a.getX() + r*(b.getX()-a.getX()),
-                    a.getY() + r*(b.getY()-a.getY()));
+            ret = new Point2D.Double(a.getX() + r * (b.getX() - a.getX()), a.getY() + r * (b.getY() - a.getY()));
         }
         return ret;
     }
@@ -1367,8 +1231,8 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @return a list of all objects that are nearest to point p and
      *          not in ignore or an empty list if nothing was found.
      */
-    public final List<OsmPrimitive> getAllNearest(Point p,
-            Collection<OsmPrimitive> ignore, Predicate<OsmPrimitive> predicate) {
+    public final List<OsmPrimitive> getAllNearest(Point p, Collection<OsmPrimitive> ignore,
+            Predicate<OsmPrimitive> predicate) {
         List<OsmPrimitive> nearestList = new ArrayList<>();
         Set<Way> wset = new HashSet<>();
 
@@ -1429,7 +1293,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
     @Override
     public String helpTopic() {
         String n = getClass().getName();
-        return n.substring(n.lastIndexOf('.')+1);
+        return n.substring(n.lastIndexOf('.') + 1);
     }
 
     /**
@@ -1437,8 +1301,8 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @return A unique ID, as long as viewport dimensions are the same
      */
     public int getViewID() {
-        String x = center.east() + "_" + center.north() + "_" + scale + "_" +
-                getWidth() + "_" + getHeight() + "_" + getProjection().toString();
+        String x = getCenter().east() + "_" + getCenter().north() + "_" + getScale() + "_" + getWidth() + "_"
+                + getHeight() + "_" + getProjection().toString();
         CRC32 id = new CRC32();
         id.update(x.getBytes(StandardCharsets.UTF_8));
         return (int) id.getValue();
@@ -1468,6 +1332,26 @@ public class NavigatableComponent extends JComponent implements Helpful {
      */
     public CursorManager getCursorManager() {
         return cursorManager;
+    }
+
+    @Override
+    public void zoomChanged(ZoomChangeEvent e) {
+        //        if (oldZoom == null) {
+        //            // initial.
+        //            return;
+        //        }
+
+        EastNorth oldCenter = e.getOldState().getCenter().getEastNorth();
+        EastNorth newCenter = e.getNewState().getCenter().getEastNorth();
+        if (!newCenter.equals(oldCenter)) {
+            firePropertyChange(PROPNAME_CENTER, oldCenter, newCenter);
+        }
+        double oldScale = e.getOldState().getScale();
+        double newScale = e.getNewState().getScale();
+        if (!Utils.equalsEpsilon(oldScale, newScale)) {
+            firePropertyChange(PROPNAME_SCALE, oldScale, newScale);
+        }
+        repaint();
     }
 
     @Override
