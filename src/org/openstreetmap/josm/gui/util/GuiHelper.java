@@ -365,4 +365,10 @@ public final class GuiHelper {
             }
         }
     }
+
+    public static void requireEdtThread() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            throw new IllegalAccessError("Can only access from EDT thread.");
+        }
+    }
 }
