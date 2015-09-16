@@ -538,7 +538,7 @@ public class LayerListDialog extends ToggleDialog {
             slider.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(ChangeEvent e) {
-                    setValue((double) slider.getValue() / factor);
+                    setValue(slider.getValue() / factor);
                 }
             });
             popup.add(slider);
@@ -693,6 +693,19 @@ public class LayerListDialog extends ToggleDialog {
 
     public final class ActivateLayerAction extends AbstractAction
     implements IEnabledStateUpdating, MapView.LayerChangeListener, MultikeyShortcutAction{
+        private final class EnabledStateUpdater implements Runnable {
+            private final boolean newEnabled;
+
+            public EnabledStateUpdater(boolean newEnabled) {
+                this.newEnabled = newEnabled;
+            }
+
+            @Override
+            public void run() {
+                setEnabled(newEnabled);
+            }
+        }
+
         private transient Layer layer;
         private transient Shortcut multikeyShortcut;
 
@@ -750,21 +763,19 @@ public class LayerListDialog extends ToggleDialog {
 
         @Override
         public void updateEnabledState() {
-            GuiHelper.runInEDTAndWait(new Runnable() {
-                @Override
-                public void run() {
-                    if (layer == null) {
-                        if (getModel().getSelectedLayers().size() != 1) {
-                            setEnabled(false);
-                            return;
-                        }
-                        Layer selectedLayer = getModel().getSelectedLayers().get(0);
-                        setEnabled(!isActiveLayer(selectedLayer));
-                    } else {
-                        setEnabled(!isActiveLayer(layer));
-                    }
+            boolean newEnabled;
+            if (layer == null) {
+                if (getModel().getSelectedLayers().size() != 1) {
+                    newEnabled = false;
+                } else {
+                    Layer selectedLayer = getModel().getSelectedLayers().get(0);
+                    newEnabled = !isActiveLayer(selectedLayer);
                 }
-            });
+            } else {
+                newEnabled = !isActiveLayer(layer);
+            }
+
+            GuiHelper.runInEDTAndWait(new EnabledStateUpdater(newEnabled));
         }
 
         @Override
