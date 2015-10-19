@@ -12,10 +12,11 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.BitSet;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -70,18 +71,17 @@ public class MapCSSStyleSource extends StyleSource {
      * The accepted MIME types sent in the HTTP Accept header.
      * @since 6867
      */
-    public static final String MAPCSS_STYLE_MIME_TYPES =
-            "text/x-mapcss, text/mapcss, text/css; q=0.9, text/plain; q=0.8, application/zip, application/octet-stream; q=0.5";
+    public static final String MAPCSS_STYLE_MIME_TYPES = "text/x-mapcss, text/mapcss, text/css; q=0.9, text/plain; q=0.8, application/zip, application/octet-stream; q=0.5";
 
     // all rules
     public final List<MapCSSRule> rules = new ArrayList<>();
     // rule indices, filtered by primitive type
-    public final MapCSSRuleIndex nodeRules = new MapCSSRuleIndex();         // nodes
-    public final MapCSSRuleIndex wayRules = new MapCSSRuleIndex();          // ways without tag area=no
-    public final MapCSSRuleIndex wayNoAreaRules = new MapCSSRuleIndex();    // ways with tag area=no
-    public final MapCSSRuleIndex relationRules = new MapCSSRuleIndex();     // relations that are not multipolygon relations
+    public final MapCSSRuleIndex nodeRules = new MapCSSRuleIndex(); // nodes
+    public final MapCSSRuleIndex wayRules = new MapCSSRuleIndex(); // ways without tag area=no
+    public final MapCSSRuleIndex wayNoAreaRules = new MapCSSRuleIndex(); // ways with tag area=no
+    public final MapCSSRuleIndex relationRules = new MapCSSRuleIndex(); // relations that are not multipolygon relations
     public final MapCSSRuleIndex multipolygonRules = new MapCSSRuleIndex(); // multipolygon relations
-    public final MapCSSRuleIndex canvasRules = new MapCSSRuleIndex();       // rules to apply canvas properties
+    public final MapCSSRuleIndex canvasRules = new MapCSSRuleIndex(); // rules to apply canvas properties
 
     private Color backgroundColorOverride;
     private String css;
@@ -141,28 +141,185 @@ public class MapCSSStyleSource extends StyleSource {
      * all rules that might be applied to that primitive.
      */
     public static class MapCSSRuleIndex {
+
         /**
-         * This is an iterator over all rules that are marked as possible in the bitset.
-         *
+         * This is subset of rules.
          * @author Michael Zangl
          */
-        private final class RuleCandidatesIterator implements Iterator<MapCSSRule>, KeyValueVisitor {
-            private final BitSet ruleCandidates;
-            private int next;
+        public abstract class MapCSSRuleSubset {
 
-            private RuleCandidatesIterator(BitSet ruleCandidates) {
-                this.ruleCandidates = ruleCandidates;
+            /**
+             * Add a rule to this set.
+             * @param ruleIndex The index of the rule.
+             */
+            public void set(int ruleIndex) {
+                throw new UnsupportedOperationException();
+            }
+
+            /**
+             * Sets all rules that are in this set in the given {@link MapCSSRuleBitSubset}
+             * @param setIn The bitset to set our rules in.
+             */
+            public abstract void setIn(MapCSSRuleBitSubset setIn);
+
+            /**
+             * Gets an optimized version of this rule set, e.g. bit sets that only have few entries are converted to a list set.
+             * @return The optimized version.
+             */
+            public abstract MapCSSRuleSubset optimized();
+        }
+
+        /**
+         * This is a subset of rules represented by a bitmask. It takes O(len(rules)) storage space.
+         * @author Michael Zangl
+         */
+        public class MapCSSRuleBitSubset extends MapCSSRuleSubset implements Iterable<MapCSSRule> {
+            protected final static int LONG_BITS = 64;
+            protected final long[] bitData;
+
+            /**
+             * Creates a new, empty {@link MapCSSRuleBitSubset}.
+             */
+            public MapCSSRuleBitSubset() {
+                this(new long[(rules.size() + (LONG_BITS - 1)) / LONG_BITS]);
+            }
+
+            private MapCSSRuleBitSubset(long[] bitData) {
+                this.bitData = bitData;
+            }
+
+            /**
+             * Creates a new rule set from a given {@link MapCSSRuleBitSubset}
+             * @param copyFrom The set to get the contents from.
+             */
+            public MapCSSRuleBitSubset(MapCSSRuleBitSubset copyFrom) {
+                this(Arrays.copyOf(copyFrom.bitData, copyFrom.bitData.length));
+            }
+
+            @Override
+            public void set(int ruleIndex) {
+                bitData[ruleIndex / LONG_BITS] |= (1l << (ruleIndex % LONG_BITS));
+            }
+
+            @Override
+            public void setIn(MapCSSRuleBitSubset setIn) {
+                for (int i = 0; i < bitData.length; i++) {
+                    setIn.bitData[i] |= bitData[i];
+                }
+            }
+
+            @Override
+            public MapCSSRuleSubsetIterator iterator() {
+                return new MapCSSRuleSubsetIterator(this);
+            }
+
+            /**
+             * Gets the size of this set.
+             * @return The number of rules in this set.
+             */
+            public int size() {
+                int size = 0;
+                for (long data : bitData) {
+                    size += Long.bitCount(data);
+                }
+                return size;
+            }
+
+            @Override
+            public MapCSSRuleSubset optimized() {
+                if (size() > bitData.length) {
+                    return this;
+                } else {
+                    return new MapCSSRuleListSubset(this);
+                }
+            }
+
+            /**
+             * Check if a rule is in this set.
+             * @param ruleIndex The index of the rule.
+             * @return true if it is set.
+             */
+            public boolean isSet(int ruleIndex) {
+                return (bitData[ruleIndex / LONG_BITS] & (1l << (ruleIndex % LONG_BITS))) != 0;
+            }
+
+            @Override
+            public String toString() {
+                return "MapCSSRuleBitSubset [" + toStringHelper() + "]";
+            }
+
+            protected String toStringHelper() {
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < rules.size(); i++) {
+                    if (isSet(i)) {
+                        if (builder.length() > 0) {
+                            builder.append(",");
+                        }
+                        builder.append(i);
+                    }
+                }
+                return builder.toString();
+            }
+        }
+
+        /**
+         * This is an iterator over a subset of rules. It is backed by a bitset.
+         * <p>
+         * This contains a copy of the bitset. Before using the iterator, you can change the content of the bitset.
+         * <p>
+         * By calling #visitKeyValue, you can automatically add the rules required for this key/value pair.
+         * @author Michael Zangl
+         */
+        public class MapCSSRuleSubsetIterator extends MapCSSRuleBitSubset implements Iterator<MapCSSRule>,
+                KeyValueVisitor {
+            private int next = -2;
+
+            /**
+             * Create a new iterator of the given {@link MapCSSRuleBitSubset}
+             * @param copyFrom The bitset.
+             */
+            public MapCSSRuleSubsetIterator(MapCSSRuleBitSubset copyFrom) {
+                super(copyFrom);
+            }
+
+            private int findNext(int afterIncluding) {
+                if (afterIncluding > rules.size() || rules.isEmpty()) {
+                    return -1;
+                }
+
+                int wordIndex = afterIncluding / 64;
+                long data = bitData[wordIndex];
+                data &= (-1l << afterIncluding);
+
+                while (data == 0) {
+                    wordIndex++;
+                    if (wordIndex >= bitData.length) {
+                        return -1;
+                    }
+                    data = bitData[wordIndex];
+                }
+
+                return (wordIndex * LONG_BITS) + Long.numberOfTrailingZeros(data);
             }
 
             @Override
             public boolean hasNext() {
+                if (next == -2) {
+                    next = findNext(0);
+                }
                 return next >= 0;
             }
 
             @Override
             public MapCSSRule next() {
+                if (next == -2) {
+                    next = findNext(0);
+                }
+                if (next == -1) {
+                    throw new IllegalStateException();
+                }
                 MapCSSRule rule = rules.get(next);
-                next = ruleCandidates.nextSetBit(next + 1);
+                next = findNext(next + 1);
                 return rule;
             }
 
@@ -175,16 +332,54 @@ public class MapCSSStyleSource extends StyleSource {
             public void visitKeyValue(AbstractPrimitive p, String key, String value) {
                 MapCSSKeyRules v = index.get(key);
                 if (v != null) {
-                    BitSet rs = v.get(value);
-                    ruleCandidates.or(rs);
+                    MapCSSRuleSubset rs = v.get(value);
+                    rs.setIn(this);
                 }
             }
 
+            @Override
+            public String toString() {
+                return "MapCSSRuleSubsetIterator [" + toStringHelper() + ", next=" + next + "]";
+            }
+        }
+
+        /**
+         * This is a special subset of rules represented by a list of rule indexes. This datastructures size is linear to the nuber of rules it contains.
+         * @author Michael Zangl
+         */
+        public class MapCSSRuleListSubset extends MapCSSRuleSubset {
+            private int[] subRules;
+
             /**
-             * Call this before using the iterator.
+             * Creates a new list subset.
+             * @param copyFrom The bit subset to copy the data from.
              */
-            public void prepare() {
-                next = ruleCandidates.nextSetBit(0);
+            public MapCSSRuleListSubset(MapCSSRuleBitSubset copyFrom) {
+                subRules = new int[copyFrom.size()];
+                int j = 0;
+                // Note: We might optimize this some time.
+                for (int i = 0; i < rules.size(); i++) {
+                    if (copyFrom.isSet(i)) {
+                        subRules[j++] = i;
+                    }
+                }
+            }
+
+            @Override
+            public void setIn(MapCSSRuleBitSubset setIn) {
+                for (int ruleIndex : subRules) {
+                    setIn.set(ruleIndex);
+                }
+            }
+
+            @Override
+            public String toString() {
+                return "MapCSSRuleListSubset [" + Arrays.toString(subRules) + "]";
+            }
+
+            @Override
+            public MapCSSRuleSubset optimized() {
+                return this;
             }
         }
 
@@ -193,53 +388,79 @@ public class MapCSSStyleSource extends StyleSource {
          *
          * @author Michael Zangl
          */
-        private static final class MapCSSKeyRules {
+        private final class MapCSSKeyRules {
+            MapCSSRuleBitSubset generalRulesBuilder = new MapCSSRuleBitSubset();
+
             /**
              * The indexes of rules that might be applied if this tag is present and the value has no special handling.
              */
-            BitSet generalRules = new BitSet();
+            MapCSSRuleSubset generalRules = generalRulesBuilder;
 
             /**
              * A map that sores the indexes of rules that might be applied if the key=value pair is present on this
              * primitive. This includes all key=* rules.
+             * <p>
+             * TODO: Use a {@link IdentityHashMap} for this. Lookup will be 5 times faster then.
              */
-            Map<String, BitSet> specialRules = new HashMap<>();
+            final HashMap<String, MapCSSRuleSubset> specialRules = new HashMap<>();
 
             public void addForKey(int ruleIndex) {
-                generalRules.set(ruleIndex);
-                for (BitSet r : specialRules.values()) {
+                generalRulesBuilder.set(ruleIndex);
+                for (MapCSSRuleSubset r : specialRules.values()) {
                     r.set(ruleIndex);
                 }
             }
 
             public void addForKeyAndValue(String value, int ruleIndex) {
-                BitSet forValue = specialRules.get(value);
+                MapCSSRuleSubset forValue = specialRules.get(value);
                 if (forValue == null) {
-                    forValue = new BitSet();
-                    forValue.or(generalRules);
-                    specialRules.put(value.intern(), forValue);
+                    forValue = new MapCSSRuleBitSubset(generalRulesBuilder);
+                    String interned = value.intern();
+                    specialRules.put(interned, forValue);
                 }
                 forValue.set(ruleIndex);
             }
 
-            public BitSet get(String value) {
-                BitSet forValue = specialRules.get(value);
-                if (forValue != null) return forValue; else return generalRules;
+            /**
+             * Gets the rules for the key=value pair using this key. Call {@link #optimize()} before calling this.
+             * @param value The value for this key.
+             * @return A subset of rules.
+             */
+            public MapCSSRuleSubset get(String value) {
+                MapCSSRuleSubset forValue = specialRules.get(value);
+                if (forValue != null)
+                    return forValue;
+                else
+                    return generalRules;
+            }
+
+            /**
+             * Optimize this map. Any changes afterwards may have unpredictable results.
+             */
+            public void optimize() {
+                generalRules = generalRulesBuilder.optimized();
+                generalRulesBuilder = null;
+                for (Entry<String, MapCSSRuleSubset> v : specialRules.entrySet()) {
+                    MapCSSRuleSubset optimized = v.getValue().optimized();
+                    specialRules.put(v.getKey().intern(), optimized);
+                }
             }
         }
 
         /**
          * All rules this index is for. Once this index is built, this list is sorted.
          */
-        private final List<MapCSSRule> rules = new ArrayList<>();
+        protected final List<MapCSSRule> rules = new ArrayList<>();
         /**
          * All rules that only apply when the given key is present.
+         * <p>
+         * TODO: Use a {@link IdentityHashMap} for this. Lookup will be 5 times faster then. This requires all keys to be interned.
          */
-        private final Map<String, MapCSSKeyRules> index = new HashMap<>();
+        protected final Map<String, MapCSSKeyRules> index = new HashMap<>();
         /**
          * Rules that do not require any key to be present. Only the index in the {@link #rules} array is stored.
          */
-        private final BitSet remaining = new BitSet();
+        private MapCSSRuleBitSubset remaining = null;
 
         /**
          * Add a rule to this index. This needs to be called before {@link #initIndex()} is called.
@@ -247,6 +468,7 @@ public class MapCSSStyleSource extends StyleSource {
          */
         public void add(MapCSSRule rule) {
             rules.add(rule);
+            remaining = null;
         }
 
         /**
@@ -256,6 +478,7 @@ public class MapCSSStyleSource extends StyleSource {
          */
         public void initIndex() {
             Collections.sort(rules);
+            remaining = new MapCSSRuleBitSubset();
             for (int ruleIndex = 0; ruleIndex < rules.size(); ruleIndex++) {
                 MapCSSRule r = rules.get(ruleIndex);
                 // find the rightmost selector, this must be a GeneralSelector
@@ -281,6 +504,11 @@ public class MapCSSStyleSource extends StyleSource {
                         remaining.set(ruleIndex);
                     }
                 }
+            }
+
+            // optimize all sets
+            for (MapCSSKeyRules rules : index.values()) {
+                rules.optimize();
             }
         }
 
@@ -331,13 +559,9 @@ public class MapCSSStyleSource extends StyleSource {
          * @return An iterator over possible rules in the right order.
          */
         public Iterator<MapCSSRule> getRuleCandidates(OsmPrimitive osm) {
-            final BitSet ruleCandidates = new BitSet(rules.size());
-            ruleCandidates.or(remaining);
-
-            final RuleCandidatesIterator candidatesIterator = new RuleCandidatesIterator(ruleCandidates);
-            osm.visitKeys(candidatesIterator);
-            candidatesIterator.prepare();
-            return candidatesIterator;
+            MapCSSRuleSubsetIterator ruleCandidates = remaining.iterator();
+            osm.visitKeys(ruleCandidates);
+            return ruleCandidates;
         }
 
         /**
@@ -348,7 +572,7 @@ public class MapCSSStyleSource extends StyleSource {
         public void clear() {
             rules.clear();
             index.clear();
-            remaining.clear();
+            remaining = null;
         }
     }
 
@@ -426,7 +650,7 @@ public class MapCSSStyleSource extends StyleSource {
                 logError(new ParseException(e.getMessage())); // allow e to be garbage collected, it links to the entire token stream
             }
             // optimization: filter rules for different primitive types
-            for (MapCSSRule r: rules) {
+            for (MapCSSRule r : rules) {
                 // find the rightmost selector, this must be a GeneralSelector
                 Selector selRightmost = r.selector;
                 while (selRightmost instanceof ChildOrParentSelector) {
@@ -435,39 +659,40 @@ public class MapCSSStyleSource extends StyleSource {
                 MapCSSRule optRule = new MapCSSRule(r.selector.optimizedBaseCheck(), r.declaration);
                 final String base = ((GeneralSelector) selRightmost).getBase();
                 switch (base) {
-                    case "node":
-                        nodeRules.add(optRule);
-                        break;
-                    case "way":
-                        wayNoAreaRules.add(optRule);
-                        wayRules.add(optRule);
-                        break;
-                    case "area":
-                        wayRules.add(optRule);
-                        multipolygonRules.add(optRule);
-                        break;
-                    case "relation":
-                        relationRules.add(optRule);
-                        multipolygonRules.add(optRule);
-                        break;
-                    case "*":
-                        nodeRules.add(optRule);
-                        wayRules.add(optRule);
-                        wayNoAreaRules.add(optRule);
-                        relationRules.add(optRule);
-                        multipolygonRules.add(optRule);
-                        break;
-                    case "canvas":
-                        canvasRules.add(r);
-                        break;
-                    case "meta":
-                    case "setting":
-                        break;
-                    default:
-                        final RuntimeException e = new RuntimeException(MessageFormat.format("Unknown MapCSS base selector {0}", base));
-                        Main.warn(tr("Failed to parse Mappaint styles from ''{0}''. Error was: {1}", url, e.getMessage()));
-                        Main.error(e);
-                        logError(e);
+                case "node":
+                    nodeRules.add(optRule);
+                    break;
+                case "way":
+                    wayNoAreaRules.add(optRule);
+                    wayRules.add(optRule);
+                    break;
+                case "area":
+                    wayRules.add(optRule);
+                    multipolygonRules.add(optRule);
+                    break;
+                case "relation":
+                    relationRules.add(optRule);
+                    multipolygonRules.add(optRule);
+                    break;
+                case "*":
+                    nodeRules.add(optRule);
+                    wayRules.add(optRule);
+                    wayNoAreaRules.add(optRule);
+                    relationRules.add(optRule);
+                    multipolygonRules.add(optRule);
+                    break;
+                case "canvas":
+                    canvasRules.add(r);
+                    break;
+                case "meta":
+                case "setting":
+                    break;
+                default:
+                    final RuntimeException e = new RuntimeException(MessageFormat.format(
+                            "Unknown MapCSS base selector {0}", base));
+                    Main.warn(tr("Failed to parse Mappaint styles from ''{0}''. Error was: {1}", url, e.getMessage()));
+                    Main.error(e);
+                    logError(e);
                 }
             }
             nodeRules.initIndex();
@@ -534,7 +759,8 @@ public class MapCSSStyleSource extends StyleSource {
         if (backgroundColorOverride == null) {
             backgroundColorOverride = c.get("background-color", null, Color.class);
             if (backgroundColorOverride != null) {
-                Main.warn(tr("Detected deprecated ''{0}'' in ''{1}'' which will be removed shortly. Use ''{2}'' instead.",
+                Main.warn(tr(
+                        "Detected deprecated ''{0}'' in ''{1}'' which will be removed shortly. Use ''{2}'' instead.",
                         "canvas{background-color}", url, "fill-color"));
             }
         }
@@ -574,7 +800,7 @@ public class MapCSSStyleSource extends StyleSource {
             if ("boolean".equals(type)) {
                 set = BooleanStyleSetting.create(c, this, e.getKey());
             } else {
-                Main.warn("Unkown setting type: "+type);
+                Main.warn("Unkown setting type: " + type);
             }
             if (set != null) {
                 settings.add(set);
@@ -671,26 +897,25 @@ public class MapCSSStyleSource extends StyleSource {
     }
 
     public boolean evalSupportsDeclCondition(String feature, Object val) {
-        if (feature == null) return false;
-        if (SUPPORTED_KEYS.contains(feature)) return true;
+        if (feature == null)
+            return false;
+        if (SUPPORTED_KEYS.contains(feature))
+            return true;
         switch (feature) {
-            case "user-agent":
-            {
-                String s = Cascade.convertTo(val, String.class);
-                return "josm".equals(s);
-            }
-            case "min-josm-version":
-            {
-                Float v = Cascade.convertTo(val, Float.class);
-                return v != null && Math.round(v) <= Version.getInstance().getVersion();
-            }
-            case "max-josm-version":
-            {
-                Float v = Cascade.convertTo(val, Float.class);
-                return v != null && Math.round(v) >= Version.getInstance().getVersion();
-            }
-            default:
-                return false;
+        case "user-agent": {
+            String s = Cascade.convertTo(val, String.class);
+            return "josm".equals(s);
+        }
+        case "min-josm-version": {
+            Float v = Cascade.convertTo(val, Float.class);
+            return v != null && Math.round(v) <= Version.getInstance().getVersion();
+        }
+        case "max-josm-version": {
+            Float v = Cascade.convertTo(val, Float.class);
+            return v != null && Math.round(v) >= Version.getInstance().getVersion();
+        }
+        default:
+            return false;
         }
     }
 
