@@ -25,8 +25,8 @@ import javax.swing.KeyStroke;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.SelectAction;
 import org.openstreetmap.josm.data.coor.EastNorth;
-import org.openstreetmap.josm.gui.navigate.NavigationModel;
-import org.openstreetmap.josm.gui.navigate.NavigationModel.ScrollMode;
+import org.openstreetmap.josm.gui.mapview.MapDisplayZoomHelper.ScrollMode;
+import org.openstreetmap.josm.gui.mapview.NavigationModel;
 import org.openstreetmap.josm.gui.util.CursorManager;
 import org.openstreetmap.josm.tools.Destroyable;
 import org.openstreetmap.josm.tools.Shortcut;
@@ -51,7 +51,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
             if (".".equals(action) || ",".equals(action)) {
                 Point2D mouse = lastMousePosition;
                 if (mouse == null)
-                    mouse = nm.getScreenPosition(nm.getCenter());
+                    mouse = nm.getState().getCenter().getOnScreen();
                 MouseWheelEvent we = new MouseWheelEvent((Component) e.getSource(), e.getID(), e.getWhen(), e.getModifiers(), (int) mouse.getX(), (int) mouse.getY(), 0, false,
 
                         MouseWheelEvent.WHEEL_UNIT_SCROLL, 1, ",".equals(action) ? -1 : 1);
@@ -73,8 +73,8 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
                     relativeY += .2;
                     break;
                 }
-                EastNorth newcenter = nm.getEastNorthRelative(relativeX, relativeY);
-                nm.zoomTo(newcenter, ScrollMode.IMMEDIATE);
+                EastNorth newcenter = nm.getState().getPoint(new Point2D.Double(relativeX, relativeY)).getEastNorth();
+                nm.getZoomHelper().zoomTo(newcenter, ScrollMode.IMMEDIATE);
             }
         }
     }
@@ -170,9 +170,10 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         if (stdMovement || (macMovement && allowedMode)) {
             if (mousePosMove == null)
                 startMovement(e);
-            EastNorth center = nm.getCenter();
-            EastNorth mouseCenter = nm.getEastNorth(e.getPoint());
-            nm.zoomTo(new EastNorth(
+            EastNorth center = nm.getState().getCenter().getEastNorth();
+            EastNorth mouseCenter = nm.getState().getPoint(e.getPoint()).getEastNorth();
+
+            nm.getZoomHelper().zoomTo(new EastNorth(
                     mousePosMove.east() + center.east() - mouseCenter.east(),
                     mousePosMove.north() + center.north() - mouseCenter.north()), ScrollMode.IMMEDIATE);
         } else {
@@ -220,7 +221,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
         if (movementInPlace)
             return;
         movementInPlace = true;
-        mousePosMove = nm.getEastNorth(e.getX(), e.getY());
+        mousePosMove = nm.getState().getPoint(e.getPoint()).getEastNorth();
         cursorManager.setNewCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR), this);
     }
 
@@ -241,7 +242,7 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
      */
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        nm.zoomToFactorAround(e.getPoint(), Math.pow(Math.sqrt(2), e.getWheelRotation()));
+        nm.getZoomHelper().zoomToFactorAround(e.getPoint(), Math.pow(Math.sqrt(2), e.getWheelRotation()));
     }
 
     /**
@@ -258,9 +259,9 @@ public class MapMover extends MouseAdapter implements MouseMotionListener, Mouse
                 if (mousePosMove == null) {
                     startMovement(e);
                 }
-                EastNorth center = nm.getCenter();
-                EastNorth mouseCenter = nm.getEastNorth(e.getX(), e.getY());
-                nm.zoomTo(new EastNorth(mousePosMove.east() + center.east() - mouseCenter.east(), mousePosMove.north()
+                EastNorth center = nm.getState().getCenter().getEastNorth();
+                EastNorth mouseCenter = nm.getState().getPoint(e.getPoint()).getEastNorth();
+                nm.getZoomHelper().zoomTo(new EastNorth(mousePosMove.east() + center.east() - mouseCenter.east(), mousePosMove.north()
                         + center.north() - mouseCenter.north()), ScrollMode.IMMEDIATE);
             } else {
                 endMovement();

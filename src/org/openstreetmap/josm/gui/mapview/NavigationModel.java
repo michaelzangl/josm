@@ -6,6 +6,7 @@ import java.awt.event.ComponentEvent;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 
@@ -122,14 +123,16 @@ public class NavigationModel {
      */
     private WeakReference<NavigateablePanel> trackedComponent = new WeakReference<NavigateablePanel>(null);
 
-    private MapDisplayPosition position = null;
+    private MapDisplayPosition position = new MapDisplayPosition(null);
 
-    private MapDisplayState state = null;
+    private MapDisplayState state = new MapDisplayState(Main.getProjection(), position, new EastNorth(0, 0), 1);
 
     /**
      * The object we synchronize the state against.
      */
-    private Object stateMutex = new Object();
+    private final Object stateMutex = new Object();
+
+    private final MapDisplayZoomHelper zoomHelper = new MapDisplayZoomHelper(this, stateMutex);
 
     /**
      * Adds a zoom change listener
@@ -174,7 +177,7 @@ public class NavigationModel {
     void setZoom(EastNorth center, double scale) {
         GuiHelper.requireEdtThread();
         synchronized (stateMutex) {
-            state = state.usingCenter(center).usingScale(getState().getCenter(), scale);
+            state = state.usingScale(getState().getCenter(), scale).usingCenter(center);
         }
     }
 
@@ -199,11 +202,10 @@ public class NavigationModel {
     }
 
     /**
-     * Creates a class that allows zooming this navigation model.
+     * Gets a class that allows zooming this navigation model.
      * @return A zoom helper.
      */
-    public MapDisplayZoomHelper createZoomHelper() {
-        return new MapDisplayZoomHelper(this, stateMutex);
+    public MapDisplayZoomHelper getZoomHelper() {
+        return zoomHelper;
     }
-
 }

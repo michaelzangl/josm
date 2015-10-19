@@ -402,11 +402,17 @@ public class NavigatableComponent extends NavigateablePanel implements Helpful, 
      *      to the own top/left.
      */
     public Point2D getPoint2D(EastNorth p) {
-        return getState().get(p).getOnScreen();
+        if (p == null) {
+            return new Point2D.Double();
+        }
+        return getState().get(p).getOnMapView();
     }
 
     public Point2D getPoint2D(LatLon latlon) {
-        return getState().get(latlon).getOnScreen();
+        if (latlon == null) {
+            return new Point2D.Double();
+        }
+        return getState().get(latlon).getOnMapView();
     }
 
     public Point2D getPoint2D(Node n) {

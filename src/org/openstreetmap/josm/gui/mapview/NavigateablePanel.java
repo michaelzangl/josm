@@ -6,20 +6,17 @@ import javax.swing.JPanel;
 import org.openstreetmap.josm.gui.NavigatableComponent;
 
 /**
- * This is a panel that displays something like a map: A graphic that is expessed in world coordinates.
+ * This is a panel that displays something like a map: A graphic that is expressed in world coordinates.
  * <p>
  * This class is intended to replace the {@link NavigatableComponent}.
  * @author Michael Zangl
  *
  */
 public class NavigateablePanel extends JPanel {
-    private final MapDisplayZoomHelper zoomer;
     private final NavigationModel navigationModel;
-
 
     public NavigateablePanel(NavigationModel navigationModel) {
         this.navigationModel = navigationModel;
-        zoomer = navigationModel.createZoomHelper();
         navigationModel.setTrackedComponent(this);
     }
 
@@ -28,7 +25,7 @@ public class NavigateablePanel extends JPanel {
      * @return The zoomer.
      */
     public MapDisplayZoomHelper getZoomer() {
-        return zoomer;
+        return navigationModel.getZoomHelper();
     }
 
     /**

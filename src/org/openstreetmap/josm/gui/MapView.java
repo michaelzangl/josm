@@ -67,8 +67,7 @@ import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.layer.geoimage.GeoImageLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.MarkerLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.PlayHeadMarker;
-import org.openstreetmap.josm.gui.mapview.MapDisplayZoomHelper.ZoomData;
-import org.openstreetmap.josm.gui.navigate.NavigationModel;
+import org.openstreetmap.josm.gui.mapview.NavigationModel.ZoomChangeEvent;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.AudioPlayer;
 import org.openstreetmap.josm.tools.BugReportExceptionHandler;
@@ -942,8 +941,8 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     }
 
     @Override
-    public void zoomChanged(NavigationModel navigationModel, ZoomData oldZoom, ZoomData newZoom) {
-        super.zoomChanged(navigationModel, oldZoom, newZoom);
+    public void zoomChanged(ZoomChangeEvent e) {
+        super.zoomChanged(e);
         synchronized (this) {
             paintPreferencesChanged = true;
         }

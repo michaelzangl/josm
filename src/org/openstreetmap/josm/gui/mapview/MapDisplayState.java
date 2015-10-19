@@ -60,7 +60,7 @@ public class MapDisplayState {
         }
 
         private double getRelativeNorth() {
-            return y * scale;
+            return position.getHeight() - y * scale;
         }
 
         public Point2D getOnMapView() {
@@ -111,8 +111,8 @@ public class MapDisplayState {
         return scale;
     }
 
-    public MapDisplayPoint getPoint(Point2D relative) {
-        return new MapDisplayPoint(relative.getX(), relative.getY());
+    public MapDisplayPoint getPoint(Point2D viewPosition) {
+        return new MapDisplayPoint(viewPosition.getX(), viewPosition.getY());
     }
 
     public MapDisplayPoint getPointFromWindow(Point2D relative) {
@@ -134,7 +134,7 @@ public class MapDisplayState {
     public MapDisplayPoint get(EastNorth eastNorth) {
         double lEast = eastNorth.east() - bottomLeft.east();
         double lNorth = eastNorth.north() - bottomLeft.north();
-        return new MapDisplayPoint(lEast / scale, lNorth / scale);
+        return new MapDisplayPoint(lEast / scale, position.getHeight() - lNorth / scale);
     }
 
     public Area getArea(Bounds bounds) {
@@ -175,7 +175,7 @@ public class MapDisplayState {
 
     private MapDisplayState moveTo(MapDisplayPoint point, EastNorth newEastNorth) {
         double east = newEastNorth.east() - point.getRelativeEast();
-        double north = newEastNorth.north() - point.getRelativeEast();
+        double north = newEastNorth.north() - point.getRelativeNorth();
         return new MapDisplayState(getProjection(), position, new EastNorth(east, north), getScale());
     }
 

@@ -1,6 +1,7 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.gui.mapview;
 
+import java.awt.Dimension;
 import java.awt.geom.Point2D;
 import java.util.Date;
 import java.util.Stack;
@@ -412,17 +413,20 @@ public class MapDisplayZoomHelper {
      * Zooms around a given point on the screen by a given factor.
      * <p>
      * The EastNorth position below that point on the screen will stay the same.
-     * @param screenPosition The position on the screen to zoom around.
+     * @param viewPosition The position on the screen to zoom around.
      * @param factor The factor to zoom by.
      */
-    public void zoomToFactorAround(Point2D screenPosition, double factor) {
+    public void zoomToFactorAround(Point2D viewPosition, double factor) {
         ZoomData state = getCurrentZoom();
         double newScale = state.getScale() * factor;
+        Dimension viewDimension = model.getState().getMapViewSize();
+        EastNorth center = model.getState().getCenter().getEastNorth();
+
         // New center position so that point under the mouse pointer stays the same place as it was before zooming
         // You will get the formula by simplifying this expression: newCenter = oldCenter + mouseCoordinatesInNewZoom - mouseCoordinatesInOldZoom
-//        zoomTo(new EastNorth(state.getCenter().east() - (screenPosition.getX() - viewDimension.width / 2.0)
-//                * (newScale - state.getScale()), getCenter().north() + (screenPosition.getY() - viewDimension.height / 2.0)
-//                * (newScale - state.getScale())), newScale);
+        zoomTo(new EastNorth( center.east() - (viewPosition.getX() - viewDimension.width / 2.0)
+                * (newScale - state.getScale()), center.north() + (viewPosition.getY() - viewDimension.height / 2.0)
+                * (newScale - state.getScale())), newScale);
     }
 
     /**
