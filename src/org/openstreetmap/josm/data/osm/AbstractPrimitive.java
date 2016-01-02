@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -499,15 +498,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
      */
     @Override
     public Map<String, String> getKeys() {
-        String[] keys = this.keys;
-        final Map<String, String> result = new HashMap<>(
-                Utils.hashMapInitialCapacity(keys == null ? 0 : keys.length / 2));
-        if (keys != null) {
-            for (int i = 0; i < keys.length; i += 2) {
-                result.put(keys[i], keys[i + 1]);
-            }
-        }
-        return result;
+        return new TagMap(keys);
     }
 
     /**

@@ -1,6 +1,8 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.data.osm;
 
+import java.util.Map.Entry;
+
 import org.openstreetmap.josm.tools.CheckParameterUtil;
 import org.openstreetmap.josm.tools.Utils;
 
@@ -9,7 +11,7 @@ import org.openstreetmap.josm.tools.Utils;
  * be empty, but not null.
  *
  */
-public class Tag {
+public class Tag implements Entry<String, String> {
 
     private String key;
     private String value;
@@ -57,6 +59,7 @@ public class Tag {
      *
      * @return the key of the tag
      */
+    @Override
     public String getKey() {
         return key;
     }
@@ -66,8 +69,20 @@ public class Tag {
      *
      * @return the value of the tag
      */
+    @Override
     public String getValue() {
         return value;
+    }
+
+    /**
+     * This is not supported by this implementation.
+     * @param value ignored
+     * @return (Does not return)
+     * @throws UnsupportedOperationException always
+     */
+    @Override
+    public String setValue(String value) {
+        throw new UnsupportedOperationException();
     }
 
     /**
