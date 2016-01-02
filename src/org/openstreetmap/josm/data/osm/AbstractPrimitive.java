@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.openstreetmap.josm.tools.LanguageInfo;
@@ -487,7 +488,16 @@ public abstract class AbstractPrimitive implements IPrimitive {
      * Note that the keys field is synchronized using RCU.
      * Writes to it are not synchronized by this object, the writers have to synchronize writes themselves.
      * <p>
-     * In short this means that you should not rely on this variable being the same value when read again and your should always copy it on writes.
+     * In short this means that you should not rely on this variable being the same value when read again and your should always
+     * copy it on writes.
+     * <p>
+     * Further reading:
+     * <ul>
+     * <li> The {@link CopyOnWriteArrayList} class
+     * <li> http://stackoverflow.com/questions/2950871/how-can-copyonwritearraylist-be-thread-safe
+     * <li> https://en.wikipedia.org/wiki/Read-copy-update
+     * (mind that we have a Garbage collector, rcu_assign_pointer and rcu_dereference are ensured by the volatile keyword)
+     * </ul>
      */
     protected volatile String[] keys;
 
@@ -532,7 +542,8 @@ public abstract class AbstractPrimitive implements IPrimitive {
      * Old key/value pairs are removed.
      * If <code>keys</code> is null, clears existing key/value pairs.
      * <p>
-     * Note that this method, like all methods that modify keys, is not synchronized and may lead to data corruption when being used from multiple threads.
+     * Note that this method, like all methods that modify keys, is not synchronized and may lead to data corruption when being used
+     * from multiple threads.
      *
      * @param keys the key/value pairs to set. If null, removes all existing key/value pairs.
      */
@@ -558,7 +569,8 @@ public abstract class AbstractPrimitive implements IPrimitive {
      * Set the given value to the given key. If key is null, does nothing. If value is null,
      * removes the key and behaves like {@link #remove(String)}.
      * <p>
-     * Note that this method, like all methods that modify keys, is not synchronized and may lead to data corruption when being used from multiple threads.
+     * Note that this method, like all methods that modify keys, is not synchronized and may lead to data corruption when being used
+     * from multiple threads.
      *
      * @param key  The key, for which the value is to be set. Can be null or empty, does nothing in this case.
      * @param value The value for the key. If null, removes the respective key/value pair.
@@ -616,7 +628,8 @@ public abstract class AbstractPrimitive implements IPrimitive {
     /**
      * Remove the given key from the list
      * <p>
-     * Note that this method, like all methods that modify keys, is not synchronized and may lead to data corruption when being used from multiple threads.
+     * Note that this method, like all methods that modify keys, is not synchronized and may lead to data corruption when being used
+     * from multiple threads.
      *
      * @param key  the key to be removed. Ignored, if key is null.
      */
@@ -646,7 +659,8 @@ public abstract class AbstractPrimitive implements IPrimitive {
     /**
      * Removes all keys from this primitive.
      * <p>
-     * Note that this method, like all methods that modify keys, is not synchronized and may lead to data corruption when being used from multiple threads.
+     * Note that this method, like all methods that modify keys, is not synchronized and may lead to data corruption when being used
+     * from multiple threads.
      */
     @Override
     public void removeAll() {
