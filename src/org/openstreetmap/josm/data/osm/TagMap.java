@@ -128,7 +128,7 @@ public class TagMap extends AbstractMap<String, String> {
     }
 
     @Override
-    public TagEntrySet entrySet() {
+    public Set<Entry<String, String>> entrySet() {
         return new TagEntrySet(tags);
     }
 
@@ -248,5 +248,13 @@ public class TagMap extends AbstractMap<String, String> {
         }
         stringBuilder.append("]");
         return stringBuilder.toString();
+    }
+
+    /**
+     * Gets the backing tags array. Do not modify this array.
+     * @return The tags array.
+     */
+    String[] getTagsArray() {
+        return tags;
     }
 }

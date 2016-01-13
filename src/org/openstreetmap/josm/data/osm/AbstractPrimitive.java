@@ -497,7 +497,7 @@ public abstract class AbstractPrimitive implements IPrimitive {
      * @see #visitKeys(KeyValueVisitor)
      */
     @Override
-    public Map<String, String> getKeys() {
+    public TagMap getKeys() {
         return new TagMap(keys);
     }
 
@@ -539,6 +539,20 @@ public abstract class AbstractPrimitive implements IPrimitive {
             newKeys[index++] = entry.getValue();
         }
         this.keys = newKeys;
+        keysChangedImpl(originalKeys);
+    }
+
+    /**
+     * Copy the keys from a TagMap.
+     * @param keys The new key map.
+     */
+    public void setKeys(TagMap keys) {
+        Map<String, String> originalKeys = getKeys();
+        if (keys.isEmpty()) {
+            this.keys = null;
+        } else {
+            this.keys = keys.getTagsArray();
+        }
         keysChangedImpl(originalKeys);
     }
 
