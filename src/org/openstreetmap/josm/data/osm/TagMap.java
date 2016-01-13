@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * This class provides a read/write map that uses the same format as {@link AbstractPrimitive#keys}.
@@ -16,14 +17,32 @@ import java.util.NoSuchElementException;
  * @author Michael Zangl
  */
 public class TagMap extends AbstractMap<String, String> {
+    /**
+     * We use this array every time we want to represent an empty map.
+     * This saves us the burden of checking for null every time but saves some object allocations.
+     */
     private static final String[] EMPTY_TAGS = new String[0];
 
+    /**
+     * An iterator that iterates over the tags in this map. The iterator always represents the state of the map when it was created.
+     * Further changes to the map won't change the tags that we iterate over but they also won't raise any exceptions.
+     * @author Michael Zangl
+     */
     private static class TagEntryInterator implements Iterator<Entry<String, String>> {
-
+        /**
+         * The current state of the tags we iterate over.
+         */
         private final String[] tags;
-        int currentIndex = 0;
+        /**
+         * Current tag index. Always a multiple of 2.
+         */
+        private int currentIndex = 0;
 
-        public TagEntryInterator(String[] tags) {
+        /**
+         * Create a new {@link TagEntryInterator}
+         * @param tags The tags array. It is never changed but should also not be changed by you.
+         */
+        TagEntryInterator(String[] tags) {
             super();
             this.tags = tags;
         }
@@ -51,10 +70,18 @@ public class TagMap extends AbstractMap<String, String> {
 
     }
 
+    /**
+     * This is the entry set of this map. It represents the state when it was created.
+     * @author Michael Zangl
+     */
     private static class TagEntrySet extends AbstractSet<Entry<String, String>> {
         private final String[] tags;
 
-        public TagEntrySet(String[] tags) {
+        /**
+         * Create a new {@link TagEntrySet}
+         * @param tags The tags array. It is never changed but should also not be changed by you.
+         */
+        TagEntrySet(String[] tags) {
             super();
             this.tags = tags;
         }
@@ -87,7 +114,7 @@ public class TagMap extends AbstractMap<String, String> {
      * Creates a new read only tag map using a key/value/key/value/... array.
      * <p>
      * The array that is passed as parameter may not be modified after passing it to this map.
-     * @param tags The tags array.
+     * @param tags The tags array. It is not modified by this map.
      */
     public TagMap(String[] tags) {
         if (tags == null || tags.length == 0) {
@@ -106,15 +133,32 @@ public class TagMap extends AbstractMap<String, String> {
     }
 
     @Override
+    public Set<String> keySet() {
+        // TODO Auto-generated method stub
+        return super.keySet();
+    }
+
+    @Override
     public boolean containsKey(Object key) {
-        return indexOf(tags, key) >= 0;
+        return indexOfKey(tags, key) >= 0;
     }
 
     @Override
     public String get(Object key) {
         String[] tags = this.tags;
-        int index = indexOf(tags, key);
+        int index = indexOfKey(tags, key);
         return index < 0 ? null : tags[index + 1];
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+        String[] tags = this.tags;
+        for (int i = 1; i < tags.length; i += 2) {
+            if (value.equals(tags[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -125,7 +169,7 @@ public class TagMap extends AbstractMap<String, String> {
         if (value == null) {
             throw new NullPointerException();
         }
-        int index = indexOf(tags, key);
+        int index = indexOfKey(tags, key);
         int newTagArrayLength = tags.length;
         if (index < 0) {
             index = newTagArrayLength;
@@ -142,7 +186,7 @@ public class TagMap extends AbstractMap<String, String> {
 
     @Override
     public synchronized String remove(Object key) {
-        int index = indexOf(tags, key);
+        int index = indexOfKey(tags, key);
         if (index < 0) {
             return null;
         }
@@ -165,7 +209,21 @@ public class TagMap extends AbstractMap<String, String> {
         tags = EMPTY_TAGS;
     }
 
-    private static int indexOf(String[] tags, Object key) {
+    @Override
+    public int size() {
+        return tags.length / 2;
+    }
+
+    /**
+     * Finds a key in an array that is structured like the {@link #tags} array and returns the position.
+     * <p>
+     * We allow the parameter to be passed to allow for better synchronization.
+     *
+     * @param tags The tags array to search through.
+     * @param key The key to search.
+     * @return The index of the key (a multiple of two) or -1 if it was not found.
+     */
+    private static int indexOfKey(String[] tags, Object key) {
         for (int i = 0; i < tags.length; i += 2) {
             if (tags[i].equals(key)) {
                 return i;
@@ -175,7 +233,20 @@ public class TagMap extends AbstractMap<String, String> {
     }
 
     @Override
-    public int size() {
-        return tags.length / 2;
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("TagMap[");
+        boolean first = true;
+        for (java.util.Map.Entry<String, String> e : entrySet()) {
+            if (!first) {
+                stringBuilder.append(",");
+            }
+            stringBuilder.append(e.getKey());
+            stringBuilder.append("=");
+            stringBuilder.append(e.getValue());
+            first = false;
+        }
+        stringBuilder.append("]");
+        return stringBuilder.toString();
     }
 }
