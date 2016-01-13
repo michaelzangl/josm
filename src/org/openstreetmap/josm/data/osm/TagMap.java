@@ -133,12 +133,6 @@ public class TagMap extends AbstractMap<String, String> {
     }
 
     @Override
-    public Set<String> keySet() {
-        // TODO Auto-generated method stub
-        return super.keySet();
-    }
-
-    @Override
     public boolean containsKey(Object key) {
         return indexOfKey(tags, key) >= 0;
     }

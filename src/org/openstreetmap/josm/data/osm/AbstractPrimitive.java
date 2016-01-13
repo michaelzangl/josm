@@ -548,10 +548,11 @@ public abstract class AbstractPrimitive implements IPrimitive {
      */
     public void setKeys(TagMap keys) {
         Map<String, String> originalKeys = getKeys();
-        if (keys.isEmpty()) {
+        String[] arr = keys.getTagsArray();
+        if (arr.length == 0) {
             this.keys = null;
         } else {
-            this.keys = keys.getTagsArray();
+            this.keys = arr;
         }
         keysChangedImpl(originalKeys);
     }
