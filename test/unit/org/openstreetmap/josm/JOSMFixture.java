@@ -90,6 +90,7 @@ public class JOSMFixture {
         Main.platform.preStartupHook();
 
         Main.pref.init(false);
+        Main.pref.put("osm-server.url", "http://api06.dev.openstreetmap.org/api");
         I18n.set(Main.pref.get("language", "en"));
 
         // init projection
