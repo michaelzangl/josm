@@ -152,4 +152,17 @@ public abstract class Plugin implements MapFrameListener {
               }
         });
     }
+
+    /**
+     * Checks if a class is managed by this plugin.
+     * <p>
+     * The default implementation assumes that a class belongs to a plugin if it is in the same or a child package as the plugin base class.
+     * @param className The class name to check for.
+     * @return True if this plugin is responsible for that class.
+     */
+    public boolean isClassManagedByThisPlugin(String className) {
+        String baseClass = getPluginInformation().className;
+        baseClass = baseClass.substring(0, baseClass.lastIndexOf('.'));
+        return className.startsWith(baseClass);
+    }
 }

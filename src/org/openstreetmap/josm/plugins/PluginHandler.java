@@ -68,6 +68,7 @@ import org.openstreetmap.josm.tools.GBC;
 import org.openstreetmap.josm.tools.I18n;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Utils;
+import org.openstreetmap.josm.tools.crashreport.CrashReportData;
 
 /**
  * PluginHandler is basically a collection of static utility functions used to bootstrap
@@ -1321,44 +1322,16 @@ public final class PluginHandler {
     }
 
     /**
-     * Replies the plugin which most likely threw the exception <code>ex</code>.
-     *
-     * @param ex the exception
-     * @return the plugin; null, if the exception probably wasn't thrown from a plugin
-     */
-    private static PluginProxy getPluginCausingException(Throwable ex) {
-        PluginProxy err = null;
-        StackTraceElement[] stack = ex.getStackTrace();
-        // remember the error position, as multiple plugins may be involved, we search the topmost one
-        int pos = stack.length;
-        for (PluginProxy p : pluginList) {
-            String baseClass = p.getPluginInformation().className;
-            baseClass = baseClass.substring(0, baseClass.lastIndexOf('.'));
-            for (int elpos = 0; elpos < pos; ++elpos) {
-                if (stack[elpos].getClassName().startsWith(baseClass)) {
-                    pos = elpos;
-                    err = p;
-                }
-            }
-        }
-        return err;
-    }
-
-    /**
      * Checks whether the exception <code>e</code> was thrown by a plugin. If so,
      * conditionally updates or deactivates the plugin, but asks the user first.
      *
      * @param e the exception
      * @return plugin download task if the plugin has been updated to a newer version, {@code null} if it has been disabled or kept as it
      */
-    public static PluginDownloadTask updateOrdisablePluginAfterException(Throwable e) {
+    public static PluginDownloadTask updateOrdisablePluginAfterException(CrashReportData e) {
         PluginProxy plugin = null;
-        // Check for an explicit problem when calling a plugin function
-        if (e instanceof PluginException) {
-            plugin = ((PluginException) e).plugin;
-        }
         if (plugin == null) {
-            plugin = getPluginCausingException(e);
+            plugin = e.getPluginCausingException();
         }
         if (plugin == null)
             // don't know what plugin threw the exception
@@ -1523,5 +1496,21 @@ public final class PluginHandler {
         public boolean isRememberDecision() {
             return cbDontShowAgain.isSelected();
         }
+    }
+
+    /**
+     * Searches through the list of plugins and returns the plugin to which this class belongs.
+     * <p>
+     * We assume that a class does not belong to multiple plugins.
+     * @param className The class to search
+     * @return The plugin or <code>null</code> if no plugin was found.
+     */
+    public static PluginProxy getPluginForClass(String className) {
+        for (PluginProxy p : pluginList) {
+            if (p.isClassManagedByThisPlugin(className)) {
+                return p;
+            }
+        }
+        return null;
     }
 }

@@ -60,6 +60,7 @@ import org.openstreetmap.josm.io.CachedFile;
 import org.openstreetmap.josm.tools.CheckParameterUtil;
 import org.openstreetmap.josm.tools.LanguageInfo;
 import org.openstreetmap.josm.tools.Utils;
+import org.openstreetmap.josm.tools.crashreport.CrashReportData;
 
 /**
  * This is a mappaint style that is based on MapCSS rules.
@@ -607,7 +608,17 @@ public class MapCSSStyleSource extends StyleSource {
 
     @Override
     public void apply(MultiCascade mc, OsmPrimitive osm, double scale, boolean pretendWayIsClosed) {
-        Environment env = new Environment(osm, mc, null, this);
+        try {
+            Environment env = new Environment(osm, mc, null, this);
+            MapCSSRuleIndex matchingRuleIndex = findMatchingRuleIndex(osm);
+            applyWithIndex(mc, osm, scale, env, matchingRuleIndex);
+            throw new RuntimeException("Test");
+        } catch (Throwable t) {
+            throw CrashReportData.create(t, "Apply MapCSS Rule").put("primitive", osm);
+        }
+    }
+
+    private MapCSSRuleIndex findMatchingRuleIndex(OsmPrimitive osm) {
         MapCSSRuleIndex matchingRuleIndex;
         if (osm instanceof Node) {
             matchingRuleIndex = nodeRules;
@@ -626,7 +637,11 @@ public class MapCSSStyleSource extends StyleSource {
                 matchingRuleIndex = relationRules;
             }
         }
+        return matchingRuleIndex;
+    }
 
+    private void applyWithIndex(MultiCascade mc, OsmPrimitive osm, double scale, Environment env,
+            MapCSSRuleIndex matchingRuleIndex) {
         // the declaration indices are sorted, so it suffices to save the
         // last used index
         int lastDeclUsed = -1;
@@ -634,32 +649,36 @@ public class MapCSSStyleSource extends StyleSource {
         Iterator<MapCSSRule> candidates = matchingRuleIndex.getRuleCandidates(osm);
         while (candidates.hasNext()) {
             MapCSSRule r = candidates.next();
-            env.clearSelectorMatchingInformation();
-            env.layer = null;
-            String sub = env.layer = r.selector.getSubpart().getId(env);
-            if (r.selector.matches(env)) { // as side effect env.parent will be set (if s is a child selector)
-                Selector s = r.selector;
-                if (s.getRange().contains(scale)) {
-                    mc.range = Range.cut(mc.range, s.getRange());
-                } else {
-                    mc.range = mc.range.reduceAround(scale, s.getRange());
-                    continue;
-                }
-
-                if (r.declaration.idx == lastDeclUsed)
-                    continue; // don't apply one declaration more than once
-                lastDeclUsed = r.declaration.idx;
-                if ("*".equals(sub)) {
-                    for (Entry<String, Cascade> entry : mc.getLayers()) {
-                        env.layer = entry.getKey();
-                        if ("*".equals(env.layer)) {
-                            continue;
-                        }
-                        r.execute(env);
+            try {
+                env.clearSelectorMatchingInformation();
+                env.layer = null;
+                String sub = env.layer = r.selector.getSubpart().getId(env);
+                if (r.selector.matches(env)) { // as side effect env.parent will be set (if s is a child selector)
+                    Selector s = r.selector;
+                    if (s.getRange().contains(scale)) {
+                        mc.range = Range.cut(mc.range, s.getRange());
+                    } else {
+                        mc.range = mc.range.reduceAround(scale, s.getRange());
+                        continue;
                     }
+
+                    if (r.declaration.idx == lastDeclUsed)
+                        continue; // don't apply one declaration more than once
+                    lastDeclUsed = r.declaration.idx;
+                    if ("*".equals(sub)) {
+                        for (Entry<String, Cascade> entry : mc.getLayers()) {
+                            env.layer = entry.getKey();
+                            if ("*".equals(env.layer)) {
+                                continue;
+                            }
+                            r.execute(env);
+                        }
+                    }
+                    env.layer = sub;
+                    r.execute(env);
                 }
-                env.layer = sub;
-                r.execute(env);
+            } catch (Throwable t) {
+                throw CrashReportData.create(t, "Apply MapCSS Rule").put("rule", r.toString());
             }
         }
     }

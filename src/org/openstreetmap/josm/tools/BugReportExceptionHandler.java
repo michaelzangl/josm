@@ -20,7 +20,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.ShowStatusReportAction;
@@ -31,7 +30,7 @@ import org.openstreetmap.josm.gui.widgets.JMultilineLabel;
 import org.openstreetmap.josm.gui.widgets.JosmTextArea;
 import org.openstreetmap.josm.gui.widgets.UrlLabel;
 import org.openstreetmap.josm.plugins.PluginDownloadTask;
-import org.openstreetmap.josm.plugins.PluginHandler;
+import org.openstreetmap.josm.tools.crashreport.CrashReportData;
 
 /**
  * An exception handler that asks the user to send a bug report.
@@ -140,13 +139,14 @@ public final class BugReportExceptionHandler implements Thread.UncaughtException
         @Override
         public void run() {
             // Give the user a chance to deactivate the plugin which threw the exception (if it was thrown from a plugin)
-            SwingUtilities.invokeLater(new BugReporterWorker(PluginHandler.updateOrdisablePluginAfterException(e)));
+
+            //SwingUtilities.invokeLater(new BugReporterWorker(PluginHandler.updateOrdisablePluginAfterException(e2)));
         }
     }
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        handleException(e);
+        handleException(t, e);
     }
 
     /**
@@ -162,33 +162,46 @@ public final class BugReportExceptionHandler implements Thread.UncaughtException
      * @param e the exception
      */
     public static void handleException(final Throwable e) {
-        if (handlingInProgress || suppressExceptionDialogs)
-            return;                  // we do not handle secondary exceptions, this gets too messy
-        if (bugReporterThread != null && bugReporterThread.isAlive())
-            return;
-        handlingInProgress = true;
-        exceptionCounter++;
-        try {
-            Main.error(e);
-            if (Main.parent != null) {
-                if (e instanceof OutOfMemoryError) {
-                    // do not translate the string, as translation may raise an exception
-                    JOptionPane.showMessageDialog(Main.parent, "JOSM is out of memory. " +
-                            "Strange things may happen.\nPlease restart JOSM with the -Xmx###M option,\n" +
-                            "where ### is the number of MB assigned to JOSM (e.g. 256).\n" +
-                            "Currently, " + Runtime.getRuntime().maxMemory()/1024/1024 + " MB are available to JOSM.",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE
-                            );
-                    return;
-                }
+        handleException(Thread.currentThread(), e);
+    }
 
-                bugReporterThread = new BugReporterThread(e);
-                bugReporterThread.start();
-            }
-        } finally {
-            handlingInProgress = false;
+    private static void handleException(final Thread t, final Throwable e) {
+//        if (handlingInProgress || suppressExceptionDialogs)
+//            return;                  // we do not handle secondary exceptions, this gets too messy
+//        if (bugReporterThread != null && bugReporterThread.isAlive())
+//            return;
+//        handlingInProgress = true;
+//        exceptionCounter++;
+//        try {
+//            Main.error(e);
+//            if (Main.parent != null) {
+//                if (e instanceof OutOfMemoryError) {
+//                    // do not translate the string, as translation may raise an exception
+//                    JOptionPane.showMessageDialog(Main.parent, "JOSM is out of memory. " +
+//                            "Strange things may happen.\nPlease restart JOSM with the -Xmx###M option,\n" +
+//                            "where ### is the number of MB assigned to JOSM (e.g. 256).\n" +
+//                            "Currently, " + Runtime.getRuntime().maxMemory()/1024/1024 + " MB are available to JOSM.",
+//                            "Error",
+//                            JOptionPane.ERROR_MESSAGE
+//                            );
+//                    return;
+//                }
+//
+//                bugReporterThread = new BugReporterThread(e);
+//                bugReporterThread.start();
+//            }
+//        } finally {
+//            handlingInProgress = false;
+//        }
+        CrashReportData data = CrashReportData.create(e, "Global exception handler");
+        //TODO: Add this for all exceptions, not just global ones.
+        data.put("Thread", t.getName());
+        data.put("Thread id", t.getId());
+        ThreadGroup group = t.getThreadGroup();
+        if (group != null) {
+            data.put("Thread group", group.getName());
         }
+        data.display();
     }
 
     private static void askForBugReport(final Throwable e) {

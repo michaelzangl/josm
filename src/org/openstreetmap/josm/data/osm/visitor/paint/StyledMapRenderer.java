@@ -77,6 +77,7 @@ import org.openstreetmap.josm.tools.Geometry;
 import org.openstreetmap.josm.tools.Geometry.AreaAndPerimeter;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Utils;
+import org.openstreetmap.josm.tools.crashreport.CrashReportData;
 
 /**
  * A map renderer which renders a map according to style rules in a set of style sheets.
@@ -1811,19 +1812,23 @@ public class StyledMapRenderer extends AbstractMapRenderer {
 
         @Override
         protected List<StyleRecord> compute() {
-            if (input.size() <= directExecutionTaskSize) {
-                return computeDirectly();
-            } else {
-                final Collection<ForkJoinTask<List<StyleRecord>>> tasks = new ArrayList<>();
-                for (int fromIndex = 0; fromIndex < input.size(); fromIndex += directExecutionTaskSize) {
-                    final int toIndex = Math.min(fromIndex + directExecutionTaskSize, input.size());
-                    final List<StyleRecord> output = new ArrayList<>(directExecutionTaskSize);
-                    tasks.add(new ComputeStyleListWorker(input.subList(fromIndex, toIndex), output, directExecutionTaskSize).fork());
+            try {
+                if (input.size() <= directExecutionTaskSize) {
+                    return computeDirectly();
+                } else {
+                    final Collection<ForkJoinTask<List<StyleRecord>>> tasks = new ArrayList<>();
+                    for (int fromIndex = 0; fromIndex < input.size(); fromIndex += directExecutionTaskSize) {
+                        final int toIndex = Math.min(fromIndex + directExecutionTaskSize, input.size());
+                        final List<StyleRecord> output = new ArrayList<>(directExecutionTaskSize);
+                        tasks.add(new ComputeStyleListWorker(input.subList(fromIndex, toIndex), output, directExecutionTaskSize).fork());
+                    }
+                    for (ForkJoinTask<List<StyleRecord>> task : tasks) {
+                        output.addAll(task.join());
+                    }
+                    return output;
                 }
-                for (ForkJoinTask<List<StyleRecord>> task : tasks) {
-                    output.addAll(task.join());
-                }
-                return output;
+            } catch (Throwable t) {
+                throw CrashReportData.create(t, "Style computation").put("input size", input.size()).put("directExecutionTaskSize", directExecutionTaskSize);
             }
         }
 
@@ -1971,6 +1976,9 @@ public class StyledMapRenderer extends AbstractMapRenderer {
             }
 
             drawVirtualNodes(data, bbox);
+        } catch (Throwable t) {
+            // Do not make the rest of the UI unusable if an error occurred. Simply display a dialog.
+            CrashReportData.create(t, "Rendering").display();
         } finally {
             data.getReadLock().unlock();
         }
