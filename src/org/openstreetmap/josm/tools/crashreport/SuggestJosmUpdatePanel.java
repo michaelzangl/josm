@@ -8,9 +8,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 /**
+ * This panel checks the current version of JOSM. If the user is not running the current stable/tested version, the user is prompted to update JOSM to the current version.
  *
- * @author michael
- *
+ * @author Michael Zangl
  */
 public class SuggestJosmUpdatePanel extends JPanel {
     public SuggestJosmUpdatePanel() {

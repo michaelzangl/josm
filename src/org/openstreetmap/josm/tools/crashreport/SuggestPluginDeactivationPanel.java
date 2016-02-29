@@ -9,6 +9,13 @@ import javax.swing.JPanel;
 
 import org.openstreetmap.josm.plugins.PluginProxy;
 
+/**
+ * This panel allows the user to deactivate a plugin that caused an exception.
+ * <p>
+ * If the user agrees, the plugin is deactivated on the next restart. If the user wants to, JOSM can be restarted immediately.
+ *
+ * @author Michael Zangl
+ */
 public class SuggestPluginDeactivationPanel extends JPanel {
 
     public SuggestPluginDeactivationPanel(CrashReportData data) {
@@ -21,6 +28,8 @@ public class SuggestPluginDeactivationPanel extends JPanel {
             JPanel buttons = new JPanel();
             setLayout(new BoxLayout(buttons, BoxLayout.LINE_AXIS));
             buttons.add(new JButton("Update Plugin"));
+            buttons.add(new JButton("Disable Plugin, manual restart"));
+            buttons.add(new JButton("Disable and restart (loses changes!)"));
         }
     }
 

@@ -4,8 +4,12 @@ package org.openstreetmap.josm.tools.crashreport;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.plugins.PluginException;
@@ -34,6 +38,8 @@ import org.openstreetmap.josm.tools.crashreport.CrashReportInfo.CrashReportInfoM
  * @author Michael Zangl
  */
 public final class CrashReportData extends RuntimeException {
+
+    private static final CrashReportQueue DISPLAY_QUEUE = new CrashReportQueue();
 
     private final Throwable exception;
     /**
@@ -122,7 +128,7 @@ public final class CrashReportData extends RuntimeException {
      * Displays this message to the user.
      */
     public void display() {
-        CrashReportDialog.displayForDataAsync(this);
+        DISPLAY_QUEUE.enqueue(this);
     }
 
     @Override
@@ -181,6 +187,47 @@ public final class CrashReportData extends RuntimeException {
             ex = ex.getCause();
         }
         return plugins;
+    }
+
+    /**
+     * Checks if the exception is considered to be the same. This allows us to ignore a specific exception.
+     * <p>
+     * For now, two exceptions are the same if their stack traces and their message are equal.
+     * @param e The data to compare to.
+     * @return <code>true</code> if they are the same.
+     */
+    public boolean isSame(CrashReportData e) {
+        if (!getMessage().equals(e.getMessage())) {
+            return false;
+        }
+
+        Set<Throwable> dejaVu = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
+        return hasSameStackTrace(dejaVu, this.exception, e.exception);
+    }
+
+    private boolean hasSameStackTrace(Set<Throwable> dejaVu, Throwable e1, Throwable e2) {
+        if (dejaVu.contains(e1)) {
+            // cycle. If it was the same until here, we hope both have that cycle.
+            return true;
+        }
+        dejaVu.add(e1);
+
+        StackTraceElement[] t1 = e1.getStackTrace();
+        StackTraceElement[] t2 = e2.getStackTrace();
+
+        if (!Arrays.equals(t1, t2)) {
+            return false;
+        }
+
+        Throwable c1 = e1.getCause();
+        Throwable c2 = e2.getCause();
+        if ((c1 == null) != (c2 == null)) {
+            return false;
+        } else if (c1 != null) {
+            return hasSameStackTrace(dejaVu, c1, c2);
+        } else {
+            return true;
+        }
     }
 
     /**
