@@ -23,7 +23,7 @@ public class SuggestPluginDeactivationPanel extends JPanel {
         if (plugin != null) {
             setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
             setBorder(BorderFactory.createTitledBorder("Caused by plugin?"));
-            add(new JLabel("Was this caused by " + plugin.getPluginInformation().name + "."));
+            add(new JLabel("This bug might be caused by " + plugin.getPluginInformation().name + "."));
 
             JPanel buttons = new JPanel();
             setLayout(new BoxLayout(buttons, BoxLayout.LINE_AXIS));

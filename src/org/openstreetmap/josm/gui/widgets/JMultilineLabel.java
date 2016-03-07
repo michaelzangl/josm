@@ -46,6 +46,14 @@ public class JMultilineLabel extends JEditorPane {
      */
     public JMultilineLabel(String text, boolean allBold) {
         JosmEditorPane.makeJLabelLike(this, allBold);
+        setMultilineText(text);
+    }
+
+    /**
+     * Sets the text and adds multiline tags to it. Use this instead of {@link #setText(String)}.
+     * @param text The text to display
+     */
+    public void setMultilineText(String text) {
         String html = text.trim().replaceAll("\n", "<br>");
         if (!html.startsWith("<html>")) {
             html = "<html>" + html + "</html>";

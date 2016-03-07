@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.openstreetmap.josm.actions.ShowStatusReportAction;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.plugins.PluginException;
 import org.openstreetmap.josm.plugins.PluginHandler;
@@ -83,6 +84,9 @@ public final class CrashReportData extends RuntimeException {
             }
             out.println();
         }
+        out.println("----- System Status -----");
+        out.println(ShowStatusReportAction.getReportHeader());
+        out.println();
         out.println("----- Active Plugins -----");
         printActivePlugins(out);
         out.println();
@@ -90,6 +94,10 @@ public final class CrashReportData extends RuntimeException {
         getCause().printStackTrace(out);
     }
 
+    /**
+     * @see PluginHandler#getBugReportText()
+     * @param out
+     */
     private void printActivePlugins(PrintWriter out) {
         List<PluginProxy> badPlugins = getPluginsCausingException();
         for (PluginProxy plugin : PluginHandler.pluginList) {
@@ -97,6 +105,9 @@ public final class CrashReportData extends RuntimeException {
             out.print(plugin.getPluginInformation().name);
             out.print(" by ");
             out.print(plugin.getPluginInformation().author);
+            out.print(", version: ");
+            out.print(plugin.getPluginInformation().version);
+
             int badPluginIndex = badPlugins.indexOf(plugin);
             if (badPluginIndex >= 0) {
                 // Indicate that this plugin might be a cause for the error.
@@ -104,6 +115,7 @@ public final class CrashReportData extends RuntimeException {
                 out.print(badPluginIndex + 1);
                 out.print(")");
             }
+            out.println();
         }
     }
 

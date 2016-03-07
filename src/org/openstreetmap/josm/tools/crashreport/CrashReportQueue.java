@@ -37,6 +37,8 @@ public class CrashReportQueue {
      */
     private final ArrayList<CrashReportData> suppressed = new ArrayList<>();
 
+    private boolean suppressAllReports;
+
     /**
      * Enqueues a crash report that should be displayed.
      * @param data The data to display.
@@ -65,11 +67,12 @@ public class CrashReportQueue {
         }
     }
 
-    protected synchronized void crashReportClosed(CrashReportData suppress) {
+    protected synchronized void crashReportClosed(CrashReportData suppress, boolean suppressAllReports) {
         if (suppress != null) {
             suppressOfType(suppress);
         }
         dialogShown = false;
+        this.suppressAllReports |= suppressAllReports;
         recheckShowDialog();
     }
 
@@ -77,7 +80,7 @@ public class CrashReportQueue {
         return new CrashReportCloseListener() {
             @Override
             public void crashReportDialogClosed(CrashReportCloseResult closeResult) {
-                crashReportClosed(closeResult.isSuppressReportsOfSameType() ? toShow : null);
+                crashReportClosed(closeResult.isSuppressReportsOfSameType() ? toShow : null, closeResult.isSuppressAllReports());
             }
         };
     }
@@ -89,7 +92,7 @@ public class CrashReportQueue {
     }
 
     private boolean isSuppressed(CrashReportData data) {
-        return Utils.exists(suppressed, new IsSamePredicate(data));
+        return suppressAllReports || Utils.exists(suppressed, new IsSamePredicate(data));
     }
 
     /**
