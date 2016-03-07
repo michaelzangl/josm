@@ -126,7 +126,13 @@ public final class CrashReportData extends RuntimeException {
      * @return This crash report data instance for easy chaining.
      */
     public CrashReportData put(String key, Object value) {
-        getInfo().put(key, value.toString());
+        String string;
+        try {
+            string = value.toString();
+        } catch (Throwable t) {
+            string = "[" + t.getClass().getSimpleName() + " while converting to String]";
+        }
+        getInfo().put(key, string);
         return this;
     }
 
