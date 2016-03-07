@@ -1976,9 +1976,6 @@ public class StyledMapRenderer extends AbstractMapRenderer {
             }
 
             drawVirtualNodes(data, bbox);
-        } catch (Throwable t) {
-            // Do not make the rest of the UI unusable if an error occurred. Simply display a dialog.
-            CrashReportData.create(t, "Rendering").display();
         } finally {
             data.getReadLock().unlock();
         }

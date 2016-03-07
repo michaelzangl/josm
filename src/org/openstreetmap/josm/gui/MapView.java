@@ -67,6 +67,7 @@ import org.openstreetmap.josm.tools.AudioPlayer;
 import org.openstreetmap.josm.tools.BugReportExceptionHandler;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.openstreetmap.josm.tools.Utils;
+import org.openstreetmap.josm.tools.crashreport.CrashReportData;
 
 /**
  * This is a component used in the {@link MapFrame} for browsing the map. It use is to
@@ -695,7 +696,13 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
             g2.fillRect(0, 0, getWidth(), getHeight());
 
             for (int i = 0; i < nonChangedLayersCount; i++) {
-                paintLayer(visibleLayers.get(i), g2, box);
+                Layer layer = visibleLayers.get(i);
+                try {
+                    paintLayer(layer, g2, box);
+                } catch (Throwable t) {
+                    // Do not make the rest of the UI unusable if an error occurred. Simply display a dialog.
+                    CrashReportData.create(t, "Painting layer").put("layer", layer).put("layer_index", i).display();
+                }
             }
         } else {
             // Maybe there were more unchanged layers then last time - draw them to buffer
@@ -724,7 +731,12 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
 
         synchronized (temporaryLayers) {
             for (MapViewPaintable mvp : temporaryLayers) {
-                mvp.paint(tempG, this, box);
+                try {
+                    mvp.paint(tempG, this, box);
+                } catch (Throwable t) {
+                    // Do not make the rest of the UI unusable if an error occurred. Simply display a dialog.
+                    CrashReportData.create(t, "Painting temporary layer").put("layer", mvp).display();
+                }
             }
         }
 
@@ -777,7 +789,12 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
         }
 
         if (playHeadMarker != null) {
-            playHeadMarker.paint(tempG, this);
+            try {
+                playHeadMarker.paint(tempG, this);
+            } catch (Throwable t) {
+                // Do not make the rest of the UI unusable if an error occurred. Simply display a dialog.
+                CrashReportData.create(t, "Painting play head marker.").display();
+            }
         }
 
         g.drawImage(offscreenBuffer, 0, 0, null);

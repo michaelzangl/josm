@@ -612,9 +612,8 @@ public class MapCSSStyleSource extends StyleSource {
             Environment env = new Environment(osm, mc, null, this);
             MapCSSRuleIndex matchingRuleIndex = findMatchingRuleIndex(osm);
             applyWithIndex(mc, osm, scale, env, matchingRuleIndex);
-            throw new RuntimeException("Test");
         } catch (Throwable t) {
-            throw CrashReportData.create(t, "Apply MapCSS Rule").put("primitive", osm);
+            throw CrashReportData.create(t, "Apply MapCSS Rule").put("primitive", osm).put("scale", scale);
         }
     }
 
