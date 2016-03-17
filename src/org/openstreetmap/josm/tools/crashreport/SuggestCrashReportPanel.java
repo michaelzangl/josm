@@ -23,9 +23,11 @@ import javax.swing.JTextArea;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.actions.ReportBugAction;
 import org.openstreetmap.josm.gui.widgets.JMultilineLabel;
+import org.openstreetmap.josm.tools.Base64;
 import org.openstreetmap.josm.tools.GBC;
 import org.openstreetmap.josm.tools.HttpClient;
 import org.openstreetmap.josm.tools.HttpClient.Response;
+import org.openstreetmap.josm.tools.OpenBrowser;
 
 /**
  * This panel displays allows the user to send in a crash report.
@@ -43,7 +45,8 @@ public class SuggestCrashReportPanel extends JPanel {
         this.data = data;
         setBorder(BorderFactory.createTitledBorder("Send crash report."));
         setLayout(new GridBagLayout());
-        JMultilineLabel comp = new JMultilineLabel("You can help us fix the issue by reporting the error. We need the following information and a step by step list of how you produced the error for this.");
+        JMultilineLabel comp = new JMultilineLabel(
+                "You can help us fix the issue by reporting the error. We need the following information and a step by step list of how you produced the error for this.");
         add(comp, GBC.eop().fill(GBC.HORIZONTAL));
         add(Box.createRigidArea(new Dimension(0, 10)));
 
@@ -55,7 +58,8 @@ public class SuggestCrashReportPanel extends JPanel {
 
         // Buttons
         JButton sendButton = new JButton();
-        sendButton.setAction(new JosmAction(tr("Report bug"), "bug", tr("Report a ticket to JOSM bugtracker"), null, false) {
+        sendButton.setAction(new JosmAction(tr("Report bug"), "bug", tr("Report a ticket to JOSM bugtracker"), null,
+                false) {
             @Override
             public void actionPerformed(ActionEvent e) {
                 startSending();
@@ -101,16 +105,19 @@ public class SuggestCrashReportPanel extends JPanel {
 
         @Override
         public void run() {
-            //try {
-                    // first, send the debug text using post.
-                    // pasteDebugText();
+            try {
+                // first, send the debug text using post.
+                String debugTextPaste = pasteDebugText();
 
-                    // Now direct the user to the ticket site.
-                    ReportBugAction.reportBug(getDebugText());
+                // Now direct the user to the ticket site.
+                ReportBugAction.reportBug(debugTextPaste);
 
-            //} catch (BugReportSenderException e) {
-            //    failed(e.getMessage());
-            //}
+                System.out.println("http://localhost:8000/trac/josmticket?pdata_stored=" + debugTextPaste);
+                OpenBrowser.displayUrl("http://localhost:8000/trac/josmticket?pdata_stored=" + debugTextPaste);
+            } catch (BugReportSenderException e) {
+                e.printStackTrace();
+                failed(e.getMessage());
+            }
         }
 
         /**
@@ -118,24 +125,22 @@ public class SuggestCrashReportPanel extends JPanel {
          * @return The token which was returned by the server. We need to pass this on to the ticket system.
          * @throws BugReportSenderException
          */
-        private String pasteDebugText() throws
-                BugReportSenderException {
+        private String pasteDebugText() throws BugReportSenderException {
             try {
-            String text = getDebugText();
-            //TODO: Implement this on server side.
-            HttpClient client = HttpClient.create(new URL("http://posttestserver.com/post.php"), "POST")
-                    .setHeader("Content-Type", "text/plain")
-                    .setRequestBody(text.getBytes(StandardCharsets.UTF_8));
+                String text = getDebugText();
+                String postQuery = "pdata=" + Base64.encode(text, true);
+                HttpClient client = HttpClient.create(new URL("http://localhost:8000/trac/josmticket"), "POST")
+                        .setHeader("Content-Type", "application/x-www-form-urlencoded")
+                        .setRequestBody(postQuery.getBytes(StandardCharsets.UTF_8));
 
-            Response connection = client.connect();
-            if (connection.getResponseCode() != 200) {
-                throw new BugReportSenderException("Could not connect to josm server.");
-            }
-            System.out.println("Response: " + connection.getResponseMessage());
+                Response connection = client.connect();
+                if (connection.getResponseCode() != 200) {
+                    //throw new BugReportSenderException("Could not connect to josm server.");
+                }
 
-            System.out.println("Response: " + new Scanner(connection.getContentReader()).useDelimiter("\\A").next());
-
-            return "xyz";
+                try (Scanner s = new Scanner(connection.getContentReader())) {
+                    return s.useDelimiter("\\A").next();
+                }
             } catch (IOException t) {
                 throw new BugReportSenderException(t);
             }
