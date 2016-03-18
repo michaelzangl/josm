@@ -660,7 +660,7 @@ public class LayerListDialog extends ToggleDialog {
             content.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
             content.setLayout(new GridBagLayout());
 
-            putValue(SMALL_ICON, ImageProvider.get("dialogs", "showhide")); // TODO better icon
+            putValue(SMALL_ICON, ImageProvider.get("dialogs/layerlist", "visibility"));
             putValue(SHORT_DESCRIPTION, tr("Change visibility of the selected layer."));
 
             visibilityCheckbox = new JCheckBox(tr("Show layer"));
@@ -679,7 +679,7 @@ public class LayerListDialog extends ToggleDialog {
             opacitySlider.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(ChangeEvent e) {
-                    setOpacityValue((double) opacitySlider.getValue() / SLIDER_STEPS, opacitySlider.getValueIsAdjusting());
+                    setOpacityValue(readOpacityValue(), opacitySlider.getValueIsAdjusting());
                 }
             });
             opacitySlider.setToolTipText(tr("Adjust opacity of the layer."));
@@ -692,11 +692,19 @@ public class LayerListDialog extends ToggleDialog {
             gammaSlider.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(ChangeEvent e) {
-                    setGammaValue((double) gammaSlider.getValue() / SLIDER_STEPS);
+                    setGammaValue(readGammaValue());
                 }
             });
             gammaSlider.setToolTipText(tr("Adjust gamma value of the layer."));
             content.add(gammaSlider, GBC.eol());
+        }
+
+        protected double readOpacityValue() {
+            return (double) opacitySlider.getValue() / SLIDER_STEPS;
+        }
+
+        protected double readGammaValue() {
+            return (double) gammaSlider.getValue() / SLIDER_STEPS * MAX_GAMMA_FACTOR;
         }
 
         protected void setVisible(boolean visible) {
@@ -718,7 +726,7 @@ public class LayerListDialog extends ToggleDialog {
 
         protected void setGammaValue(double value) {
             for (ImageryLayer imageryLayer : Utils.filteredCollection(model.getSelectedLayers(), ImageryLayer.class)) {
-                imageryLayer.setGamma(value * MAX_GAMMA_FACTOR);
+                imageryLayer.setGamma(value);
             }
         }
 
@@ -734,7 +742,7 @@ public class LayerListDialog extends ToggleDialog {
             }
         }
 
-        private void updateValues() {
+        protected void updateValues() {
             List<Layer> layers = model.getSelectedLayers();
 
             visibilityCheckbox.setEnabled(!layers.isEmpty());
@@ -747,6 +755,23 @@ public class LayerListDialog extends ToggleDialog {
             // TODO: Indicate tristate.
             visibilityCheckbox.setSelected(allVisible && !allHidden);
 
+            updateOpacitySlider(layers, allHidden);
+
+            updateGammaSlider(layers, allHidden);
+        }
+
+        private void updateGammaSlider(List<Layer> layers, boolean allHidden) {
+            Collection<ImageryLayer> gammaLayers = Utils.filteredCollection(layers, ImageryLayer.class);
+            if (gammaLayers.isEmpty() || allHidden) {
+                gammaSlider.setEnabled(false);
+            } else {
+                gammaSlider.setEnabled(true);
+                double gamma = gammaLayers.iterator().next().getGamma();
+                gammaSlider.setValue((int) (gamma * SLIDER_STEPS / MAX_GAMMA_FACTOR));
+            }
+        }
+
+        private void updateOpacitySlider(List<Layer> layers, boolean allHidden) {
             if (layers.isEmpty() || allHidden) {
                 opacitySlider.setEnabled(false);
             } else {
@@ -761,15 +786,6 @@ public class LayerListDialog extends ToggleDialog {
                     setOpacityValue(opacity, false);
                 }
                 opacitySlider.setValue((int) (opacity * SLIDER_STEPS));
-            }
-
-            Collection<ImageryLayer> gammaLayers = Utils.filteredCollection(layers, ImageryLayer.class);
-            if (gammaLayers.isEmpty() || allHidden) {
-                gammaSlider.setEnabled(false);
-            } else {
-                gammaSlider.setEnabled(true);
-                double gamma = gammaLayers.iterator().next().getGamma();
-                gammaSlider.setValue((int) (gamma * SLIDER_STEPS / MAX_GAMMA_FACTOR));
             }
         }
 
