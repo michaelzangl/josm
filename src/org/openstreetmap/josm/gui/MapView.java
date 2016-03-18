@@ -279,12 +279,9 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
         Main.pref.addPreferenceChangeListener(this);
 
         addComponentListener(new ComponentAdapter() {
-            @Override public void componentResized(ComponentEvent e) {
+            @Override
+            public void componentResized(ComponentEvent e) {
                 removeComponentListener(this);
-
-                for (JComponent c : getMapNavigationComponents(MapView.this)) {
-                    MapView.this.add(c);
-                }
 
                 mapMover = new MapMover(MapView.this, contentPane);
             }
@@ -316,6 +313,10 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
         if (Shortcut.findShortcut(KeyEvent.VK_TAB, 0) != null) {
             setFocusTraversalKeysEnabled(false);
         }
+
+        for (JComponent c : getMapNavigationComponents(MapView.this)) {
+            add(c);
+        }
     }
 
     /**
@@ -325,11 +326,15 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
      */
     public static List<? extends JComponent> getMapNavigationComponents(MapView forMapView) {
         MapSlider zoomSlider = new MapSlider(forMapView);
-        zoomSlider.setBounds(3, 0, 114, 30);
+        Dimension size = zoomSlider.getPreferredSize();
+        zoomSlider.setSize(size);
+        zoomSlider.setLocation(3, 0);
         zoomSlider.setFocusTraversalKeysEnabled(Shortcut.findShortcut(KeyEvent.VK_TAB, 0) == null);
 
         MapScaler scaler = new MapScaler(forMapView);
-        scaler.setLocation(10, 30);
+        scaler.setPreferredLineLength(size.width - 10);
+        scaler.setSize(scaler.getPreferredSize());
+        scaler.setLocation(3, size.height);
 
         return Arrays.asList(zoomSlider, scaler);
     }

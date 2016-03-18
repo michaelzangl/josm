@@ -3,10 +3,12 @@ package org.openstreetmap.josm.gui;
 
 import static org.openstreetmap.josm.gui.help.HelpUtil.ht;
 
+import java.awt.Dimension;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.JSlider;
+import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -27,6 +29,8 @@ class MapSlider extends JSlider implements PropertyChangeListener, ChangeListene
         addChangeListener(this);
         // Call this manually once so it gets setup correctly
         propertyChange(null);
+        int w = UIManager.getDefaults().getInt("Slider.thumbWidth") + 150;
+        setPreferredSize(new Dimension(w, 27));
     }
 
     @Override
