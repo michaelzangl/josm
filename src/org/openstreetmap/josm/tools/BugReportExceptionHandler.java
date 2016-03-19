@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPOutputStream;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -22,6 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.actions.ReportBugAction;
 import org.openstreetmap.josm.actions.ShowStatusReportAction;
 import org.openstreetmap.josm.data.Version;
 import org.openstreetmap.josm.gui.ExtendedDialog;
@@ -209,7 +211,7 @@ public final class BugReportExceptionHandler implements Thread.UncaughtException
                     tr("You should also update your plugins. If neither of those help please " +
                             "file a bug report in our bugtracker using this link:")),
                             GBC.eol().fill(GridBagConstraints.HORIZONTAL));
-            p.add(getBugReportUrlLabel(text), GBC.eop().insets(8, 0, 0, 0));
+            p.add(new JButton(new ReportBugAction(text)), GBC.eop().insets(8, 0, 0, 0));
             p.add(new JMultilineLabel(
                     tr("There the error information provided below should already be " +
                             "filled in for you. Please include information on how to reproduce " +

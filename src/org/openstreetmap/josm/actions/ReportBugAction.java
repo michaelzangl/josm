@@ -15,31 +15,37 @@ import org.openstreetmap.josm.tools.bugreport.BugReportSender;
  */
 public class ReportBugAction extends JosmAction {
 
+    private final String text;
+
     /**
-     * Constructs a new {@code ReportBugAction}.
+     * Constructs a new {@code ReportBugAction} that reports the normal status report.
      */
     public ReportBugAction() {
+        this(ShowStatusReportAction.getReportHeader());
+    }
+
+    /**
+     * Constructs a new {@link ReportBugAction} for the given debug text.
+     * @param text The text to send
+     */
+    public ReportBugAction(String text) {
         super(tr("Report bug"), "bug", tr("Report a ticket to JOSM bugtracker"),
                 Shortcut.registerShortcut("reportbug", tr("Report a ticket to JOSM bugtracker"),
                         KeyEvent.CHAR_UNDEFINED, Shortcut.NONE), true);
+        this.text = text;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        startBugReport();
+        BugReportSender.reportBug(text);
     }
 
     /**
      * Reports a ticket to JOSM bugtracker.
-     * <p>
-     * Replaced by {@link BugReportSender#reportBug(String)}
+     * @deprecated Use {@link BugReportSender#reportBug(String)}
      */
     @Deprecated
     public static void reportBug() {
-        startBugReport();
-    }
-
-    private static void startBugReport() {
         BugReportSender.reportBug(ShowStatusReportAction.getReportHeader());
     }
 
@@ -47,6 +53,7 @@ public class ReportBugAction extends JosmAction {
      * Reports a ticket to JOSM bugtracker with given status report.
      * Replaced by {@link BugReportSender#reportBug(String)}
      * @param report Status report header containing technical, non-personal information
+     * @deprecated Use {@link BugReportSender#reportBug(String)}
      */
     @Deprecated
     public static void reportBug(String report) {
