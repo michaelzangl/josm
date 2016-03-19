@@ -6,10 +6,8 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
-import org.openstreetmap.josm.tools.BugReportExceptionHandler;
-import org.openstreetmap.josm.tools.OpenBrowser;
 import org.openstreetmap.josm.tools.Shortcut;
-import org.openstreetmap.josm.tools.Utils;
+import org.openstreetmap.josm.tools.bugreport.BugReportSender;
 
 /**
  * Reports a ticket to JOSM bugtracker.
@@ -28,22 +26,30 @@ public class ReportBugAction extends JosmAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        reportBug();
+        startBugReport();
     }
 
     /**
      * Reports a ticket to JOSM bugtracker.
+     * <p>
+     * Replaced by {@link BugReportSender#reportBug(String)}
      */
+    @Deprecated
     public static void reportBug() {
-        reportBug(ShowStatusReportAction.getReportHeader());
+        startBugReport();
+    }
+
+    private static void startBugReport() {
+        BugReportSender.reportBug(ShowStatusReportAction.getReportHeader());
     }
 
     /**
      * Reports a ticket to JOSM bugtracker with given status report.
+     * Replaced by {@link BugReportSender#reportBug(String)}
      * @param report Status report header containing technical, non-personal information
      */
+    @Deprecated
     public static void reportBug(String report) {
-        OpenBrowser.displayUrl(BugReportExceptionHandler.getBugReportUrl(
-                Utils.strip(report)).toExternalForm());
+        BugReportSender.reportBug(report);
     }
 }
