@@ -7,11 +7,11 @@ import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -19,6 +19,12 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.actions.ReportBugAction;
@@ -28,6 +34,11 @@ import org.openstreetmap.josm.tools.GBC;
 import org.openstreetmap.josm.tools.HttpClient;
 import org.openstreetmap.josm.tools.HttpClient.Response;
 import org.openstreetmap.josm.tools.OpenBrowser;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
+import com.sun.org.apache.xml.internal.serialize.OutputFormat;
+import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 
 /**
  * This panel displays allows the user to send in a crash report.
@@ -134,16 +145,37 @@ public class SuggestCrashReportPanel extends JPanel {
                         .setRequestBody(postQuery.getBytes(StandardCharsets.UTF_8));
 
                 Response connection = client.connect();
-                if (connection.getResponseCode() != 200) {
-                    //throw new BugReportSenderException("Could not connect to josm server.");
-                }
 
-                try (Scanner s = new Scanner(connection.getContentReader())) {
-                    return s.useDelimiter("\\A").next();
+                try (InputStream in = connection.getContent()) {
+                    Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+                    OutputFormat format = new OutputFormat(document);
+                    format.setIndenting(true);
+                    XMLSerializer serializer = new XMLSerializer(System.out, format);
+                    serializer.serialize(document);
+                    return retriveDebugToken(document);
                 }
-            } catch (IOException t) {
+            } catch (IOException | SAXException | ParserConfigurationException | XPathExpressionException t) {
                 throw new BugReportSenderException(t);
             }
+        }
+
+        private String retriveDebugToken(Document document) throws XPathExpressionException, BugReportSenderException {
+            XPathFactory factory = XPathFactory.newInstance();
+            XPath xpath = factory.newXPath();
+            String status = (String) xpath.compile("/josmticket/@status").evaluate(document, XPathConstants.STRING);
+            if (!"ok".equals(status)) {
+                String message = (String) xpath.compile("/josmticket/error/text()").evaluate(document, XPathConstants.STRING);
+                if (message.isEmpty()) {
+                    message = "Error in server response but server did not tell us what happened.";
+                }
+                throw new BugReportSenderException(message);
+            }
+
+            String token = (String) xpath.compile("/josmticket/preparedid/text()").evaluate(document, XPathConstants.STRING);
+            if (token.isEmpty()) {
+                throw new BugReportSenderException("Server did not respond with a prepared id.");
+            }
+            return token;
         }
 
         private void failed(String string) {
