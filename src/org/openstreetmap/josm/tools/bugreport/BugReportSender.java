@@ -8,6 +8,10 @@ import java.awt.GridBagLayout;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import javax.swing.JOptionPane;
@@ -79,12 +83,18 @@ public class BugReportSender extends Thread {
     private String pasteDebugText() throws BugReportSenderException {
         try {
             String text = Utils.strip(statusText);
-            String postQuery = "pdata=" + Base64.encode(text, true);
+            ByteBuffer buffer = Charset.forName("UTF-8").encode(CharBuffer.wrap(text));
+            String pdata = Base64.encode(buffer, false);
+            String postQuery = "pdata=" + URLEncoder.encode(pdata, "UTF-8");
             HttpClient client = HttpClient.create(new URL(getJOSMTicketURL()), "POST")
                     .setHeader("Content-Type", "application/x-www-form-urlencoded")
                     .setRequestBody(postQuery.getBytes(StandardCharsets.UTF_8));
 
             Response connection = client.connect();
+
+            if (connection.getResponseCode() >= 500) {
+                throw new BugReportSenderException("Internal server error.");
+            }
 
             try (InputStream in = connection.getContent()) {
                 DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
