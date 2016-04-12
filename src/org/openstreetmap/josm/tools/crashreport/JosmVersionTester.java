@@ -71,13 +71,14 @@ public class JosmVersionTester {
             }
             if (lastKnownJosmTested > josmVersion) {
                 return UpToDate.HAVE_UPDATE_TESTED;
-            }
-            // TODO: Include this check only if user was downloading a latest version:
-            if (lastKnownJosmLatest == Version.JOSM_UNKNOWN_VERSION) {
-                return UpToDate.UNKNOWN;
-            }
-            if (lastKnownJosmLatest > josmVersion) {
-                return UpToDate.HAVE_UPDATE_LATEST;
+            } else if (lastKnownJosmTested != josmVersion) {
+                // User is using a latest version.
+                if (lastKnownJosmLatest == Version.JOSM_UNKNOWN_VERSION) {
+                    return UpToDate.UNKNOWN;
+                }
+                if (lastKnownJosmLatest > josmVersion) {
+                    return UpToDate.HAVE_UPDATE_LATEST;
+                }
             }
             return UpToDate.UP_TO_DATE;
         }
