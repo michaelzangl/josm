@@ -228,6 +228,7 @@ public class LayerManager {
      * Adds a layer change listener
      *
      * @param listener the listener.
+     * @throws IllegalArgumentException If the listener was added twice.
      */
     public synchronized void addLayerChangeListener(LayerChangeListener listener) {
         addLayerChangeListener(listener, false);
@@ -238,6 +239,7 @@ public class LayerManager {
      *
      * @param listener the listener.
      * @param fireAdd if we should fire an add event for every layer in this manager.
+     * @throws IllegalArgumentException If the listener was added twice.
      */
     public synchronized void addLayerChangeListener(LayerChangeListener listener, boolean fireAdd) {
         if (layerChangeListeners.contains(listener)) {
@@ -269,6 +271,7 @@ public class LayerManager {
      */
     public synchronized void removeLayerChangeListener(LayerChangeListener listener, boolean fireRemove) {
         if (!layerChangeListeners.remove(listener)) {
+            // TODO: Throw an exception as soon as nobody hopes we are not throwing one.
             //throw new IllegalArgumentException("Listener was not registered before: " + listener);
             Main.error("Listener was not registered before: " + listener);
         } else {

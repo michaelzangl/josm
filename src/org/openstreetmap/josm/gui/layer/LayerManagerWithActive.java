@@ -176,8 +176,9 @@ public class LayerManagerWithActive extends LayerManager {
         layersList.remove(except);
         // First look for data layer
         for (Layer layer : layersList) {
-            if (layer instanceof OsmDataLayer)
+            if (layer instanceof OsmDataLayer) {
                 return layer;
+            }
         }
 
         // Then any layer
