@@ -34,8 +34,8 @@ import org.openstreetmap.josm.tools.Predicates;
  */
 public class LayerManagerTest {
 
-    private class AbstractTestLayer extends Layer {
-        private AbstractTestLayer() {
+    protected static class AbstractTestLayer extends Layer {
+        protected AbstractTestLayer() {
             super("Test Layer");
         }
 
@@ -82,14 +82,14 @@ public class LayerManagerTest {
         }
     }
 
-    private class AbstractTestLayer2 extends AbstractTestLayer {}
+    protected static class AbstractTestLayer2 extends AbstractTestLayer {}
 
     /**
      * Intercepts the events for easier testing.
      * @author Michael Zangl
      *
      */
-    private class EventIntercepter implements LayerChangeListener {
+    protected class CapturingLayerChangeListener implements LayerChangeListener {
         private LayerAddEvent layerAdded;
         private LayerRemoveEvent layerRemoved;
         private LayerOrderChangeEvent layerOrderChanged;
@@ -117,7 +117,7 @@ public class LayerManagerTest {
 
     }
 
-    private LayerManager layerManager;
+    protected LayerManager layerManager;
 
     /**
      * Set up test layer manager.
@@ -165,7 +165,7 @@ public class LayerManagerTest {
 
         // event
         AbstractTestLayer layer4 = new AbstractTestLayer();
-        EventIntercepter l = new EventIntercepter();
+        CapturingLayerChangeListener l = new CapturingLayerChangeListener();
         layerManager.addLayerChangeListener(l);
         layerManager.addLayer(layer4);
 
@@ -214,7 +214,7 @@ public class LayerManagerTest {
         layerManager.addLayer(layer2);
         assertEquals(layerManager.getLayers(), Arrays.asList(layer1, layer2));
 
-        EventIntercepter l = new EventIntercepter();
+        CapturingLayerChangeListener l = new CapturingLayerChangeListener();
         layerManager.addLayerChangeListener(l);
         layerManager.removeLayer(layer2);
         assertEquals(layerManager.getLayers(), Arrays.asList(layer1));
@@ -238,7 +238,7 @@ public class LayerManagerTest {
         layerManager.moveLayer(layer2, 0);
         assertEquals(layerManager.getLayers(), Arrays.asList(layer2, layer1));
 
-        EventIntercepter l = new EventIntercepter();
+        CapturingLayerChangeListener l = new CapturingLayerChangeListener();
         layerManager.addLayerChangeListener(l);
         layerManager.moveLayer(layer2, 1);
         assertEquals(layerManager.getLayers(), Arrays.asList(layer1, layer2));
@@ -320,7 +320,7 @@ public class LayerManagerTest {
      */
     @Test
     public void testAddLayerChangeListener() {
-        EventIntercepter l = new EventIntercepter();
+        CapturingLayerChangeListener l = new CapturingLayerChangeListener();
         layerManager.addLayerChangeListener(l);
         assertNull(l.layerAdded);
         assertNull(l.layerRemoved);
@@ -332,7 +332,7 @@ public class LayerManagerTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testAddLayerChangeListenerDupplicates() {
-        EventIntercepter l = new EventIntercepter();
+        CapturingLayerChangeListener l = new CapturingLayerChangeListener();
         layerManager.addLayerChangeListener(l);
         layerManager.addLayerChangeListener(l);
     }
@@ -372,7 +372,7 @@ public class LayerManagerTest {
      */
     @Test
     public void testRemoveLayerChangeListener() {
-        EventIntercepter l = new EventIntercepter();
+        CapturingLayerChangeListener l = new CapturingLayerChangeListener();
         layerManager.addLayerChangeListener(l);
         layerManager.addLayer(new AbstractTestLayer());
         layerManager.removeLayerChangeListener(l);
@@ -388,7 +388,7 @@ public class LayerManagerTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testRemoveLayerChangeListenerNotAdded() {
-        EventIntercepter l = new EventIntercepter();
+        CapturingLayerChangeListener l = new CapturingLayerChangeListener();
         layerManager.removeLayerChangeListener(l);
     }
 

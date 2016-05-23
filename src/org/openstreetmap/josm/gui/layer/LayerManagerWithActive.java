@@ -96,7 +96,10 @@ public class LayerManagerWithActive extends LayerManager {
      * @param initialFire fire a fake active-layer-changed-event right after adding
      * the listener. The previous layers will be null.
      */
-    public void addActiveLayerChangeListener(ActiveLayerChangeListener listener, boolean initialFire) {
+    public synchronized void addActiveLayerChangeListener(ActiveLayerChangeListener listener, boolean initialFire) {
+        if (activeLayerChangeListeners.contains(listener)) {
+            throw new IllegalArgumentException("Attempted to add listener that was already in list: " + listener);
+        }
         activeLayerChangeListeners.add(listener);
         if (initialFire) {
             listener.activeOrEditLayerChanged(new ActiveLayerChangeEvent(this, null, null));
@@ -107,7 +110,10 @@ public class LayerManagerWithActive extends LayerManager {
      * Removes an active/edit layer change listener.
      * @param listener the listener.
      */
-    public void removeActiveLayerChangeListener(ActiveLayerChangeListener listener) {
+    public synchronized void removeActiveLayerChangeListener(ActiveLayerChangeListener listener) {
+        if (!activeLayerChangeListeners.contains(listener)) {
+            throw new IllegalArgumentException("Attempted to remove listener that was not in list: " + listener);
+        }
         activeLayerChangeListeners.remove(listener);
     }
 
@@ -212,7 +218,11 @@ public class LayerManagerWithActive extends LayerManager {
      * @return That data set, <code>null</code> if there is no edit layer.
      */
     public synchronized DataSet getEditDataSet() {
-        return editLayer != null ? editLayer.data : null;
+        if (editLayer != null) {
+            return editLayer.data;
+        } else {
+            return null;
+        }
     }
 
 
