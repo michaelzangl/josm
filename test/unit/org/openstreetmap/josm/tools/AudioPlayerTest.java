@@ -10,6 +10,8 @@ import java.net.URL;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.Ignore;
+
 import org.openstreetmap.josm.JOSMFixture;
 import org.openstreetmap.josm.TestUtils;
 
@@ -35,6 +37,7 @@ public class AudioPlayerTest {
      * @throws MalformedURLException wrong URL
      */
     @Test(timeout = 4*MAX_DURATION)
+    @Ignore("annoying")
     public void testPlay() throws MalformedURLException, Exception {
         File wav1 = new File(TestUtils.getRegressionDataFile(6851, "20111003_121226.wav"));
         File wav2 = new File(TestUtils.getRegressionDataFile(6851, "20111003_121557.wav"));
