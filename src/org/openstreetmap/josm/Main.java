@@ -92,6 +92,7 @@ import org.openstreetmap.josm.gui.help.HelpUtil;
 import org.openstreetmap.josm.gui.io.SaveLayersDialog;
 import org.openstreetmap.josm.gui.layer.AbstractModifiableLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
+import org.openstreetmap.josm.gui.layer.LayerManagerWithActive;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer.CommandQueueListener;
 import org.openstreetmap.josm.gui.preferences.ToolbarPreferences;
@@ -189,8 +190,15 @@ public abstract class Main {
 
     /**
      * The MapFrame. Use {@link Main#setMapFrame} to set or clear it.
+     * <p>
+     * There should be no need to access this to access any map data. Use {@link #layerManager} instead.
      */
     public static MapFrame map;
+
+    /**
+     * Provides access to the layers displayed in the main view.
+     */
+    public static LayerManagerWithActive layerManager = new LayerManagerWithActive();
 
     /**
      * The toolbar preference control to register new actions.
