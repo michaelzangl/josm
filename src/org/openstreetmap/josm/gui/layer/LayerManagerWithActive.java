@@ -7,6 +7,7 @@ import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.openstreetmap.josm.data.osm.DataSet;
+import org.openstreetmap.josm.gui.util.GuiHelper;
 
 /**
  * This class extends the layer manager by adding an active and an edit layer.
@@ -27,6 +28,8 @@ public class LayerManagerWithActive extends LayerManager {
          * Called whenever the active or edit layer changed.
          * <p>
          * You can be sure that this layer is still contained in this set.
+         * <p>
+         * Listeners are called in the EDT thread and you can manipulate the layer manager in the current thread.
          * @param e The change event.
          */
         public void activeOrEditLayerChanged(ActiveLayerChangeEvent e);
@@ -94,7 +97,7 @@ public class LayerManagerWithActive extends LayerManager {
      *
      * @param listener the listener.
      * @param initialFire fire a fake active-layer-changed-event right after adding
-     * the listener. The previous layers will be null.
+     * the listener. The previous layers will be null. The listener is notified in the current thread.
      */
     public synchronized void addActiveLayerChangeListener(ActiveLayerChangeListener listener, boolean initialFire) {
         if (activeLayerChangeListeners.contains(listener)) {
@@ -121,7 +124,19 @@ public class LayerManagerWithActive extends LayerManager {
      * Set the active layer. If the layer is an OsmDataLayer, the edit layer is also changed.
      * @param layer The active layer.
      */
-    public synchronized void setActiveLayer(Layer layer) {
+    public void setActiveLayer(final Layer layer) {
+        // we force this on to the EDT Thread to make events fire from there.
+        // The synchronization lock needs to be held by the EDT.
+        GuiHelper.runInEDTAndWaitWithException(new Runnable() {
+            @Override
+            public void run() {
+                realSetActiveLayer(layer);
+            }
+        });
+    }
+
+    protected synchronized void realSetActiveLayer(final Layer layer) {
+        // to be called in EDT thread
         checkContainsLayer(layer);
         setActiveLayer(layer, false);
     }
@@ -138,6 +153,7 @@ public class LayerManagerWithActive extends LayerManager {
     }
 
     private void fireActiveLayerChange(ActiveLayerChangeEvent event) {
+        GuiHelper.assertCallFromEdt();
         if (event.getPreviousActiveLayer() != activeLayer || event.getPreviousEditLayer() != editLayer) {
             for (ActiveLayerChangeListener l : activeLayerChangeListeners) {
                 l.activeOrEditLayerChanged(event);
@@ -146,8 +162,8 @@ public class LayerManagerWithActive extends LayerManager {
     }
 
     @Override
-    public synchronized void addLayer(Layer layer) {
-        super.addLayer(layer);
+    protected synchronized void realAddLayer(Layer layer) {
+        super.realAddLayer(layer);
 
         // update the active layer automatically.
         if (layer instanceof OsmDataLayer || activeLayer == null) {
@@ -156,13 +172,13 @@ public class LayerManagerWithActive extends LayerManager {
     }
 
     @Override
-    public synchronized void removeLayer(Layer layer) {
+    protected synchronized void realRemoveLayer(Layer layer) {
         if (layer == activeLayer || layer == editLayer) {
             Layer nextActive = suggestNextActiveLayer(layer);
             setActiveLayer(nextActive, true);
         }
 
-        super.removeLayer(layer);
+        super.realRemoveLayer(layer);
     }
 
     /**

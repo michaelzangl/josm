@@ -25,6 +25,7 @@ import org.openstreetmap.josm.gui.layer.LayerManager.LayerAddEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerChangeListener;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerOrderChangeEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerRemoveEvent;
+import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.Predicates;
 
 /**
@@ -96,6 +97,7 @@ public class LayerManagerTest {
 
         @Override
         public void layerAdded(LayerAddEvent e) {
+            GuiHelper.assertCallFromEdt();
             assertNull(layerAdded);
             assertSame(layerManager, e.getSource());
             layerAdded = e;
@@ -103,6 +105,7 @@ public class LayerManagerTest {
 
         @Override
         public void layerRemoving(LayerRemoveEvent e) {
+            GuiHelper.assertCallFromEdt();
             assertNull(layerRemoved);
             assertSame(layerManager, e.getSource());
             layerRemoved = e;
@@ -110,6 +113,7 @@ public class LayerManagerTest {
 
         @Override
         public void layerOrderChanged(LayerOrderChangeEvent e) {
+            GuiHelper.assertCallFromEdt();
             assertNull(layerOrderChanged);
             assertSame(layerManager, e.getSource());
             layerOrderChanged = e;

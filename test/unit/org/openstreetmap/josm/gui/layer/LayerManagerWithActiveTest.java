@@ -14,6 +14,7 @@ import org.openstreetmap.josm.JOSMFixture;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.gui.layer.LayerManagerWithActive.ActiveLayerChangeEvent;
 import org.openstreetmap.josm.gui.layer.LayerManagerWithActive.ActiveLayerChangeListener;
+import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.Predicates;
 
 /**
@@ -25,13 +26,21 @@ public class LayerManagerWithActiveTest extends LayerManagerTest {
 
     private LayerManagerWithActive layerManagerWithActive;
 
-    private final class CapturingActiveLayerChangeListener implements ActiveLayerChangeListener {
+    private class CapturingActiveLayerChangeListener implements ActiveLayerChangeListener {
         private ActiveLayerChangeEvent lastEvent;
 
         @Override
         public void activeOrEditLayerChanged(ActiveLayerChangeEvent e) {
             assertSame(layerManager, e.getSource());
             lastEvent = e;
+        }
+    }
+
+    private final class CapturingThreadCheckingActiveLayerChangeListener extends CapturingActiveLayerChangeListener {
+        @Override
+        public void activeOrEditLayerChanged(ActiveLayerChangeEvent e) {
+            GuiHelper.assertCallFromEdt();
+            super.activeOrEditLayerChanged(e);
         }
     }
 
@@ -108,7 +117,7 @@ public class LayerManagerWithActiveTest extends LayerManagerTest {
         layerManagerWithActive.addLayer(layer1);
         layerManagerWithActive.addLayer(layer2);
 
-        CapturingActiveLayerChangeListener listener = new CapturingActiveLayerChangeListener();
+        CapturingActiveLayerChangeListener listener = new CapturingThreadCheckingActiveLayerChangeListener();
         layerManagerWithActive.addActiveLayerChangeListener(listener, false);
         assertNull(listener.lastEvent);
 
