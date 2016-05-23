@@ -17,7 +17,6 @@ import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.osm.visitor.BoundingXYVisitor;
@@ -387,7 +386,6 @@ public class LayerManagerTest {
     /**
      * {@link LayerManager#removeLayerChangeListener(LayerChangeListener)} listener not in list
      */
-    @Ignore("Not implemented yet.")
     @Test(expected = IllegalArgumentException.class)
     public void testRemoveLayerChangeListenerNotAdded() {
         EventIntercepter l = new EventIntercepter();

@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.tools.Utils;
 
 /**
@@ -271,9 +270,7 @@ public class LayerManager {
      */
     public synchronized void removeLayerChangeListener(LayerChangeListener listener, boolean fireRemove) {
         if (!layerChangeListeners.remove(listener)) {
-            // TODO: Throw an exception as soon as nobody hopes we are not throwing one.
-            //throw new IllegalArgumentException("Listener was not registered before: " + listener);
-            Main.error("Listener was not registered before: " + listener);
+            throw new IllegalArgumentException("Listener was not registered before: " + listener);
         } else {
             if (fireRemove) {
                 for (Layer l : getLayers()) {

@@ -322,7 +322,11 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     @Deprecated
     public static void removeLayerChangeListener(LayerChangeListener listener) {
         LayerChangeAdapter adapter = new LayerChangeAdapter(listener);
-        Main.getLayerManager().removeLayerChangeListener(adapter);
+        try {
+            Main.getLayerManager().removeLayerChangeListener(adapter);
+        } catch (IllegalArgumentException e) {
+            // Ignored in old implementation
+        }
         Main.getLayerManager().removeActiveLayerChangeListener(adapter);
     }
 
