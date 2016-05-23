@@ -327,7 +327,11 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
         } catch (IllegalArgumentException e) {
             // Ignored in old implementation
         }
-        Main.getLayerManager().removeActiveLayerChangeListener(adapter);
+        try {
+            Main.getLayerManager().removeActiveLayerChangeListener(adapter);
+        } catch (IllegalArgumentException e) {
+            // Ignored in old implementation
+        }
     }
 
     /**
@@ -339,7 +343,11 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      */
     @Deprecated
     public static void removeEditLayerChangeListener(EditLayerChangeListener listener) {
-        Main.getLayerManager().removeActiveLayerChangeListener(new EditLayerChangeAdapter(listener));
+        try {
+            Main.getLayerManager().removeActiveLayerChangeListener(new EditLayerChangeAdapter(listener));
+        } catch (IllegalArgumentException e) {
+            // Ignored in old implementation
+        }
     }
 
     /**
