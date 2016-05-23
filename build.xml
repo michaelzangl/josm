@@ -756,6 +756,18 @@ Build-Date: ${build.tstamp}
             <jvmarg value="-Djosm.home=/tmp/.josm/"/>
         </java>
     </target>
+    <target name="runjit" depends="dist">
+        <java jar="${dist.dir}/josm-custom.jar" fork="true" output="/dev/null">
+            <arg value="--set=expert=true"/>
+            <arg value="--set=remotecontrol.enabled=true"/>
+            <arg value="--set=debug.edt-checker.enable=false"/>
+            <jvmarg value="-Djosm.home=/tmp/.josm/"/>
+            <jvmarg value="-XX:+UnlockDiagnosticVMOptions"/>
+            <jvmarg value="-XX:+TraceClassLoading"/>
+            <jvmarg value="-XX:+LogCompilation"/>
+            <jvmarg value="-XX:+PrintAssembly"/>
+        </java>
+    </target>
     <!--
       ** Compile build script for generating projection list.
     -->
