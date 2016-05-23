@@ -198,7 +198,7 @@ public abstract class Main {
     /**
      * Provides access to the layers displayed in the main view.
      */
-    public static LayerManagerWithActive layerManager = new LayerManagerWithActive();
+    private static LayerManagerWithActive layerManager = new LayerManagerWithActive();
 
     /**
      * The toolbar preference control to register new actions.
@@ -538,8 +538,8 @@ public abstract class Main {
      */
     public final synchronized void removeLayer(final Layer layer) {
         if (map != null) {
-            map.mapView.removeLayer(layer);
-            if (isDisplayingMapView() && map.mapView.getAllLayers().isEmpty()) {
+            getLayerManager().removeLayer(layer);
+            if (isDisplayingMapView() && getLayerManager().getLayers().isEmpty()) {
                 setMapFrame(null);
             }
         }
@@ -737,6 +737,14 @@ public abstract class Main {
     }
 
     /**
+     * Returns the main layer manager that is used by the map view.
+     * @return The layer manager. The value returned will never change.
+     */
+    public static LayerManagerWithActive getLayerManager() {
+        return layerManager;
+    }
+
+    /**
      * Add a new layer to the map.
      *
      * If no map exists, create one.
@@ -780,7 +788,7 @@ public abstract class Main {
             createMapFrame(layer, viewport);
         }
         layer.hookUpMapView();
-        map.mapView.addLayer(layer);
+        getLayerManager().addLayer(layer);
         if (noMap) {
             Main.map.setVisible(true);
         } else if (viewport != null) {
@@ -820,7 +828,7 @@ public abstract class Main {
      */
     public OsmDataLayer getEditLayer() {
         if (!isDisplayingMapView()) return null;
-        return map.mapView.getEditLayer();
+        return getLayerManager().getEditLayer();
     }
 
     /**
@@ -859,7 +867,7 @@ public abstract class Main {
      */
     public Layer getActiveLayer() {
         if (!isDisplayingMapView()) return null;
-        return map.mapView.getActiveLayer();
+        return getLayerManager().getActiveLayer();
     }
 
     protected static final JPanel contentPanePrivate = new JPanel(new BorderLayout());
@@ -1040,7 +1048,7 @@ public abstract class Main {
      */
     public static boolean saveUnsavedModifications() {
         if (!isDisplayingMapView()) return true;
-        return saveUnsavedModifications(map.mapView.getLayersOfType(AbstractModifiableLayer.class), true);
+        return saveUnsavedModifications(getLayerManager().getLayersOfType(AbstractModifiableLayer.class), true);
     }
 
     /**
@@ -1107,7 +1115,7 @@ public abstract class Main {
             pref.put("gui.maximized", (windowState & JFrame.MAXIMIZED_BOTH) != 0);
             // Remove all layers because somebody may rely on layerRemoved events (like AutosaveTask)
             if (Main.isDisplayingMapView()) {
-                Collection<Layer> layers = new ArrayList<>(Main.map.mapView.getAllLayers());
+                Collection<Layer> layers = new ArrayList<>(getLayerManager().getLayers());
                 for (Layer l: layers) {
                     Main.main.removeLayer(l);
                 }

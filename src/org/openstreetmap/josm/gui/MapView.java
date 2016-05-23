@@ -93,6 +93,8 @@ implements PropertyChangeListener, PreferenceChangedListener, OsmDataLayer.Layer
 LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListener {
     /**
      * Interface to notify listeners of a layer change.
+     * <p>
+     * To be removed: end of 2016. Use {@link org.openstreetmap.josm.gui.layer.LayerManager.LayerChangeListener} instead.
      * @author imi
      */
     @Deprecated
@@ -120,6 +122,8 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
 
     /**
      * An interface that needs to be implemented in order to listen for changes to the active edit layer.
+     * <p>
+     * To be removed: end of 2016. Use {@link ActiveLayerChangeListener} instead.
      */
     @Deprecated
     public interface EditLayerChangeListener {
@@ -253,6 +257,12 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
 
     }
 
+    /**
+     * This class is an adapter for the old layer change interface.
+     * <p>
+     * New implementations should use {@link org.openstreetmap.josm.gui.layer.LayerManagerWithActive.ActiveLayerChangeListener}
+     * @author Michael Zangl
+     */
     protected static class EditLayerChangeAdapter implements ActiveLayerChangeListener {
 
         private final EditLayerChangeListener wrapped;
@@ -305,33 +315,33 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     /**
      * Removes a layer change listener
      * <p>
-     * You should register the listener on {@link Main#layerManager} instead
+     * You should register the listener on {@link Main#getLayerManager()} instead. To be removed: end of 2016.
      *
      * @param listener the listener. Ignored if null or not registered.
      */
     @Deprecated
     public static void removeLayerChangeListener(LayerChangeListener listener) {
         LayerChangeAdapter adapter = new LayerChangeAdapter(listener);
-        Main.layerManager.removeLayerChangeListener(adapter);
-        Main.layerManager.removeActiveLayerChangeListener(adapter);
+        Main.getLayerManager().removeLayerChangeListener(adapter);
+        Main.getLayerManager().removeActiveLayerChangeListener(adapter);
     }
 
     /**
      * Removes an edit layer change listener
      * <p>
-     * You should register the listener on {@link Main#layerManager} instead
+     * You should register the listener on {@link Main#getLayerManager()} instead. To be removed: end of 2016.
      *
      * @param listener the listener. Ignored if null or not registered.
      */
     @Deprecated
     public static void removeEditLayerChangeListener(EditLayerChangeListener listener) {
-        Main.layerManager.removeActiveLayerChangeListener(new EditLayerChangeAdapter(listener));
+        Main.getLayerManager().removeActiveLayerChangeListener(new EditLayerChangeAdapter(listener));
     }
 
     /**
      * Adds a layer change listener
      * <p>
-     * You should register the listener on {@link Main#layerManager} instead
+     * You should register the listener on {@link Main#getLayerManager()} instead. To be removed: end of 2016.
      *
      * @param listener the listener. Ignored if null or already registered.
      */
@@ -343,7 +353,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     /**
      * Adds a layer change listener
      * <p>
-     * You should register the listener on {@link Main#layerManager} instead
+     * You should register the listener on {@link Main#getLayerManager()} instead. To be removed: end of 2016.
      *
      * @param listener the listener. Ignored if null or already registered.
      * @param initialFire fire an active-layer-changed-event right after adding
@@ -355,8 +365,8 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
             initialFire = initialFire && Main.isDisplayingMapView();
 
             LayerChangeAdapter adapter = new LayerChangeAdapter(listener, initialFire);
-            Main.layerManager.addLayerChangeListener(adapter, false);
-            Main.layerManager.addActiveLayerChangeListener(adapter, initialFire);
+            Main.getLayerManager().addLayerChangeListener(adapter, false);
+            Main.getLayerManager().addActiveLayerChangeListener(adapter, initialFire);
             adapter.receiveOneInitialFire = false;
         }
     }
@@ -364,7 +374,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     /**
      * Adds an edit layer change listener
      * <p>
-     * You should register the listener on {@link Main#layerManager} instead
+     * You should register the listener on {@link Main#getLayerManager()} instead. To be removed: end of 2016.
      *
      * @param listener the listener. Ignored if null or already registered.
      * @param initialFire fire an edit-layer-changed-event right after adding
@@ -373,14 +383,14 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     @Deprecated
     public static void addEditLayerChangeListener(EditLayerChangeListener listener, boolean initialFire) {
         if (listener != null) {
-            Main.layerManager.addActiveLayerChangeListener(new EditLayerChangeAdapter(listener), initialFire && Main.isDisplayingMapView() && Main.map.mapView.getEditLayer() != null);
+            Main.getLayerManager().addActiveLayerChangeListener(new EditLayerChangeAdapter(listener), initialFire && Main.isDisplayingMapView() && Main.map.mapView.getEditLayer() != null);
         }
     }
 
     /**
      * Adds an edit layer change listener
      * <p>
-     * You should register the listener on {@link Main#layerManager} instead
+     * You should register the listener on {@link Main#getLayerManager()} instead. To be removed: end of 2016.
      *
      * @param listener the listener. Ignored if null or already registered.
      */
@@ -517,8 +527,9 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     }
 
     /**
-     * Add a layer to the current MapView. The layer will be added at topmost
-     * position.
+     * Add a layer to the current MapView.
+     * <p>
+     * Use {@link Main#getLayerManager()}.addLayer() instead. To be removed: end of 2016.
      * @param layer The layer to add
      */
     @Deprecated
@@ -546,6 +557,9 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
         repaint();
     }
 
+    /**
+     * Use {@link Main#getLayerManager()} instead. To be removed: end of 2016.
+     */
     @Override
     @Deprecated
     protected DataSet getCurrentDataSet() {
@@ -579,12 +593,12 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      *     becomes active</li>
      *   <li>otherwise, the top most layer of any type becomes active</li>
      * </ul>
+     * To be removed: end of 2016 (now handled by {@link LayerManagerWithActive}
      * @param layersList lit of layers
      *
      * @return the next active data layer
-     *
-     * TODO: Remove.
      */
+    @Deprecated
     protected Layer determineNextActiveLayer(List<Layer> layersList) {
         // First look for data layer
         for (Layer layer:layersList) {
@@ -603,6 +617,8 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     /**
      * Remove the layer from the mapview. If the layer was in the list before,
      * an LayerChange event is fired.
+     * <p>
+     * Use {@link Main#getLayerManager()}.removeLayer() instead. To be removed: end of 2016.
      * @param layer The layer to remove
      */
     @Deprecated
@@ -663,6 +679,8 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
 
     /**
      * Gets the index of the layer in the layer list.
+     * <p>
+     * Access the layer list using {@link Main#getLayerManager()} instead. To be removed: end of 2016.
      * @param layer The layer to search for.
      * @return The index in the list.
      * @throws IllegalArgumentException if that layer does not belong to this view.
@@ -887,7 +905,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     }
 
     /**
-     * Use {@link LayerManager#getLayers()} instead.
+     * Use {@link LayerManager#getLayers()} instead. To be removed: end of 2016.
      *
      * @return An unmodifiable collection of all layers
      */
@@ -897,7 +915,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     }
 
     /**
-     * Use {@link LayerManager#getLayers()} instead.
+     * Use {@link LayerManager#getLayers()} instead. To be removed: end of 2016.
      *
      * @return An unmodifiable ordered list of all layers
      */
@@ -907,7 +925,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     }
 
     /**
-     * Replies an unmodifiable list of layers of a certain type.
+     * Replies an unmodifiable list of layers of a certain type. To be removed: end of 2016.
      *
      * Example:
      * <pre>
@@ -926,7 +944,9 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     }
 
     /**
-     * Replies the number of layers managed by this map view
+     * Replies the number of layers managed by this map view. To be removed: end of 2016.
+     * <p>
+     * You can use {@link Main#getLayerManager()}.getLayers().size() instead.
      *
      * @return the number of layers managed by this map view
      */
@@ -937,6 +957,8 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
 
     /**
      * Replies true if there is at least one layer in this map view
+     * <p>
+     * You can use !{@link Main#getLayerManager()}.getLayers().isEmpty() instead.
      *
      * @return true if there is at least one layer in this map view
      */
@@ -948,6 +970,8 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     /**
      * Sets the active layer to <code>layer</code>. If <code>layer</code> is an instance
      * of {@link OsmDataLayer} also sets {@link #editLayer} to <code>layer</code>.
+     * <p>
+     * You can use !{@link Main#getLayerManager()}.setActiveLayer() instead.
      *
      * @param layer the layer to be activate; must be one of the layers in the list of layers
      * @throws IllegalArgumentException if layer is not in the list of layers
@@ -958,6 +982,8 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
     }
     /**
      * Replies the currently active layer
+     * <p>
+     * You can use !{@link Main#getLayerManager()}.getActiveLayer() instead.
      *
      * @return the currently active layer (may be null)
      */
@@ -993,6 +1019,8 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
 
     /**
      * Replies the current edit layer, if any
+     * <p>
+     * You can use !{@link Main#getLayerManager()}.getEditLayer() instead. To be made private: end of 2016.
      *
      * @return the current edit layer. May be null.
      */
@@ -1003,6 +1031,8 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
 
     /**
      * replies true if the list of layers managed by this map view contain layer
+     * <p>
+     * You can use !{@link Main#getLayerManager()}.containsLayer() instead.
      *
      * @param layer the layer
      * @return true if the list of layers managed by this map view contain layer
@@ -1120,7 +1150,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
 
     @Override
     public void uploadDiscouragedChanged(OsmDataLayer layer, boolean newValue) {
-        if (layer == getEditLayer()) {
+        if (layer == layerManager.getEditLayer()) {
             refreshTitle();
         }
     }
