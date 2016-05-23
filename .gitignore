@@ -1,0 +1,14 @@
+/bin/
+/bin2/
+/build/
+/build2/
+/.metadata/
+/.externalToolBuilders/
+/dist/
+hotspot*.log
+junitvmwatcher*properties
+/src/org/openstreetmap/josm/gui/mappaint/mapcss/parsergen/
+/test/build/
+/test/config/*home
+/test/jacoco.exec
+/test/report/
