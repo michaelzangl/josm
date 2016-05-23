@@ -192,7 +192,7 @@ public class MapFrame extends JPanel implements Destroyable, LayerChangeListener
         setSize(400, 400);
         setLayout(new BorderLayout());
 
-        mapView = new MapView(Main.layerManager, contentPane, viewportData);
+        mapView = new MapView(Main.getLayerManager(), contentPane, viewportData);
         if (!GraphicsEnvironment.isHeadless()) {
             new FileDrop(mapView);
         }

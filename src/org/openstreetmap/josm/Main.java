@@ -86,7 +86,6 @@ import org.openstreetmap.josm.gui.MainApplication.Option;
 import org.openstreetmap.josm.gui.MainMenu;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.MapFrameListener;
-import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.dialogs.LayerListDialog;
 import org.openstreetmap.josm.gui.help.HelpUtil;
 import org.openstreetmap.josm.gui.io.SaveLayersDialog;
@@ -198,7 +197,7 @@ public abstract class Main {
     /**
      * Provides access to the layers displayed in the main view.
      */
-    private static LayerManagerWithActive layerManager = new LayerManagerWithActive();
+    private static final LayerManagerWithActive layerManager = new LayerManagerWithActive();
 
     /**
      * The toolbar preference control to register new actions.
@@ -615,7 +614,7 @@ public abstract class Main {
             @Override
             public void initialize() {
                 validator = new OsmValidator();
-                MapView.addLayerChangeListener(validator);
+                getLayerManager().addLayerChangeListener(validator);
             }
         });
 

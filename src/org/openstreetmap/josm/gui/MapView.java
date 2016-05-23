@@ -687,13 +687,11 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
      */
     @Deprecated
     public int getLayerPos(Layer layer) {
-        int curLayerPos;
-            curLayerPos = getAllLayersAsList().indexOf(layer);
+        int curLayerPos = layerManager.getLayers().indexOf(layer);
         if (curLayerPos == -1)
             throw new IllegalArgumentException(tr("Layer not in list."));
         return curLayerPos;
     }
-
 
     private void paintLayer(Layer layer, Graphics2D g, Bounds box) {
         if (layer.getOpacity() < 1) {
@@ -969,7 +967,7 @@ LayerManager.LayerChangeListener, LayerManagerWithActive.ActiveLayerChangeListen
 
     /**
      * Sets the active layer to <code>layer</code>. If <code>layer</code> is an instance
-     * of {@link OsmDataLayer} also sets {@link #editLayer} to <code>layer</code>.
+     * of {@link OsmDataLayer} also sets editLayer to <code>layer</code>.
      * <p>
      * You can use !{@link Main#getLayerManager()}.setActiveLayer() instead.
      *
