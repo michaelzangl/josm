@@ -198,10 +198,10 @@ public final class BugReportExceptionHandler implements Thread.UncaughtException
     static JPanel buildPanel(final Throwable e) {
         StringWriter stack = new StringWriter();
         PrintWriter writer = new PrintWriter(stack);
-        if (e instanceof ReportingException) {
+        if (e instanceof ReportedException) {
             // Temporary!
-            ((ReportingException) e).printReportDataTo(writer);
-            ((ReportingException) e).printReportStackTo(writer);
+            ((ReportedException) e).printReportDataTo(writer);
+            ((ReportedException) e).printReportStackTo(writer);
         } else {
             e.printStackTrace(writer);
         }

@@ -17,18 +17,19 @@ import java.util.Set;
  * <p>
  * It is used to capture more information about an exception that was already thrown.
  *
- *@see BugReport
  * @author Michael Zangl
+ * @see BugReport
  * @since xxx
  */
-public class ReportingException extends RuntimeException {
+public class ReportedException extends RuntimeException {
     private static final int MAX_COLLECTION_ENTRIES = 30;
     /**
      *
      */
     private static final long serialVersionUID = 737333873766201033L;
     /**
-     * We capture all stack traces on exception creation. This allows us to trace synchonization problems better. We cannot be really sure what happened but we at least see which threads
+     * We capture all stack traces on exception creation. This allows us to trace synchonization problems better. We cannot be really sure what
+     * happened but we at least see which threads
      */
     private final Map<Thread, StackTraceElement[]> allStackTraces;
     private final LinkedList<Section> sections = new LinkedList<>();
@@ -36,11 +37,11 @@ public class ReportingException extends RuntimeException {
     private final Throwable exception;
     private String methodWarningFrom;
 
-    ReportingException(Throwable exception) {
+    ReportedException(Throwable exception) {
         this(exception, Thread.currentThread());
     }
 
-    ReportingException(Throwable exception, Thread caughtOnThread) {
+    ReportedException(Throwable exception, Thread caughtOnThread) {
         super(exception);
         this.exception = exception;
 
@@ -53,7 +54,7 @@ public class ReportingException extends RuntimeException {
      */
     public void warn() {
         methodWarningFrom = BugReport.getCallingMethod(2);
-        // TODO: BugReport.warnFor(this);
+        // TODO: Open the dialog.
     }
 
     /**
@@ -67,10 +68,10 @@ public class ReportingException extends RuntimeException {
     }
 
     /**
-     * Prints the report to the console or an other output stream.
+     * Prints the captured data of this report to a {@link PrintWriter}.
      *
      * @param out
-     *            The console to print to.
+     *            The writer to print to.
      */
     public void printReportDataTo(PrintWriter out) {
         out.println("=== REPORTED CRASH DATA ===");
@@ -85,6 +86,13 @@ public class ReportingException extends RuntimeException {
         }
     }
 
+
+    /**
+     * Prints the stack trace of this report to a {@link PrintWriter}.
+     *
+     * @param out
+     *            The writer to print to.
+     */
     public void printReportStackTo(PrintWriter out) {
         out.println("=== STACK TRACE ===");
         out.println(niceThreadName(caughtOnThread));
@@ -92,6 +100,13 @@ public class ReportingException extends RuntimeException {
         out.println();
     }
 
+
+    /**
+     * Prints the stack traces for other threads of this report to a {@link PrintWriter}.
+     *
+     * @param out
+     *            The writer to print to.
+     */
     public void printReportThreadsTo(PrintWriter out) {
         out.println("=== RUNNING THREADS ===");
         for (Entry<Thread, StackTraceElement[]> thread : allStackTraces.entrySet()) {
@@ -123,7 +138,7 @@ public class ReportingException extends RuntimeException {
      *            The exception to check against.
      * @return <code>true</code> if they are considered the same.
      */
-    public boolean isSame(ReportingException e) {
+    public boolean isSame(ReportedException e) {
         if (!getMessage().equals(e.getMessage())) {
             return false;
         }
@@ -166,7 +181,7 @@ public class ReportingException extends RuntimeException {
      *            The value.
      * @return This exception for easy chaining.
      */
-    public ReportingException put(String key, Object value) {
+    public ReportedException put(String key, Object value) {
         String string;
         try {
             if (value == null) {
@@ -193,7 +208,7 @@ public class ReportingException extends RuntimeException {
             if (lines <= MAX_COLLECTION_ENTRIES) {
                 str += e;
             } else {
-                str += "...";
+                str += "\n    ... (" + value.size() + " entries)";
                 break;
             }
         }
