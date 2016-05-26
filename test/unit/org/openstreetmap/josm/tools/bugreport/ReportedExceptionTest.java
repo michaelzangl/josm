@@ -10,7 +10,7 @@ import org.junit.Test;
 /**
  * Tests the {@link ReportedException} class.
  * @author Michael Zangl
- *
+ * @since xxx
  */
 public class ReportedExceptionTest {
     private final class CauseOverwriteException extends RuntimeException {
@@ -66,8 +66,13 @@ public class ReportedExceptionTest {
     @Test
     public void testIsSame() {
         // Do not break this line! All exceptions need to be created in the same line.
+        // CHECKSTYLE.OFF: LineLength
+        // @formatter:off
         ReportedException[] testExceptions = new ReportedException[] {
                 /* 0 */ genException1(), /* 1, same as 0 */ genException1(), /* 2 */ genException2("x"), /* 3, same as 2 */ genException2("x"), /* 4, has different message than 2 */ genException2("y"), /* 5, has different stack trace than 2 */ genException3("x"), /* 6 */ genException4(true), /* 7, has different cause than 6 */ genException4(false), /* 8, has a cycle and should not crash */ genExceptionCycle() };
+        // @formatter:on
+        // CHECKSTYLE.ON: LineLength
+
         for (int i = 0; i < testExceptions.length; i++) {
             for (int j = 0; j < testExceptions.length; j++) {
                 boolean is01 = (i == 0 || i == 1) && (j == 0 || j == 1);
