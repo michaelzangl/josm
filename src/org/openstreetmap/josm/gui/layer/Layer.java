@@ -140,6 +140,7 @@ public abstract class Layer extends AbstractMapViewPaintable implements Destroya
      * If a file is associated with this layer, this variable should be set to it.
      */
     private File associatedFile;
+    private LayerManager layerManager;
 
     /**
      * Create the layer and fill in the necessary components.
@@ -170,14 +171,14 @@ public abstract class Layer extends AbstractMapViewPaintable implements Destroya
         // calculate total memory needed for all layers
         long memoryBytesRequired = 50L * 1024L * 1024L; // assumed minimum JOSM memory footprint
         if (Main.map != null && Main.map.mapView != null) {
-            for (Layer layer: Main.map.mapView.getAllLayers()) {
+            for (Layer layer : Main.map.mapView.getAllLayers()) {
                 memoryBytesRequired += layer.estimateMemoryUsage();
             }
-            if (memoryBytesRequired >  Runtime.getRuntime().maxMemory()) {
-                throw new IllegalArgumentException(
-                        tr("To add another layer you need to allocate at least {0,number,#}MB memory to JOSM using -Xmx{0,number,#}M "
-                        + "option (see http://forum.openstreetmap.org/viewtopic.php?id=25677).\n"
-                        + "Currently you have {1,number,#}MB memory allocated for JOSM",
+            if (memoryBytesRequired > Runtime.getRuntime().maxMemory()) {
+                throw new IllegalArgumentException(tr(
+                        "To add another layer you need to allocate at least {0,number,#}MB memory to JOSM using -Xmx{0,number,#}M "
+                                + "option (see http://forum.openstreetmap.org/viewtopic.php?id=25677).\n"
+                                + "Currently you have {1,number,#}MB memory allocated for JOSM",
                         memoryBytesRequired / 1024 / 1024, Runtime.getRuntime().maxMemory() / 1024 / 1024));
             }
         }
@@ -334,7 +335,7 @@ public abstract class Layer extends AbstractMapViewPaintable implements Destroya
      */
     public void setVisible(boolean visible) {
         boolean oldValue = isVisible();
-        this.visible  = visible;
+        this.visible = visible;
         if (visible && opacity == 0) {
             setOpacity(1);
         } else if (oldValue != isVisible()) {
@@ -524,15 +525,13 @@ public abstract class Layer extends AbstractMapViewPaintable implements Destroya
     @Override
     public void projectionChanged(Projection oldValue, Projection newValue) {
         if (!isProjectionSupported(newValue)) {
-            String message = "<html><body><p>" +
-                    tr("The layer {0} does not support the new projection {1}.", getName(), newValue.toCode()) + "</p>" +
-                    "<p style='width: 450px;'>" + tr("Supported projections are: {0}", nameSupportedProjections()) + "</p>" +
-                    tr("Change the projection again or remove the layer.");
+            String message = "<html><body><p>"
+                    + tr("The layer {0} does not support the new projection {1}.", getName(), newValue.toCode())
+                    + "</p>" + "<p style='width: 450px;'>"
+                    + tr("Supported projections are: {0}", nameSupportedProjections()) + "</p>"
+                    + tr("Change the projection again or remove the layer.");
 
-            JOptionPane.showMessageDialog(Main.parent,
-                    message,
-                    tr("Warning"),
-                    JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(Main.parent, message, tr("Warning"), JOptionPane.WARNING_MESSAGE);
         }
     }
 
@@ -591,5 +590,24 @@ public abstract class Layer extends AbstractMapViewPaintable implements Destroya
         } else {
             return LayerPositionStrategy.AFTER_LAST_VALIDATION_LAYER;
         }
+    }
+
+    /**
+     * Returns a LayerManager that represents the sublayers of this layer. You can normally not add any sublayers directly to the list but this layer will provide methods to add supported sublayers.
+     * @return The layer manager.
+     */
+    public LayerManager getSubLayers() {
+        if (layerManager == null) // better in constructor:
+            layerManager = createSubLayerManager();
+        return layerManager;
+    }
+
+    /**
+     * Create the {@link LayerManager} object to be used for sublayers. Called once after layer construction.
+     *
+     * @return A LayerManager instance. You may use your own implementation.
+     */
+    protected LayerManager createSubLayerManager() {
+        return new LayerManager();
     }
 }
