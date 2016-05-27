@@ -80,7 +80,6 @@ public class ReportedExceptionTest {
                 assertEquals(i + ", " + j, is01 || is23 || i == j, testExceptions[i].isSame(testExceptions[j]));
             }
         }
-
     }
 
     private ReportedException genException1() {

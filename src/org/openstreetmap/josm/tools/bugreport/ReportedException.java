@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.openstreetmap.josm.Main;
+
 /**
  * This is a special exception that cannot be directly thrown.
  * <p>
@@ -31,9 +33,9 @@ public class ReportedException extends RuntimeException {
      * We capture all stack traces on exception creation. This allows us to trace synchonization problems better. We cannot be really sure what
      * happened but we at least see which threads
      */
-    private final Map<Thread, StackTraceElement[]> allStackTraces;
+    private final transient Map<Thread, StackTraceElement[]> allStackTraces;
     private final LinkedList<Section> sections = new LinkedList<>();
-    private final Thread caughtOnThread;
+    private final transient Thread caughtOnThread;
     private final Throwable exception;
     private String methodWarningFrom;
 
@@ -111,7 +113,7 @@ public class ReportedException extends RuntimeException {
         out.println("=== RUNNING THREADS ===");
         for (Entry<Thread, StackTraceElement[]> thread : allStackTraces.entrySet()) {
             out.println(niceThreadName(thread.getKey()));
-            if (thread.getKey() == caughtOnThread) {
+            if (caughtOnThread.equals(thread.getKey())) {
                 out.println("Stacktrace see above.");
             } else {
                 for (StackTraceElement e : thread.getValue()) {
@@ -122,7 +124,7 @@ public class ReportedException extends RuntimeException {
         }
     }
 
-    private String niceThreadName(Thread thread) {
+    private static String niceThreadName(Thread thread) {
         String name = "Thread: " + thread.getName() + " (" + thread.getId() + ")";
         ThreadGroup threadGroup = thread.getThreadGroup();
         if (threadGroup != null) {
@@ -147,7 +149,7 @@ public class ReportedException extends RuntimeException {
         return hasSameStackTrace(dejaVu, this.exception, e.exception);
     }
 
-    private boolean hasSameStackTrace(Set<Throwable> dejaVu, Throwable e1, Throwable e2) {
+    private static boolean hasSameStackTrace(Set<Throwable> dejaVu, Throwable e1, Throwable e2) {
         if (dejaVu.contains(e1)) {
             // cycle. If it was the same until here, we assume both have that cycle.
             return true;
@@ -193,26 +195,29 @@ public class ReportedException extends RuntimeException {
             } else {
                 string = value.toString();
             }
-        } catch (Throwable t) {
+        } catch (RuntimeException t) {
+            Main.warn(t);
             string = "<Error calling toString()>";
         }
         sections.getLast().put(key, string);
         return this;
     }
 
-    private String makeCollectionNice(Collection<?> value) {
+    private static String makeCollectionNice(Collection<?> value) {
         int lines = 0;
-        String str = "";
+        StringBuilder str = new StringBuilder();
         for (Object e : value) {
-            str += "\n    - ";
+            str.append("\n    - ");
             if (lines <= MAX_COLLECTION_ENTRIES) {
-                str += e;
+                str.append(e);
             } else {
-                str += "\n    ... (" + value.size() + " entries)";
+                str.append("\n    ... (");
+                str.append(value.size());
+                str.append(" entries)");
                 break;
             }
         }
-        return str;
+        return str.toString();
     }
 
     @Override
@@ -234,6 +239,10 @@ public class ReportedException extends RuntimeException {
 
         }
 
+        /**
+         * Prints this entry to the output stream in a line.
+         * @param out The stream to print to.
+         */
         public void print(PrintWriter out) {
             out.print(" - ");
             out.print(key);
@@ -251,10 +260,19 @@ public class ReportedException extends RuntimeException {
             this.sectionName = sectionName;
         }
 
+        /**
+         * Add a key/value entry to this section.
+         * @param key The key. Need not be unique.
+         * @param value The value.
+         */
         public void put(String key, String value) {
             entries.add(new SectionEntry(key, value));
         }
 
+        /**
+         * Prints this section to the output stream.
+         * @param out The stream to print to.
+         */
         public void printSection(PrintWriter out) {
             out.println(sectionName + ":");
             if (entries.isEmpty()) {

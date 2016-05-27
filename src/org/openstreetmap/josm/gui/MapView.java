@@ -739,7 +739,7 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
             }
             layer.paint(g, this, box);
             g.setPaintMode();
-        } catch (Throwable t) {
+        } catch (RuntimeException t) {
             throw BugReport.intercept(t).put("layer", layer).put("bounds", box);
         }
     }
