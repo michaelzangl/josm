@@ -3,7 +3,9 @@ package org.openstreetmap.josm.gui.layer;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.openstreetmap.josm.gui.util.GuiHelper;
@@ -114,7 +116,27 @@ public class LayerManager {
         LayerOrderChangeEvent(LayerManager source) {
             super(source);
         }
+    }
 
+    /**
+     * An exception to be thrown when a cyclic remove is detected (remove inside removed listener)
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public static class CyclicLayerRemoveException extends IllegalArgumentException {
+
+        /**
+         * Create a new exception
+         * @param message The message
+         */
+        public CyclicLayerRemoveException(String message) {
+            super(message);
+        }
+
+        @Override
+        public String toString() {
+            return "CyclicLayerRemoveException [" + getMessage() + "]";
+        }
     }
 
     /**
@@ -123,6 +145,11 @@ public class LayerManager {
     private final List<Layer> layers = new ArrayList<>();
 
     private final List<LayerChangeListener> layerChangeListeners = new CopyOnWriteArrayList<>();
+
+    /**
+     * A set of layers that are currently removed. To detect {@link #removeLayer(Layer)} calls in the layer remove listener.
+     */
+    private final Set<Layer> removingLayers = Collections.newSetFromMap(new IdentityHashMap<Layer, Boolean>());
 
     /**
      * Add a layer. The layer will be added at a given psoition.
@@ -154,6 +181,8 @@ public class LayerManager {
      * Remove the layer from the mapview. If the layer was in the list before,
      * an LayerChange event is fired.
      * @param layer The layer to remove
+     * @throws IllegalArgumentException When the layer is not in this list
+     * @throws CyclicLayerRemoveException When {@link #removeLayer(Layer)} is called for a removed layer inside the layer removed listener.
      */
     public void removeLayer(final Layer layer) {
         // we force this on to the EDT Thread to make events fire from there.
@@ -161,14 +190,17 @@ public class LayerManager {
         GuiHelper.runInEDTAndWaitWithException(new Runnable() {
             @Override
             public void run() {
+                checkContainsLayer(layer);
+                if (!removingLayers.add(layer)) {
+                    throw new CyclicLayerRemoveException("Caclic remove for layer " + layer);
+                }
                 realRemoveLayer(layer);
+                removingLayers.remove(layer);
             }
         });
     }
 
     protected synchronized void realRemoveLayer(Layer layer) {
-        checkContainsLayer(layer);
-
         fireLayerRemoving(layer);
         layers.remove(layer);
     }

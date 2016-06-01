@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.osm.visitor.BoundingXYVisitor;
 import org.openstreetmap.josm.gui.MapView;
+import org.openstreetmap.josm.gui.layer.LayerManager.CyclicLayerRemoveException;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerAddEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerChangeListener;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerOrderChangeEvent;
@@ -228,6 +229,32 @@ public class LayerManagerTest {
         assertNull(l.layerOrderChanged);
     }
 
+    /**
+     * {@link LayerManager#removeLayer(Layer)} fails if a removeLayer of a layer that is removed is called inside the layer remove listener.
+     */
+    @Test(expected = CyclicLayerRemoveException.class)
+    public void testRemoveLayerFailsWhenRemoveCycle() {
+        final AbstractTestLayer layer1 = new AbstractTestLayer();
+        AbstractTestLayer layer2 = new AbstractTestLayer();
+        layerManager.addLayer(layer1);
+        layerManager.addLayer(layer2);
+
+        layerManager.addLayerChangeListener(new LayerChangeListener() {
+            @Override
+            public void layerRemoving(LayerRemoveEvent e) {
+                layerManager.removeLayer(layer1);
+            }
+
+            @Override
+            public void layerOrderChanged(LayerOrderChangeEvent e) {
+            }
+
+            @Override
+            public void layerAdded(LayerAddEvent e) {
+            }
+        });
+        layerManager.removeLayer(layer1);
+    }
     /**
      * {@link LayerManager#moveLayer(Layer, int)}
      */

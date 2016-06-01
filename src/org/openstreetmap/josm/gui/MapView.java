@@ -57,6 +57,7 @@ import org.openstreetmap.josm.gui.layer.GpxLayer;
 import org.openstreetmap.josm.gui.layer.ImageryLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.LayerManager;
+import org.openstreetmap.josm.gui.layer.LayerManager.CyclicLayerRemoveException;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerAddEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerOrderChangeEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerRemoveEvent;
@@ -659,7 +660,12 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
      */
     @Deprecated
     public void removeLayer(Layer layer) {
-        layerManager.removeLayer(layer);
+        try {
+            layerManager.removeLayer(layer);
+        } catch (CyclicLayerRemoveException e) {
+            // ignore...
+            Main.warn(e);
+        }
     }
 
     @Override
