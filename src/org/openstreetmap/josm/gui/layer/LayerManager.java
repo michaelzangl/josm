@@ -194,8 +194,11 @@ public class LayerManager {
                 if (!removingLayers.add(layer)) {
                     throw new CyclicLayerRemoveException("Caclic remove for layer " + layer);
                 }
-                realRemoveLayer(layer);
-                removingLayers.remove(layer);
+                try {
+                    realRemoveLayer(layer);
+                } finally {
+                    removingLayers.remove(layer);
+                }
             }
         });
     }
