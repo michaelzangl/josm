@@ -55,6 +55,7 @@ public class BugReport {
     /**
      * Get if this report should include a system status report
      * @return <code>true</code> to include it.
+     * @since xxx
      */
     public boolean getIncludeStatusReport() {
         return includeStatusReport;
@@ -63,6 +64,7 @@ public class BugReport {
     /**
      * Set if this report should include a system status report
      * @param includeStatusReport if the status report should be included
+     * @since xxx
      */
     public void setIncludeStatusReport(boolean includeStatusReport) {
         this.includeStatusReport = includeStatusReport;
@@ -72,6 +74,7 @@ public class BugReport {
     /**
      * Get if this report should include the data that was traced.
      * @return <code>true</code> to include it.
+     * @since xxx
      */
     public boolean getIncludeData() {
         return includeData;
@@ -80,6 +83,7 @@ public class BugReport {
     /**
      * Set if this report should include the data that was traced.
      * @param includeData if data should be included
+     * @since xxx
      */
     public void setIncludeData(boolean includeData) {
         this.includeData = includeData;
@@ -89,6 +93,7 @@ public class BugReport {
     /**
      * Get if this report should include the stack traces for all other threads.
      * @return <code>true</code> to include it.
+     * @since xxx
      */
     public boolean getIncludeAllStackTraces() {
         return includeAllStackTraces;
@@ -97,6 +102,7 @@ public class BugReport {
     /**
      * Sets if this report should include the stack traces for all other threads.
      * @param includeAllStackTraces if all stack traces should be included
+     * @since xxx
      */
     public void setIncludeAllStackTraces(boolean includeAllStackTraces) {
         this.includeAllStackTraces = includeAllStackTraces;
