@@ -122,6 +122,11 @@ public class LayerListDialog extends ToggleDialog {
     private final ActivateLayerAction activateLayerAction;
     private final ShowHideLayerAction showHideLayerAction;
 
+    /**
+     * Set if {@link #showNotify()} was called. To be removed when lifecycle is fixed.
+     */
+    private boolean isShown;
+
     //TODO This duplicates ShowHide actions functionality
     /** stores which layer index to toggle and executes the ShowHide action if the layer is present */
     private final class ToggleLayerIndexVisibility extends AbstractAction {
@@ -329,17 +334,25 @@ public class LayerListDialog extends ToggleDialog {
 
     @Override
     public void showNotify() {
+        if (isShown) {
+            return;
+        }
         MapView.addLayerChangeListener(activateLayerAction);
         layerManager.addLayerChangeListener(model);
         layerManager.addActiveLayerChangeListener(model, true);
         model.populate();
+        isShown = true;
     }
 
     @Override
     public void hideNotify() {
+        if (!isShown) {
+            return;
+        }
         layerManager.removeLayerChangeListener(model);
         layerManager.removeActiveLayerChangeListener(model);
         MapView.removeLayerChangeListener(activateLayerAction);
+        isShown = false;
     }
 
     /**
