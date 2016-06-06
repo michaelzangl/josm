@@ -632,9 +632,9 @@ public class MainMenu extends JMenuBar {
     }
 
     /**
-     * Constructs a new {@code MainMenu}.
+     * Initialize the main menu.
      */
-    public MainMenu() {
+    public void initialize() {
         moreToolsMenu.setVisible(false);
         dataMenu.setVisible(false);
         gpsMenu.setVisible(false);
