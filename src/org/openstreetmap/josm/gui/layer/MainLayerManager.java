@@ -76,7 +76,7 @@ public class MainLayerManager extends LayerManager {
         }
 
         /**
-         * Gets the data set that way previously used.
+         * Gets the data set that was previously used.
          * @return The data set of {@link #getPreviousEditLayer()}.
          */
         public DataSet getPreviousEditDataSet() {

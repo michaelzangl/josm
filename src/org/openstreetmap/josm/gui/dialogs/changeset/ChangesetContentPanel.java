@@ -53,6 +53,7 @@ import org.openstreetmap.josm.gui.widgets.JMultilineLabel;
 import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Utils;
+import org.openstreetmap.josm.tools.bugreport.BugReport;
 import org.openstreetmap.josm.tools.bugreport.BugReportExceptionHandler;
 
 /**
@@ -101,8 +102,12 @@ public class ChangesetContentPanel extends JPanel implements PropertyChangeListe
                     public void componentHidden(ComponentEvent e) {
                         // make sure the listener is unregistered when the panel becomes
                         // invisible
-                        Main.getLayerManager().removeActiveLayerChangeListener(actSelectInCurrentLayerAction);
-                        Main.getLayerManager().removeActiveLayerChangeListener(actZoomInCurrentLayerAction);
+                        try {
+                            Main.getLayerManager().removeActiveLayerChangeListener(actSelectInCurrentLayerAction);
+                            Main.getLayerManager().removeActiveLayerChangeListener(actZoomInCurrentLayerAction);
+                        } catch (IllegalArgumentException t) {
+                            throw BugReport.intercept(t).put("hint", "This Component can only be hidden once.");
+                        }
                     }
                 }
         );
