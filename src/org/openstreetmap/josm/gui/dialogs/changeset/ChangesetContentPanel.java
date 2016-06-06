@@ -41,12 +41,12 @@ import org.openstreetmap.josm.data.osm.history.History;
 import org.openstreetmap.josm.data.osm.history.HistoryDataSet;
 import org.openstreetmap.josm.data.osm.history.HistoryOsmPrimitive;
 import org.openstreetmap.josm.gui.HelpAwareOptionPane;
-import org.openstreetmap.josm.gui.MapView;
-import org.openstreetmap.josm.gui.MapView.EditLayerChangeListener;
 import org.openstreetmap.josm.gui.help.HelpUtil;
 import org.openstreetmap.josm.gui.history.HistoryBrowserDialogManager;
 import org.openstreetmap.josm.gui.history.HistoryLoadTask;
 import org.openstreetmap.josm.gui.io.DownloadPrimitivesWithReferrersTask;
+import org.openstreetmap.josm.gui.layer.MainLayerManager.ActiveLayerChangeEvent;
+import org.openstreetmap.josm.gui.layer.MainLayerManager.ActiveLayerChangeListener;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.gui.widgets.JMultilineLabel;
@@ -89,11 +89,11 @@ public class ChangesetContentPanel extends JPanel implements PropertyChangeListe
 
         actSelectInCurrentLayerAction = new SelectInCurrentLayerAction();
         model.getSelectionModel().addListSelectionListener(actSelectInCurrentLayerAction);
-        MapView.addEditLayerChangeListener(actSelectInCurrentLayerAction);
+        Main.getLayerManager().addActiveLayerChangeListener(actSelectInCurrentLayerAction);
 
         actZoomInCurrentLayerAction = new ZoomInCurrentLayerAction();
         model.getSelectionModel().addListSelectionListener(actZoomInCurrentLayerAction);
-        MapView.addEditLayerChangeListener(actZoomInCurrentLayerAction);
+        Main.getLayerManager().addActiveLayerChangeListener(actZoomInCurrentLayerAction);
 
         addComponentListener(
                 new ComponentAdapter() {
@@ -101,8 +101,8 @@ public class ChangesetContentPanel extends JPanel implements PropertyChangeListe
                     public void componentHidden(ComponentEvent e) {
                         // make sure the listener is unregistered when the panel becomes
                         // invisible
-                        MapView.removeEditLayerChangeListener(actSelectInCurrentLayerAction);
-                        MapView.removeEditLayerChangeListener(actZoomInCurrentLayerAction);
+                        Main.getLayerManager().removeActiveLayerChangeListener(actSelectInCurrentLayerAction);
+                        Main.getLayerManager().removeActiveLayerChangeListener(actZoomInCurrentLayerAction);
                     }
                 }
         );
@@ -324,7 +324,7 @@ public class ChangesetContentPanel extends JPanel implements PropertyChangeListe
         }
     }
 
-    abstract class SelectionBasedAction extends AbstractAction implements ListSelectionListener, EditLayerChangeListener {
+    abstract class SelectionBasedAction extends AbstractAction implements ListSelectionListener, ActiveLayerChangeListener {
 
         protected Set<OsmPrimitive> getTarget() {
             if (!isEnabled() || Main.main == null || !Main.main.hasEditLayer()) {
@@ -355,7 +355,7 @@ public class ChangesetContentPanel extends JPanel implements PropertyChangeListe
         }
 
         @Override
-        public void editLayerChanged(OsmDataLayer oldLayer, OsmDataLayer newLayer) {
+        public void activeOrEditLayerChanged(ActiveLayerChangeEvent e) {
             updateEnabledState();
         }
 
