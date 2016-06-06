@@ -567,6 +567,7 @@ public abstract class Main {
 
     /**
      * Initialize the main object. A lot of global variables are initialized here.
+     * @since xxx
      */
     public void initalize() {
         isOpenjdk = System.getProperty("java.vm.name").toUpperCase(Locale.ENGLISH).indexOf("OPENJDK") != -1;
