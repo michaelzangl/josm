@@ -599,7 +599,7 @@ implements SelectionChangedListener, ActiveLayerChangeListener, DataSetListenerA
     public void hideNotify() {
         DatasetEventManager.getInstance().removeDatasetListener(dataChangedAdapter);
         SelectionEventManager.getInstance().removeSelectionListener(this);
-        Main.getLayerManager().removeEditLayerChangeListener(this);
+        Main.getLayerManager().removeActiveLayerChangeListener(this);
         for (JosmAction action : josmActions) {
             Main.unregisterActionShortcut(action);
         }
