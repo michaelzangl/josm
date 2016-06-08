@@ -139,6 +139,7 @@ public final class DataSet implements Data, Cloneable, ProjectionChangeListener 
     /**
      * Creates a new {@link DataSet}.
      * @param copyFrom An other {@link DataSet} to copy the contents of this dataset from.
+     * @since xxx
      */
     public DataSet(DataSet copyFrom) {
         this();
@@ -923,7 +924,7 @@ public final class DataSet implements Data, Cloneable, ProjectionChangeListener 
 
     /**
      * Return a copy of this dataset
-     * @deprecated Use the copy constructor instead.
+     * @deprecated Use the copy constructor instead. Remove in July 2016
      */
     @Deprecated
     @Override
