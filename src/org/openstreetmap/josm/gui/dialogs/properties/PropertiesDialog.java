@@ -1082,12 +1082,6 @@ implements SelectionChangedListener, ActiveLayerChangeListener, DataSetListenerA
             editHelper.addTag();
             btnAdd.requestFocusInWindow();
         }
-
-        @Override
-        public void destroy() {
-            // TODO Auto-generated method stub
-            super.destroy();
-        }
     }
 
     /**
