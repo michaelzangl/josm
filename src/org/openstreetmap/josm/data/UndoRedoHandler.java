@@ -171,16 +171,14 @@ public class UndoRedoHandler implements LayerChangeListener {
         }
     }
 
-
-    @Override
-    public void layerAdded(LayerAddEvent e) {
-        // TODO Auto-generated method stub
-
-    }
-
     @Override
     public void layerRemoving(LayerRemoveEvent e) {
         clean(e.getRemovedLayer());
+    }
+
+    @Override
+    public void layerAdded(LayerAddEvent e) {
+        // Do nothing
     }
 
     @Override
