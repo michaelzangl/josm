@@ -143,7 +143,15 @@ public class NavigatableComponent extends JComponent implements Helpful {
     protected EastNorth center = calculateDefaultCenter();
 
     private final transient Object paintRequestLock = new Object();
+    /**
+     * @deprecated To be removed in July 2016
+     */
+    @Deprecated
     private Rectangle paintRect;
+    /**
+     * @deprecated To be removed in July 2016
+     */
+    @Deprecated
     private Polygon paintPoly;
 
     protected transient ViewportData initialViewport;
@@ -1595,7 +1603,9 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @param r The Rectangle to draw
      * @see #requestClearRect
      * @since 5500
+     * @deprecated To be removed in July 2016. Use a temporary layer instead.
      */
+    @Deprecated
     public void requestPaintRect(Rectangle r) {
         if (r != null) {
             synchronized (paintRequestLock) {
@@ -1610,7 +1620,9 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * @param p The Polygon to draw
      * @see #requestClearPoly
      * @since 5500
+     * @deprecated To be removed in July 2016. Use a temporary layer instead.
      */
+    @Deprecated
     public void requestPaintPoly(Polygon p) {
         if (p != null) {
             synchronized (paintRequestLock) {
@@ -1624,7 +1636,9 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * Requests to clear the rectangled previously drawn.
      * @see #requestPaintRect
      * @since 5500
+     * @deprecated To be removed in July 2016. Use a temporary layer instead.
      */
+    @Deprecated
     public void requestClearRect() {
         synchronized (paintRequestLock) {
             paintRect = null;
@@ -1636,7 +1650,9 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * Requests to clear the polyline previously drawn.
      * @see #requestPaintPoly
      * @since 5500
+     * @deprecated To be removed in July 2016. Use a temporary layer instead.
      */
+    @Deprecated
     public void requestClearPoly() {
         synchronized (paintRequestLock) {
             paintPoly = null;
