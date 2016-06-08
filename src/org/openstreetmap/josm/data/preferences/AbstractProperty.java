@@ -1,6 +1,7 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.data.preferences;
 
+
 import org.openstreetmap.josm.Main;
 
 /**

@@ -67,6 +67,8 @@ import org.openstreetmap.josm.tools.CheckParameterUtil;
 import org.openstreetmap.josm.tools.ColorHelper;
 import org.openstreetmap.josm.tools.FilteredCollection;
 import org.openstreetmap.josm.tools.I18n;
+import org.openstreetmap.josm.tools.ListenerList;
+import org.openstreetmap.josm.tools.ListenerList.EventFirerer;
 import org.openstreetmap.josm.tools.MultiMap;
 import org.openstreetmap.josm.tools.Predicate;
 import org.openstreetmap.josm.tools.Utils;
@@ -226,6 +228,8 @@ public class Preferences {
 
     private final CopyOnWriteArrayList<PreferenceChangedListener> listeners = new CopyOnWriteArrayList<>();
 
+    private final HashMap<String, ListenerList<PreferenceChangedListener>> keyListeners = new HashMap<>();
+
     /**
      * Adds a new preferences listener.
      * @param listener The listener to add
@@ -244,10 +248,48 @@ public class Preferences {
         listeners.remove(listener);
     }
 
+    /**
+     * Adds a listener that only listens to changes in one preference
+     * @param key The preference key to listen to
+     * @param listener The listener to add.
+     */
+    public void addKeyPreferenceChangeListener(String key, PreferenceChangedListener listener) {
+        ListenerList<PreferenceChangedListener> keyListener1 = keyListeners.get(key);
+        if (keyListener1 == null) {
+            keyListener1 = new ListenerList<>();
+            keyListeners.put(key, keyListener1);
+        }
+        ListenerList<PreferenceChangedListener> keyListener = keyListener1;
+        keyListener.addListener(listener);
+    }
+
+    /**
+     * Removes a listener that only listens to changes in one preference
+     * @param key The preference key to listen to
+     * @param listener The listener to add.
+     */
+    public void removeKeyPreferenceChangeListener(String key, PreferenceChangedListener listener) {
+        ListenerList<PreferenceChangedListener> keyListener1 = keyListeners.get(key);
+        if (keyListener1 == null) {
+            throw new IllegalArgumentException("There are no listeners registered for " + key);
+        }
+        ListenerList<PreferenceChangedListener> keyListener = keyListener1;
+        keyListener.removeListener(listener);
+    }
+
     protected void firePreferenceChanged(String key, Setting<?> oldValue, Setting<?> newValue) {
-        PreferenceChangeEvent evt = new DefaultPreferenceChangeEvent(key, oldValue, newValue);
+        final PreferenceChangeEvent evt = new DefaultPreferenceChangeEvent(key, oldValue, newValue);
         for (PreferenceChangedListener l : listeners) {
             l.preferenceChanged(evt);
+        }
+        ListenerList<PreferenceChangedListener> forKey = keyListeners.get(key);
+        if (forKey != null) {
+            forKey.fireEvent(new EventFirerer<PreferenceChangedListener>() {
+                @Override
+                public void fire(PreferenceChangedListener listener) {
+                    listener.preferenceChanged(evt);
+                }
+            });
         }
     }
 
