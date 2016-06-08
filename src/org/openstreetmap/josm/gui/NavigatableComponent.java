@@ -2,9 +2,7 @@
 package org.openstreetmap.josm.gui;
 
 import java.awt.Cursor;
-import java.awt.Graphics;
 import java.awt.Point;
-import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -43,7 +41,6 @@ import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.osm.WaySegment;
 import org.openstreetmap.josm.data.osm.visitor.BoundingXYVisitor;
-import org.openstreetmap.josm.data.osm.visitor.paint.PaintColors;
 import org.openstreetmap.josm.data.preferences.BooleanProperty;
 import org.openstreetmap.josm.data.preferences.DoubleProperty;
 import org.openstreetmap.josm.data.preferences.IntegerProperty;
@@ -141,10 +138,6 @@ public class NavigatableComponent extends JComponent implements Helpful {
      * Center n/e coordinate of the desired screen center.
      */
     protected EastNorth center = calculateDefaultCenter();
-
-    private final transient Object paintRequestLock = new Object();
-    private Rectangle paintRect;
-    private Polygon paintPoly;
 
     protected transient ViewportData initialViewport;
 
@@ -1569,79 +1562,6 @@ public class NavigatableComponent extends JComponent implements Helpful {
      */
     public CursorManager getCursorManager() {
         return cursorManager;
-    }
-
-    @Override
-    public void paint(Graphics g) {
-        synchronized (paintRequestLock) {
-            if (paintRect != null) {
-                Graphics g2 = g.create();
-                g2.setColor(Utils.complement(PaintColors.getBackgroundColor()));
-                g2.drawRect(paintRect.x, paintRect.y, paintRect.width, paintRect.height);
-                g2.dispose();
-            }
-            if (paintPoly != null) {
-                Graphics g2 = g.create();
-                g2.setColor(Utils.complement(PaintColors.getBackgroundColor()));
-                g2.drawPolyline(paintPoly.xpoints, paintPoly.ypoints, paintPoly.npoints);
-                g2.dispose();
-            }
-        }
-        super.paint(g);
-    }
-
-    /**
-     * Requests to paint the given {@code Rectangle}.
-     * @param r The Rectangle to draw
-     * @see #requestClearRect
-     * @since 5500
-     */
-    public void requestPaintRect(Rectangle r) {
-        if (r != null) {
-            synchronized (paintRequestLock) {
-                paintRect = r;
-            }
-            repaint();
-        }
-    }
-
-    /**
-     * Requests to paint the given {@code Polygon} as a polyline (unclosed polygon).
-     * @param p The Polygon to draw
-     * @see #requestClearPoly
-     * @since 5500
-     */
-    public void requestPaintPoly(Polygon p) {
-        if (p != null) {
-            synchronized (paintRequestLock) {
-                paintPoly = p;
-            }
-            repaint();
-        }
-    }
-
-    /**
-     * Requests to clear the rectangled previously drawn.
-     * @see #requestPaintRect
-     * @since 5500
-     */
-    public void requestClearRect() {
-        synchronized (paintRequestLock) {
-            paintRect = null;
-        }
-        repaint();
-    }
-
-    /**
-     * Requests to clear the polyline previously drawn.
-     * @see #requestPaintPoly
-     * @since 5500
-     */
-    public void requestClearPoly() {
-        synchronized (paintRequestLock) {
-            paintPoly = null;
-        }
-        repaint();
     }
 
     /**
