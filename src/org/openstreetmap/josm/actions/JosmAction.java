@@ -182,7 +182,9 @@ public abstract class JosmAction extends AbstractAction implements Destroyable {
         if (sc != null) {
             Main.unregisterActionShortcut(this);
         }
-        Main.getLayerManager().removeActiveLayerChangeListener(layerChangeAdapter);
+        if (layerChangeAdapter != null) {
+            Main.getLayerManager().removeActiveLayerChangeListener(layerChangeAdapter);
+        }
         DataSet.removeSelectionListener(selectionChangeAdapter);
     }
 
@@ -295,6 +297,11 @@ public abstract class JosmAction extends AbstractAction implements Destroyable {
         public void activeOrEditLayerChanged(ActiveLayerChangeEvent e) {
             updateEnabledState();
         }
+
+        @Override
+        public String toString() {
+            return "LayerChangeAdapter [" + JosmAction.this.toString() + "]";
+        }
     }
 
     /**
@@ -304,6 +311,11 @@ public abstract class JosmAction extends AbstractAction implements Destroyable {
         @Override
         public void selectionChanged(Collection<? extends OsmPrimitive> newSelection) {
             updateEnabledState(newSelection);
+        }
+
+        @Override
+        public String toString() {
+            return "SelectionChangeAdapter [" + JosmAction.this.toString() + "]";
         }
     }
 }
