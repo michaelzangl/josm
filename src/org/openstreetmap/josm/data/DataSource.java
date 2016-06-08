@@ -38,6 +38,14 @@ public class DataSource {
         this.origin = origin;
     }
 
+    /**
+     * Cosntructs a new {@link DataSource}
+     * @param source The source to copy the data from.
+     */
+    public DataSource(DataSource source) {
+        this(source.bounds, source.origin);
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(bounds, origin);
