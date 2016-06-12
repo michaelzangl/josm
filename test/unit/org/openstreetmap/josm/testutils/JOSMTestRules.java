@@ -19,9 +19,10 @@ import org.openstreetmap.josm.io.OsmTransferCanceledException;
 import org.openstreetmap.josm.tools.I18n;
 
 /**
- * This class runs a test in an enviroment that resembles the one used by the JOSM main application.
+ * This class runs a test in an environment that resembles the one used by the JOSM main application.
  * <p>
- * You have access to the (default) preferences. They are reset before every test.
+ * The environment is reset before every test. You can specify the components to which you need access using the methods of this class.
+ * For example, invoking {@link #preferences()} gives you access to the (default) preferences.
  *
  * @author Michael Zangl
  * @since xxx
