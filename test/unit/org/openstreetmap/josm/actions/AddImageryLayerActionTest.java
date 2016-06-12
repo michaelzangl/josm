@@ -7,26 +7,24 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
-import org.openstreetmap.josm.JOSMFixture;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.imagery.ImageryInfo;
 import org.openstreetmap.josm.gui.layer.TMSLayer;
 import org.openstreetmap.josm.gui.layer.WMSLayer;
+import org.openstreetmap.josm.testutils.JOSMTestRules;
 
 /**
  * Unit tests for class {@link AddImageryLayerAction}.
  */
 public final class AddImageryLayerActionTest {
-
     /**
-     * Setup test.
+     * We need prefs for this. We need platform for actions and the OSM API for checking blacklist.
+     * @since xxx
      */
-    @BeforeClass
-    public static void setUp() {
-        JOSMFixture.createUnitTestFixture().init(true);
-    }
+    @Rule
+    public JOSMTestRules test = new JOSMTestRules().preferences().platform().fakeAPI();
 
     /**
      * Unit test of {@link AddImageryLayerAction#updateEnabledState}.
@@ -34,7 +32,6 @@ public final class AddImageryLayerActionTest {
     @Test
     public void testEnabledState() {
         assertFalse(new AddImageryLayerAction(new ImageryInfo()).isEnabled());
-        assertFalse(new AddImageryLayerAction(new ImageryInfo("google", "http://maps.google.com/api", "tms", null, null)).isEnabled());
         assertTrue(new AddImageryLayerAction(new ImageryInfo("foo_tms", "http://bar", "tms", null, null)).isEnabled());
         assertTrue(new AddImageryLayerAction(new ImageryInfo("foo_bing", "http://bar", "bing", null, null)).isEnabled());
         assertTrue(new AddImageryLayerAction(new ImageryInfo("foo_scanex", "http://bar", "scanex", null, null)).isEnabled());
@@ -42,25 +39,30 @@ public final class AddImageryLayerActionTest {
     }
 
     /**
+     * Unit test of {@link AddImageryLayerAction#updateEnabledState} respects blacklist.
+     * @since xxx
+     */
+    @Test
+    public void testEnabledStateBlacklist() {
+        assertFalse(new AddImageryLayerAction(new ImageryInfo("google", "http://blacklisted", "tms", null, null)).isEnabled());
+        assertFalse(new AddImageryLayerAction(new ImageryInfo("google", "https://invalid", "tms", null, null)).isEnabled());
+        assertTrue(new AddImageryLayerAction(new ImageryInfo("google", "https://notinvalid", "tms", null, null)).isEnabled());
+    }
+
+    /**
      * Unit test of {@link AddImageryLayerAction#actionPerformed} - Enabled cases.
      */
     @Test
     public void testActionPerformedEnabled() {
-        assertTrue(Main.map.mapView.getLayersOfType(TMSLayer.class).isEmpty());
+        assertTrue(Main.getLayerManager().getLayersOfType(TMSLayer.class).isEmpty());
         new AddImageryLayerAction(new ImageryInfo("foo_tms", "http://bar", "tms", null, null)).actionPerformed(null);
-        List<TMSLayer> tmsLayers = Main.map.mapView.getLayersOfType(TMSLayer.class);
+        List<TMSLayer> tmsLayers = Main.getLayerManager().getLayersOfType(TMSLayer.class);
         assertEquals(1, tmsLayers.size());
 
-        try {
-            new AddImageryLayerAction(new ImageryInfo("wms.openstreetmap.fr", "http://wms.openstreetmap.fr/wms?",
-                    "wms_endpoint", null, null)).actionPerformed(null);
-            List<WMSLayer> wmsLayers = Main.map.mapView.getLayersOfType(WMSLayer.class);
-            assertEquals(1, wmsLayers.size());
-
-            Main.map.mapView.removeLayer(wmsLayers.get(0));
-        } finally {
-            Main.map.mapView.removeLayer(tmsLayers.get(0));
-        }
+        new AddImageryLayerAction(new ImageryInfo("wms.openstreetmap.fr", "http://wms.openstreetmap.fr/wms?",
+                "wms_endpoint", null, null)).actionPerformed(null);
+        List<WMSLayer> wmsLayers = Main.getLayerManager().getLayersOfType(WMSLayer.class);
+        assertEquals(1, wmsLayers.size());
     }
 
     /**
@@ -68,8 +70,8 @@ public final class AddImageryLayerActionTest {
      */
     @Test
     public void testActionPerformedDisabled() {
-        assertTrue(Main.map.mapView.getLayersOfType(TMSLayer.class).isEmpty());
+        assertTrue(Main.getLayerManager().getLayersOfType(TMSLayer.class).isEmpty());
         new AddImageryLayerAction(new ImageryInfo()).actionPerformed(null);
-        assertTrue(Main.map.mapView.getLayersOfType(TMSLayer.class).isEmpty());
+        assertTrue(Main.getLayerManager().getLayersOfType(TMSLayer.class).isEmpty());
     }
 }
