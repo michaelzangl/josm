@@ -124,7 +124,7 @@ public class JOSMFixture {
             if (Main.map == null) {
                 Main.main.createMapFrame(null, null);
             } else {
-                for (Layer l: Main.map.mapView.getAllLayers()) {
+                for (Layer l: Main.getLayerManager().getLayers()) {
                     Main.map.mapView.removeLayer(l);
                 }
             }
