@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.openstreetmap.josm.data.osm.visitor.AbstractVisitor;
+import org.openstreetmap.josm.gui.datatransfer.PasteBufferCompatibilityHelper;
 
 /**
  * This class allows to create and keep a deep copy of primitives. Provides methods to access directly added
@@ -29,7 +30,8 @@ public class PrimitiveDeepCopy {
      * Constructs a new {@code PrimitiveDeepCopy} without data. Use {@link #makeCopy(Collection)} after that.
      */
     public PrimitiveDeepCopy() {
-        // Do nothing
+        // Send everything to Swing CCP
+        listeners.add(new PasteBufferCompatibilityHelper());
     }
 
     /**
@@ -97,14 +99,28 @@ public class PrimitiveDeepCopy {
         firePasteBufferChanged();
     }
 
+    /**
+     * Gets the list of primitives that were explicitly added to this copy.
+     * @return The added primitives
+     */
     public List<PrimitiveData> getDirectlyAdded() {
         return directlyAdded;
     }
 
+    /**
+     * Gets the list of primitives that were implicitly added because they were referenced.
+     * @return The primitives
+     */
     public List<PrimitiveData> getReferenced() {
         return referenced;
     }
 
+    /**
+     * Gets a list of all primitives in this copy.
+     * @return The primitives
+     * @see #getDirectlyAdded()
+     * @see #getReferenced()
+     */
     public List<PrimitiveData> getAll() {
         List<PrimitiveData> result = new ArrayList<>(directlyAdded.size() + referenced.size());
         result.addAll(directlyAdded);
