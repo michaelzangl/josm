@@ -308,7 +308,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
     }
 
     protected void updateLocationState() {
-        if (SwingUtilities.getWindowAncestor(this) != null) {
+        if (SwingUtilities.getWindowAncestor(this) != null && isShowing()) {
             state = state.usingLocation(this);
         }
     }
