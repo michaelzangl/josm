@@ -488,7 +488,11 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
      */
     public MapView(MainLayerManager layerManager, final JPanel contentPane, final ViewportData viewportData) {
         this.layerManager = layerManager;
-        initialViewport = viewportData;
+        if (viewportData != null) {
+            initialViewport = viewportData;
+        } else if (layerManager.getActiveLayer() != null) {
+            initialViewport = new ViewportData(layerManager.getActiveLayer().getViewProjectionBounds());
+        }
         layerManager.addLayerChangeListener(this);
         layerManager.addActiveLayerChangeListener(this);
         Main.pref.addPreferenceChangeListener(this);
@@ -1289,5 +1293,14 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
      */
     public final MainLayerManager getLayerManager() {
         return layerManager;
+    }
+
+    /**
+     * Temporary until zooming is fixed.
+     * @param viewport The new viewport to use on next draw.
+     * @since xxx
+     */
+    public void scheduleZoomTo(ViewportData viewport) {
+        initialViewport = viewport;
     }
 }

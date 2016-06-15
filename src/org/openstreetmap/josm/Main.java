@@ -49,6 +49,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.LookAndFeel;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -87,6 +88,10 @@ import org.openstreetmap.josm.gui.help.HelpUtil;
 import org.openstreetmap.josm.gui.io.SaveLayersDialog;
 import org.openstreetmap.josm.gui.layer.AbstractModifiableLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
+import org.openstreetmap.josm.gui.layer.LayerManager.LayerAddEvent;
+import org.openstreetmap.josm.gui.layer.LayerManager.LayerChangeListener;
+import org.openstreetmap.josm.gui.layer.LayerManager.LayerOrderChangeEvent;
+import org.openstreetmap.josm.gui.layer.LayerManager.LayerRemoveEvent;
 import org.openstreetmap.josm.gui.layer.MainLayerManager;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer.CommandQueueListener;
@@ -534,12 +539,7 @@ public abstract class Main {
      * @param layer The layer to remove
      */
     public final synchronized void removeLayer(final Layer layer) {
-        if (map != null) {
-            getLayerManager().removeLayer(layer);
-            if (isDisplayingMapView() && getLayerManager().getLayers().isEmpty()) {
-                setMapFrame(null);
-            }
-        }
+        getLayerManager().removeLayer(layer);
     }
 
     private static volatile InitStatusListener initListener;
@@ -571,6 +571,40 @@ public abstract class Main {
     public void initialize() {
         isOpenjdk = System.getProperty("java.vm.name").toUpperCase(Locale.ENGLISH).indexOf("OPENJDK") != -1;
         fileWatcher.start();
+
+        // Temporary - move to separate class later
+        getLayerManager().addLayerChangeListener(new LayerChangeListener() {
+            @Override
+            public void layerRemoving(LayerRemoveEvent e) {
+                // last layer is removed.
+                if (isDisplayingMapView() && getLayerManager().getLayers().size() <= 1) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            setMapFrame(null);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void layerOrderChanged(LayerOrderChangeEvent e) {
+                // ignored
+            }
+
+            @Override
+            public void layerAdded(LayerAddEvent e) {
+                boolean noMap = map == null;
+                if (noMap) {
+                    createMapFrame(e.getAddedLayer(), null);
+                }
+                e.getAddedLayer().hookUpMapView();
+                if (noMap) {
+                    Main.map.setVisible(true);
+                }
+                Main.map.mapView.scheduleZoomTo(new ViewportData(e.getAddedLayer().getViewProjectionBounds()));
+            }
+        });
 
         new InitializationTask(tr("Executing platform startup hook")) {
             @Override
@@ -767,7 +801,7 @@ public abstract class Main {
      * @see #addLayer(Layer, ViewportData)
      */
     public final void addLayer(final Layer layer) {
-        addLayer(layer, layer.getViewProjectionBounds());
+        addLayer(layer, (ViewportData) null);
     }
 
     /**
@@ -793,16 +827,9 @@ public abstract class Main {
      * isn't changed
      */
     public final synchronized void addLayer(final Layer layer, ViewportData viewport) {
-        boolean noMap = map == null;
-        if (noMap) {
-            createMapFrame(layer, viewport);
-        }
-        layer.hookUpMapView();
         getLayerManager().addLayer(layer);
-        if (noMap) {
-            Main.map.setVisible(true);
-        } else if (viewport != null) {
-            Main.map.mapView.zoomTo(viewport);
+        if (viewport != null) {
+            Main.map.mapView.scheduleZoomTo(viewport);
         }
     }
 
