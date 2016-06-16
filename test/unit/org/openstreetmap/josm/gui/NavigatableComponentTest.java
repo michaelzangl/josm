@@ -36,7 +36,7 @@ public class NavigatableComponentTest {
     private NavigatableComponent component;
 
     /**
-     *
+     * We need the projection for coordinate conversions.
      */
     @Rule
     @SuppressFBWarnings(value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
