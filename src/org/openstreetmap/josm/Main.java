@@ -512,6 +512,8 @@ public abstract class Main {
 
     /**
      * Set or clear (if passed <code>null</code>) the map.
+     * <p>
+     * To be removed any time
      * @param map The map to set {@link Main#map} to. Can be null.
      * @deprecated This is done automatically by {@link MainPanel}
      */
@@ -523,8 +525,12 @@ public abstract class Main {
     /**
      * Remove the specified layer from the map. If it is the last layer,
      * remove the map as well.
+     * <p>
+     * To be removed end of 2016
      * @param layer The layer to remove
+     * @deprecated You can remove the layer using {@link #getLayerManager()}
      */
+    @Deprecated
     public final synchronized void removeLayer(final Layer layer) {
         if (map != null) {
             getLayerManager().removeLayer(layer);
@@ -755,12 +761,16 @@ public abstract class Main {
      * Add a new layer to the map.
      *
      * If no map exists, create one.
+     * <p>
+     * To be removed end of 2016
      *
      * @param layer the layer
      *
      * @see #addLayer(Layer, ProjectionBounds)
      * @see #addLayer(Layer, ViewportData)
+     * @deprecated You can add the layer to the layer manager: {@link #getLayerManager()}
      */
+    @Deprecated
     public final void addLayer(final Layer layer) {
         addLayer(layer, (ViewportData) null);
     }
@@ -796,6 +806,8 @@ public abstract class Main {
 
     /**
      * Creates the map frame. Call only in EDT Thread.
+     * <p>
+     * To be removed any time
      * @param firstLayer The first layer that was added.
      * @param viewportData The initial viewport. Can be <code>null</code> to be automatically computed.
      * @deprecated Not supported. MainPanel does this automatically.
@@ -808,9 +820,13 @@ public abstract class Main {
 
     /**
      * Replies <code>true</code> if there is an edit layer
+     * <p>
+     * To be removed end of 2016
      *
      * @return <code>true</code> if there is an edit layer
+     * @deprecated You can get the edit layer using the layer manager and then check if it is not null: {@link #getLayerManager()}
      */
+    @Deprecated
     public boolean hasEditLayer() {
         if (getEditLayer() == null) return false;
         return true;
@@ -818,9 +834,13 @@ public abstract class Main {
 
     /**
      * Replies the current edit layer
+     * <p>
+     * To be removed end of 2016
      *
      * @return the current edit layer. <code>null</code>, if no current edit layer exists
+     * @deprecated You can get the edit layer using the layer manager: {@link #getLayerManager()}
      */
+    @Deprecated
     public OsmDataLayer getEditLayer() {
         if (!isDisplayingMapView()) return null;
         return getLayerManager().getEditLayer();
@@ -828,9 +848,13 @@ public abstract class Main {
 
     /**
      * Replies the current data set.
+     * <p>
+     * To be removed end of 2016
      *
      * @return the current data set. <code>null</code>, if no current data set exists
+     * @deprecated You can get the data set using the layer manager: {@link #getLayerManager()}
      */
+    @Deprecated
     public DataSet getCurrentDataSet() {
         if (!hasEditLayer()) return null;
         return getEditLayer().data;
@@ -857,9 +881,13 @@ public abstract class Main {
 
     /**
      * Returns the currently active  layer
+     * <p>
+     * To be removed end of 2016
      *
      * @return the currently active layer. <code>null</code>, if currently no active layer exists
+     * @deprecated You can get the layer using the layer manager: {@link #getLayerManager()}
      */
+    @Deprecated
     public Layer getActiveLayer() {
         if (!isDisplayingMapView()) return null;
         return getLayerManager().getActiveLayer();
