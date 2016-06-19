@@ -842,7 +842,6 @@ public abstract class Main {
      */
     @Deprecated
     public OsmDataLayer getEditLayer() {
-        if (!isDisplayingMapView()) return null;
         return getLayerManager().getEditLayer();
     }
 
@@ -856,8 +855,7 @@ public abstract class Main {
      */
     @Deprecated
     public DataSet getCurrentDataSet() {
-        if (!hasEditLayer()) return null;
-        return getEditLayer().data;
+        return getLayerManager().getEditDataSet();
     }
 
     /**
@@ -889,7 +887,6 @@ public abstract class Main {
      */
     @Deprecated
     public Layer getActiveLayer() {
-        if (!isDisplayingMapView()) return null;
         return getLayerManager().getActiveLayer();
     }
 
