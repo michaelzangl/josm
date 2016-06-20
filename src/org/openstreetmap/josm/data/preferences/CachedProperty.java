@@ -60,7 +60,7 @@ public abstract class CachedProperty<T> extends AbstractProperty<T> implements P
     }
 
     public String getAsString() {
-        return Main.pref.get(getKey(), getDefaultValueAsString());
+        return getPreferences().get(getKey(), getDefaultValueAsString());
     }
 
     @Override

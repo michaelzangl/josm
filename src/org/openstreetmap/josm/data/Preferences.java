@@ -54,8 +54,11 @@ import javax.xml.stream.XMLStreamException;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.preferences.ColorProperty;
+import org.openstreetmap.josm.data.preferences.DoubleProperty;
+import org.openstreetmap.josm.data.preferences.IntegerProperty;
 import org.openstreetmap.josm.data.preferences.ListListSetting;
 import org.openstreetmap.josm.data.preferences.ListSetting;
+import org.openstreetmap.josm.data.preferences.LongProperty;
 import org.openstreetmap.josm.data.preferences.MapListSetting;
 import org.openstreetmap.josm.data.preferences.PreferencesReader;
 import org.openstreetmap.josm.data.preferences.PreferencesWriter;
@@ -218,6 +221,13 @@ public class Preferences {
         }
     }
 
+    /**
+     * Old color interface
+     * <p>
+     * To be removed: end of 2016
+     * @deprecated Use a {@link ColorProperty} instead.
+     */
+    @Deprecated
     public interface ColorKey {
         String getColorName();
 
@@ -254,12 +264,11 @@ public class Preferences {
      * @param listener The listener to add.
      */
     public void addKeyPreferenceChangeListener(String key, PreferenceChangedListener listener) {
-        ListenerList<PreferenceChangedListener> keyListener1 = keyListeners.get(key);
-        if (keyListener1 == null) {
-            keyListener1 = new ListenerList<>();
-            keyListeners.put(key, keyListener1);
+        ListenerList<PreferenceChangedListener> keyListener = keyListeners.get(key);
+        if (keyListener == null) {
+            keyListener = new ListenerList<>();
+            keyListeners.put(key, keyListener);
         }
-        ListenerList<PreferenceChangedListener> keyListener = keyListener1;
         keyListener.addListener(listener);
     }
 
@@ -269,11 +278,10 @@ public class Preferences {
      * @param listener The listener to add.
      */
     public void removeKeyPreferenceChangeListener(String key, PreferenceChangedListener listener) {
-        ListenerList<PreferenceChangedListener> keyListener1 = keyListeners.get(key);
-        if (keyListener1 == null) {
+        ListenerList<PreferenceChangedListener> keyListener = keyListeners.get(key);
+        if (keyListener == null) {
             throw new IllegalArgumentException("There are no listeners registered for " + key);
         }
-        ListenerList<PreferenceChangedListener> keyListener = keyListener1;
         keyListener.removeListener(listener);
     }
 
@@ -284,6 +292,7 @@ public class Preferences {
         }
         ListenerList<PreferenceChangedListener> forKey = keyListeners.get(key);
         if (forKey != null) {
+            // TODO: Java 8 lambda
             forKey.fireEvent(new EventFirerer<PreferenceChangedListener>() {
                 @Override
                 public void fire(PreferenceChangedListener listener) {
@@ -522,24 +531,49 @@ public class Preferences {
      * @return {@code true}, if something has changed (i.e. value is different than before)
      */
     public boolean put(final String key, String value) {
-        if (value != null && value.isEmpty()) {
-            value = null;
-        }
-        return putSetting(key, value == null ? null : new StringSetting(value));
+        return putSetting(key, value == null || value.isEmpty() ? null : new StringSetting(value));
     }
 
+    /**
+     * Set a boolean value for a certain setting.
+     * @param key the unique identifier for the setting
+     * @param value The new value
+     * @return {@code true}, if something has changed (i.e. value is different than before)
+     * @see BooleanProperty
+     */
     public boolean put(final String key, final boolean value) {
         return put(key, Boolean.toString(value));
     }
 
+    /**
+     * Set a boolean value for a certain setting.
+     * @param key the unique identifier for the setting
+     * @param value The new value
+     * @return {@code true}, if something has changed (i.e. value is different than before)
+     * @see IntegerProperty
+     */
     public boolean putInteger(final String key, final Integer value) {
         return put(key, Integer.toString(value));
     }
 
+    /**
+     * Set a boolean value for a certain setting.
+     * @param key the unique identifier for the setting
+     * @param value The new value
+     * @return {@code true}, if something has changed (i.e. value is different than before)
+     * @see DoubleProperty
+     */
     public boolean putDouble(final String key, final Double value) {
         return put(key, Double.toString(value));
     }
 
+    /**
+     * Set a boolean value for a certain setting.
+     * @param key the unique identifier for the setting
+     * @param value The new value
+     * @return {@code true}, if something has changed (i.e. value is different than before)
+     * @see LongProperty
+     */
     public boolean putLong(final String key, final Long value) {
         return put(key, Long.toString(value));
     }
@@ -762,11 +796,15 @@ public class Preferences {
 
     /**
      * Convenience method for accessing colour preferences.
+     * <p>
+     * To be removed: end of 2016
      *
      * @param colName name of the colour
      * @param def default value
      * @return a Color object for the configured colour, or the default value if none configured.
+     * @deprecated Use a {@link ColorProperty} instead.
      */
+    @Deprecated
     public synchronized Color getColor(String colName, Color def) {
         return getColor(colName, null, def);
     }
@@ -786,26 +824,31 @@ public class Preferences {
 
     /**
      * Returns the color for the given key.
+     * <p>
+     * To be removed: end of 2016
      * @param key The color key
      * @return the color
+     * @deprecated Use a {@link ColorProperty} instead.
      */
+    @Deprecated
     public Color getColor(ColorKey key) {
         return getColor(key.getColorName(), key.getSpecialName(), key.getDefaultValue());
     }
 
     /**
      * Convenience method for accessing colour preferences.
-     *
+     * <p>
+     * To be removed: end of 2016
      * @param colName name of the colour
      * @param specName name of the special colour settings
      * @param def default value
      * @return a Color object for the configured colour, or the default value if none configured.
+     * @deprecated Use a {@link ColorProperty} instead.
      */
+    @Deprecated
     public synchronized Color getColor(String colName, String specName, Color def) {
         String colKey = ColorProperty.getColorKey(colName);
-        if (!colKey.equals(colName)) {
-            colornames.put(colKey, colName);
-        }
+        registerColor(colKey, colName);
         String colStr = specName != null ? get("color."+specName) : "";
         if (colStr.isEmpty()) {
             colStr = get("color." + colKey, ColorHelper.color2html(def, true));
@@ -814,6 +857,17 @@ public class Preferences {
             return ColorHelper.html2color(colStr);
         } else {
             return def;
+        }
+    }
+
+    /**
+     * Registers a color name conversion for the global color registry.
+     * @param colKey The key
+     * @param colName The name of the color.
+     */
+    public void registerColor(String colKey, String colName) {
+        if (!colKey.equals(colName)) {
+            colornames.put(colKey, colName);
         }
     }
 

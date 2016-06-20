@@ -1,14 +1,42 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.data.preferences;
 
-
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.Preferences;
+import org.openstreetmap.josm.data.Preferences.PreferenceChangedListener;
 
 /**
  * Captures the common functionality of preference properties
  * @param <T> The type of object accessed by this property
  */
 public abstract class AbstractProperty<T> {
+    /**
+     * An exception that is thrown if a preference value is invalid.
+     * @author Michael Zangl
+     */
+    public static class InvalidPreferenceValueException extends RuntimeException {
+
+        public InvalidPreferenceValueException() {
+            super();
+        }
+
+        public InvalidPreferenceValueException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public InvalidPreferenceValueException(String message) {
+            super(message);
+        }
+
+        public InvalidPreferenceValueException(Throwable cause) {
+            super(cause);
+        }
+    }
+
+    /**
+     * The preferences object this property is for.
+     */
+    protected final Preferences preferences;
     protected final String key;
     protected final T defaultValue;
 
@@ -19,8 +47,19 @@ public abstract class AbstractProperty<T> {
      * @since 5464
      */
     public AbstractProperty(String key, T defaultValue) {
+        // Main.pref should not change in production but may change during tests.
+        preferences = Main.pref;
         this.key = key;
         this.defaultValue = defaultValue;
+    }
+
+    /**
+     * Store the default value to {@link Preferences}.
+     */
+    protected void storeDefaultValue() {
+        if (getPreferences() != null) {
+            get();
+        }
     }
 
     /**
@@ -36,7 +75,7 @@ public abstract class AbstractProperty<T> {
      * @return true if {@code Main.pref} contains this property.
      */
     public boolean isSet() {
-        return !Main.pref.get(key).isEmpty();
+        return !getPreferences().get(key).isEmpty();
     }
 
     /**
@@ -51,7 +90,7 @@ public abstract class AbstractProperty<T> {
      * Removes this property from JOSM preferences (i.e replace it by its default value).
      */
     public void remove() {
-        Main.pref.put(getKey(), String.valueOf(getDefaultValue()));
+        put(getDefaultValue());
     }
 
     /**
@@ -68,4 +107,30 @@ public abstract class AbstractProperty<T> {
      * @since 5464
      */
     public abstract boolean put(T value);
+
+
+    /**
+     * Gets the preferences used for this property.
+     * @return The preferences for this property.
+     * @since xxx
+     */
+    protected Preferences getPreferences() {
+        return preferences;
+    }
+
+    /**
+     * Adds a listener that listens only for changes to this preference key.
+     * @param listener The listener to add.
+     */
+    public void addListener(PreferenceChangedListener listener) {
+        getPreferences().addKeyPreferenceChangeListener(getKey(), listener);
+    }
+
+    /**
+     * Removes a listener that listens only for changes to this preference key.
+     * @param listener The listener to add.
+     */
+    public void removeListener(PreferenceChangedListener listener) {
+        getPreferences().removeKeyPreferenceChangeListener(getKey(), listener);
+    }
 }
