@@ -246,7 +246,7 @@ public class AutosaveTaskTest {
         }
 
         assertEquals(2, countFiles());
-        task.recoverUnsavedLayersFuture().get();
+        task.recoverUnsavedLayers().get();
 
         assertEquals(1, countFiles());
     }

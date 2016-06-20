@@ -356,11 +356,11 @@ public class AutosaveTask extends TimerTask implements LayerChangeListener, List
         return false;
     }
 
-    public void recoverUnsavedLayers() {
-        recoverUnsavedLayersFuture();
-    }
-
-    protected Future<?> recoverUnsavedLayersFuture() {
+    /**
+     * Recover the unsaved layers and open them asynchronously.
+     * @return A future that can be used to wait for the completion of this task.
+     */
+    public Future<?> recoverUnsavedLayers() {
         List<File> files = getUnsavedLayersFiles();
         final OpenFileTask openFileTsk = new OpenFileTask(files, null, tr("Restoring files"));
         final Future<?> openFilesFuture = Main.worker.submit(openFileTsk);
