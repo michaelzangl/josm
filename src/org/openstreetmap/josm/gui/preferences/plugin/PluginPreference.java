@@ -27,12 +27,14 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
@@ -57,6 +59,7 @@ import org.openstreetmap.josm.plugins.ReadLocalPluginInformationTask;
 import org.openstreetmap.josm.plugins.ReadRemotePluginInformationTask;
 import org.openstreetmap.josm.tools.GBC;
 import org.openstreetmap.josm.tools.ImageProvider;
+import org.openstreetmap.josm.tools.Utils;
 
 /**
  * Preference settings for plugins.
@@ -107,7 +110,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
                     downloaded.size()
                     ));
             sb.append("<ul>");
-            for (PluginInformation pi: downloaded) {
+            for (PluginInformation pi : downloaded) {
                 sb.append("<li>").append(pi.name).append(" (").append(pi.version).append(")</li>");
             }
             sb.append("</ul>");
@@ -120,7 +123,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
                     failed.size()
                     ));
             sb.append("<ul>");
-            for (PluginInformation pi: failed) {
+            for (PluginInformation pi : failed) {
                 sb.append("<li>").append(pi.name).append("</li>");
             }
             sb.append("</ul>");
@@ -142,8 +145,8 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
     public static void notifyDownloadResults(final Component parent, PluginDownloadTask task, boolean restartRequired) {
         final Collection<PluginInformation> failed = task.getFailedPlugins();
         final StringBuilder sb = new StringBuilder();
-        sb.append("<html>")
-          .append(buildDownloadSummary(task));
+        sb.append("<html>");
+        sb.append(buildDownloadSummary(task));
         if (restartRequired) {
             sb.append(tr("Please restart JOSM to activate the downloaded plugins."));
         }
@@ -157,7 +160,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
                             sb.toString(),
                             tr("Update plugins"),
                             !failed.isEmpty() ? JOptionPane.WARNING_MESSAGE : JOptionPane.INFORMATION_MESSAGE,
-                                    HelpUtil.ht("/Preferences/Plugins")
+                            HelpUtil.ht("/Preferences/Plugins")
                             );
                 }
             });
@@ -191,6 +194,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
         pnl.add(new JButton(new DownloadAvailablePluginsAction()));
         pnl.add(new JButton(new UpdateSelectedPluginsAction()));
         pnl.add(new JButton(new ConfigureSitesAction()));
+        pnl.add(new JButton(new SelectByListAction()));
         return pnl;
     }
 
@@ -211,8 +215,7 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
                     public void componentHidden(ComponentEvent e) {
                         spPluginPreferences.setBorder(null);
                     }
-                }
-                );
+                });
 
         pnl.add(spPluginPreferences, BorderLayout.CENTER);
         pnl.add(buildActionPanel(), BorderLayout.SOUTH);
@@ -248,12 +251,12 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
                         tr("Accept the new plugin sites and close the dialog"),
                         null /* no special help topic */
                         ),
-                        new ButtonSpec(
-                                tr("Cancel"),
-                                ImageProvider.get("cancel"),
-                                tr("Close the dialog"),
-                                null /* no special help topic */
-                                )
+                new ButtonSpec(
+                        tr("Cancel"),
+                        ImageProvider.get("cancel"),
+                        tr("Close the dialog"),
+                        null /* no special help topic */
+                        )
         };
         PluginConfigurationSitesPanel pnl = new PluginConfigurationSitesPanel();
 
@@ -476,7 +479,6 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
         }
     }
 
-
     /**
      * The action for configuring the plugin download sites
      *
@@ -491,6 +493,79 @@ public final class PluginPreference extends DefaultTabPreferenceSetting {
         @Override
         public void actionPerformed(ActionEvent e) {
             configureSites();
+        }
+    }
+
+    /**
+     * The action for selecting the plugins given by a text file compatible to JOSM bug report.
+     */
+    class SelectByListAction extends AbstractAction {
+        SelectByListAction() {
+            putValue(NAME, tr("Load from list..."));
+            putValue(SHORT_DESCRIPTION, tr("Load plugins from a list of plugins"));
+            //TODO: Icon putValue(SMALL_ICON, ImageProvider.get("dialogs", ""));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JTextArea textField = new JTextArea(10, 0);
+            JCheckBox deleteNotInList = new JCheckBox(tr("Disable all other plugins"));
+
+            JLabel helpLabel = new JLabel(tr("<html>Enter a list of plugins you want to download."
+                    + "<br/>You should add one plugin id per line, version information is ignored."
+                    + "<br/>You can copy+paste the list of a status report here.</html>"));
+            int result = JOptionPane.showConfirmDialog(
+                    GuiHelper.getFrameForComponent(getTabPane()),
+                    new Object[] { helpLabel, new JScrollPane(textField), deleteNotInList },
+                    tr("Load plugins from list"),
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE);
+
+            if (result == JOptionPane.OK_OPTION) {
+                activatePlugins(textField, deleteNotInList.isSelected());
+            }
+        }
+
+        private void activatePlugins(JTextArea textField, boolean deleteNotInList) {
+            String[] lines = textField.getText().split("\n");
+            ArrayList<String> toActivate = new ArrayList<>();
+            ArrayList<String> notFound = new ArrayList<>();
+            for (String line : lines) {
+                String name = line.replaceAll("^[-\\s]*|\\s[\\(\\)\\d\\s]*", "");
+                if (name.isEmpty()) {
+                    continue;
+                }
+                PluginInformation plugin = model.getPluginInformation(name);
+                if (plugin == null) {
+                    notFound.add(name);
+                } else {
+                    toActivate.add(name);
+                }
+            }
+
+            if (notFound.isEmpty() || confirmIgnoreNotFound(notFound)) {
+                activatePlugins(toActivate, deleteNotInList);
+            }
+        }
+
+        private void activatePlugins(ArrayList<String> toActivate, boolean deleteNotInList) {
+            if (deleteNotInList) {
+                for (String name : model.getSelectedPluginNames()) {
+                    if (!toActivate.contains(name)) {
+                        model.setPluginSelected(name, false);
+                    }
+                }
+            }
+            for (String name : toActivate) {
+                model.setPluginSelected(name, true);
+            }
+            pnlPluginPreferences.refreshView();
+        }
+
+        private boolean confirmIgnoreNotFound(ArrayList<String> notFound) {
+            String list = "<ul><li>" + Utils.join("</li><li>", notFound) + "</li></ul>";
+            String message = "<html>" + tr("The following plugins were not found. Continue anyway?") + list + "</html>";
+            return JOptionPane.showConfirmDialog(GuiHelper.getFrameForComponent(getTabPane()), message) == JOptionPane.OK_OPTION;
         }
     }
 
