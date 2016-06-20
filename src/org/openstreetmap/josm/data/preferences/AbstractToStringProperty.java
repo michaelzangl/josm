@@ -43,6 +43,11 @@ public abstract class AbstractToStringProperty<T> extends AbstractProperty<T> {
             return parent.toString();
         }
 
+        @Override
+        public CachingProperty<T> cached() {
+            throw new UnsupportedOperationException("Not implemented yet.");
+        }
+
     }
 
     /**

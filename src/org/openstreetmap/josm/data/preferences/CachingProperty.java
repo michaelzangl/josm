@@ -22,7 +22,7 @@ public class CachingProperty<T> extends AbstractProperty<T> implements Preferenc
      * Create a new caching property.
      * @param toCache The property to cache.
      */
-    public CachingProperty(AbstractProperty<T> toCache) {
+    CachingProperty(AbstractProperty<T> toCache) {
         super(toCache.getKey(), toCache.getDefaultValue());
         this.toCache = toCache;
         //TODO: Weak ?
