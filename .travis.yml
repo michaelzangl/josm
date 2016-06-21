@@ -2,12 +2,14 @@ language: java
 
 jdk:
   - oraclejdk8
-  - oraclejdk7
+# Don't really need this - it will work  ;-)
+#  - oraclejdk7
   - openjdk7
 
 env:
   - TARGET=dist-optimized
   - TARGET=test
+  - TARGET=test-it
 
-script: wget -qO- http://apache.openmirror.de//ant/binaries/apache-ant-1.9.7-bin.tar.gz | tar xvz && ANT_OPTS="-Xmx2048m" apache-ant-1.9.7/bin/ant $TARGET
+script: wget -qO- http://apache.openmirror.de//ant/binaries/apache-ant-1.9.7-bin.tar.gz | tar xz && ANT_OPTS="-Xmx2048m" apache-ant-1.9.7/bin/ant $TARGET
 
