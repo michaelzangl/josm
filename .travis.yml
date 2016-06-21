@@ -1,9 +1,5 @@
 language: java
 
-before_script:
-  - sudo apt-get -qq update
-  - sudo apt-get install ant
-
 jdk:
   - oraclejdk8
   - oraclejdk7
@@ -13,5 +9,5 @@ env:
   - TARGET=dist-optimized
   - TARGET=test
 
-script: ANT_OPTS="-Xmx2048m" ant $TARGET
+script: wget -qO- http://apache.openmirror.de//ant/binaries/apache-ant-1.9.7-bin.tar.gz | tar xvz && ANT_OPTS="-Xmx2048m" apache-ant-1.9.7/bin/ant $TARGET
 
