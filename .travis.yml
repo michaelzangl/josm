@@ -1,0 +1,14 @@
+language: java
+
+jdk:
+  - oraclejdk8
+  - oraclejdk7
+  - openjdk7
+
+
+env:
+  - TARGET=run
+  - TARGET=test
+
+script: ANT_OPTS="-Xmx2048m" ant $TARGET
+
