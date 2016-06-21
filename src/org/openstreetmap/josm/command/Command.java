@@ -148,8 +148,9 @@ public abstract class Command extends PseudoCommand {
      * Executes the command on the dataset. This implementation will remember all
      * primitives returned by fillModifiedData for restoring them on undo.
      * <p>
-     * The layer is invalidated after execution so that it can be re-painted.
+     * The layer should be invalidated after execution so that it can be re-painted.
      * @return true
+     * @see #invalidateAffectedLayers()
      */
     public boolean executeCommand() {
         CloneVisitor visitor = new CloneVisitor();
