@@ -419,7 +419,7 @@ Build-Date: ${build.tstamp}
         <sequential>
             <echo message="Running @{testfamily}@{testITsuffix} tests with JUnit"/>
             <jacoco:coverage destfile="${test.dir}/jacoco@{testITsuffix}.exec" enabled="@{coverage}" excludes="jdk.dynalink.*:jdk.nashorn.*">
-                <junit printsummary="yes" fork="true" forkmode="once">
+                <junit printsummary="yes" fork="true" forkmode="once" timeout="60000" failureproperty="test.failed" threads="8">
                     <jvmarg value="-Dfile.encoding=UTF-8"/>
                     <jvmarg value="--add-exports" if:set="isJava9" />
                     <jvmarg value="java.base/sun.security.util=ALL-UNNAMED" if:set="isJava9" />
@@ -440,6 +440,7 @@ Build-Date: ${build.tstamp}
                     </classpath>
                     <formatter type="plain"/>
                     <formatter type="xml"/>
+                    <formatter usefile="false" type="brief"/>
                     <batchtest fork="yes" todir="${test.dir}/report">
                         <fileset dir="${test.dir}/build/@{testfamily}" includes="**/*Test@{testITsuffix}.class"/>
                     </batchtest>
@@ -452,12 +453,14 @@ Build-Date: ${build.tstamp}
         <call-junit testfamily="unit"/>
         <call-junit testfamily="functional"/>
         <call-junit testfamily="performance" coverage="false"/>
+        <fail message="Tests failed." if="test.failed" />
     </target>
     <target name="test-it" depends="test-compile" unless="test-it.notRequired"
         description="Run integration tests. OSM API (TEST) account shall be set with -Dosm.username and -Dosm.password">
         <call-junit testfamily="unit" testITsuffix="IT"/>
         <call-junit testfamily="functional" testITsuffix="IT"/>
         <call-junit testfamily="performance" testITsuffix="IT" coverage="false"/>
+        <fail message="IT tests failed." if="test.failed" />
     </target>
     <target name="test-html" depends="test, test-it" description="Generate HTML test reports">
         <!-- May require additional ant dependencies like ant-trax package -->
