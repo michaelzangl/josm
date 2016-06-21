@@ -51,7 +51,6 @@ import org.openstreetmap.josm.data.preferences.DoubleProperty;
 import org.openstreetmap.josm.data.preferences.IntegerProperty;
 import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.data.projection.Projections;
-import org.openstreetmap.josm.gui.MapViewState.MapViewPoint;
 import org.openstreetmap.josm.gui.help.Helpful;
 import org.openstreetmap.josm.gui.layer.NativeScaleLayer;
 import org.openstreetmap.josm.gui.layer.NativeScaleLayer.Scale;
@@ -453,10 +452,7 @@ public class NavigatableComponent extends JComponent implements Helpful {
     }
 
     public ProjectionBounds getProjectionBounds(Rectangle r) {
-        MapViewState state = getState();
-        MapViewPoint p1 = state.getForView(r.getMinX(), r.getMinY());
-        MapViewPoint p2 = state.getForView(r.getMaxX(), r.getMaxY());
-        return p1.rectTo(p2).getProjectionBounds();
+        return getState().getViewArea(r).getProjectionBounds();
     }
 
     /**

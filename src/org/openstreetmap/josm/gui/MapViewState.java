@@ -3,6 +3,7 @@ package org.openstreetmap.josm.gui;
 
 import java.awt.Container;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Point2D.Double;
@@ -131,6 +132,15 @@ public final class MapViewState {
      */
     public MapViewRectangle getViewArea() {
         return getForView(0, 0).rectTo(getForView(viewWidth, viewHeight));
+    }
+
+    /**
+     * Gets a rectangle of the view as map view area.
+     * @param rectangle The rectangle to get.
+     * @return The view area.
+     */
+    public MapViewRectangle getViewArea(Rectangle rectangle) {
+        return getForView(rectangle.getMinX(), rectangle.getMinY()).rectTo(getForView(rectangle.getMaxX(), rectangle.getMaxY()));
     }
 
     /**
@@ -396,11 +406,20 @@ public final class MapViewState {
         /**
          * Gets a rough estimate of the bounds by assuming lat/lon are parallel to x/y.
          * @return The bounds computed by converting the corners of this rectangle.
+         * @see #getLatLonBoundsBox()
          */
         public Bounds getCornerBounds() {
             Bounds b = new Bounds(p1.getLatLon());
             b.extend(p2.getLatLon());
             return b;
+        }
+
+        /**
+         * Gets the real bounds that enclose this rectangle. This is computed respecting that the borders of this rectangle may not be a straignt line in latlon coordinates.
+         * @return The bounds.
+         */
+        public Bounds getLatLonBoundsBox() {
+            return projection.getLatLonBoundsBox(getProjectionBounds());
         }
     }
 

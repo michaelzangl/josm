@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,6 +51,7 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.visitor.paint.PaintColors;
 import org.openstreetmap.josm.data.osm.visitor.paint.Rendering;
 import org.openstreetmap.josm.data.osm.visitor.paint.relations.MultipolygonCache;
+import org.openstreetmap.josm.gui.MapViewState.MapViewRectangle;
 import org.openstreetmap.josm.gui.layer.AbstractMapViewPaintable;
 import org.openstreetmap.josm.gui.layer.GpxLayer;
 import org.openstreetmap.josm.gui.layer.ImageryLayer;
@@ -61,7 +63,10 @@ import org.openstreetmap.josm.gui.layer.LayerManager.LayerRemoveEvent;
 import org.openstreetmap.josm.gui.layer.MainLayerManager;
 import org.openstreetmap.josm.gui.layer.MainLayerManager.ActiveLayerChangeEvent;
 import org.openstreetmap.josm.gui.layer.MainLayerManager.ActiveLayerChangeListener;
+import org.openstreetmap.josm.gui.layer.MapViewGraphics;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable;
+import org.openstreetmap.josm.gui.layer.MapViewPaintable.LayerPainter;
+import org.openstreetmap.josm.gui.layer.MapViewPaintable.MapViewEvent;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable.PaintableInvalidationEvent;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable.PaintableInvalidationListener;
 import org.openstreetmap.josm.gui.layer.NativeScaleLayer;
@@ -492,6 +497,11 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
     private final LayerInvalidatedListener invalidatedListener = new LayerInvalidatedListener();
 
     /**
+     * This is a map of all Layers that have been added to this view.
+     */
+    private final HashMap<Layer, LayerPainter> registeredLayers = new HashMap<>();
+
+    /**
      * Constructs a new {@code MapView}.
      * @param layerManager The layers to display.
      * @param contentPane Ignored. Main content pane is used.
@@ -599,7 +609,8 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
         }
         if (layer instanceof NativeScaleLayer) {
             setNativeScaleLayer((NativeScaleLayer) layer);
-         }
+        }
+        registeredLayers.put(layer, layer.attachToMapView(new MapViewEvent(this, false)));
 
         ProjectionBounds viewProjectionBounds = layer.getViewProjectionBounds();
         if (viewProjectionBounds != null) {
@@ -689,6 +700,11 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
     public void layerRemoving(LayerRemoveEvent e) {
         Layer layer = e.getRemovedLayer();
 
+        LayerPainter painter = registeredLayers.remove(layer);
+        if (painter == null) {
+            throw new IllegalArgumentException("The painter for layer " + layer + " was not registered.");
+        }
+        painter.detachFromMapView(new MapViewEvent(this, false));
         Main.removeProjectionChangeListener(layer);
         layer.removePropertyChangeListener(this);
         invalidatedListener.removeFrom(layer);
@@ -772,7 +788,13 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
             if (layer.getOpacity() < 1) {
                 g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) layer.getOpacity()));
             }
-            layer.paint(g, this, box);
+            LayerPainter painter = registeredLayers.get(layer);
+            if (painter == null) {
+                throw new IllegalArgumentException("Cannot paint layer, it is not registered.");
+            }
+            MapViewRectangle clipBounds = getState().getViewArea(g.getClipBounds());
+            MapViewGraphics paintGraphics = new MapViewGraphics(this, g, clipBounds);
+            painter.paint(paintGraphics);
             g.setPaintMode();
         } catch (RuntimeException t) {
             throw BugReport.intercept(t).put("layer", layer).put("bounds", box);

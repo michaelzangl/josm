@@ -81,10 +81,6 @@ import org.openstreetmap.josm.gui.NavigatableComponent.ZoomChangeListener;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.LayerListDialog;
 import org.openstreetmap.josm.gui.dialogs.LayerListPopup;
-import org.openstreetmap.josm.gui.layer.LayerManager.LayerAddEvent;
-import org.openstreetmap.josm.gui.layer.LayerManager.LayerChangeListener;
-import org.openstreetmap.josm.gui.layer.LayerManager.LayerOrderChangeEvent;
-import org.openstreetmap.josm.gui.layer.LayerManager.LayerRemoveEvent;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.WMSLayerImporter;
@@ -158,6 +154,18 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
     protected T tileSource;
     protected TileLoader tileLoader;
 
+    private final MouseAdapter adapter = new MouseAdapter() {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (!isVisible()) return;
+            if (e.getButton() == MouseEvent.BUTTON3) {
+                clickedTileHolder.setTile(getTileForPixelpos(e.getX(), e.getY()));
+                new TileSourceLayerPopup().show(e.getComponent(), e.getX(), e.getY());
+            } else if (e.getButton() == MouseEvent.BUTTON1) {
+                attribution.handleAttribution(e.getPoint(), true);
+            }
+        }
+    };
     /**
      * Creates Tile Source based Imagery Layer based on Imagery Info
      * @param info imagery info
@@ -614,46 +622,24 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
         super.hookUpMapView();
         projectionChanged(null, Main.getProjection()); // check if projection is supported
         initTileSource(this.tileSource);
-
-        final MouseAdapter adapter = new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (!isVisible()) return;
-                if (e.getButton() == MouseEvent.BUTTON3) {
-                    clickedTileHolder.setTile(getTileForPixelpos(e.getX(), e.getY()));
-                    new TileSourceLayerPopup().show(e.getComponent(), e.getX(), e.getY());
-                } else if (e.getButton() == MouseEvent.BUTTON1) {
-                    attribution.handleAttribution(e.getPoint(), true);
-                }
-            }
-        };
-        Main.getLayerManager().addLayerChangeListener(new LayerChangeListener() {
-
-            @Override
-            public void layerRemoving(LayerRemoveEvent e) {
-                if (e.getRemovedLayer() == AbstractTileSourceLayer.this) {
-                    Main.map.mapView.removeMouseListener(adapter);
-                    e.getSource().removeLayerChangeListener(this);
-                    MapView.removeZoomChangeListener(AbstractTileSourceLayer.this);
-                }
-            }
-
-            @Override
-            public void layerOrderChanged(LayerOrderChangeEvent e) {
-                // ignored
-            }
-
-            @Override
-            public void layerAdded(LayerAddEvent e) {
-                if (e.getAddedLayer() == AbstractTileSourceLayer.this) {
-                    Main.map.mapView.addMouseListener(adapter);
-                    MapView.addZoomChangeListener(AbstractTileSourceLayer.this);
-                }
-            }
-        }, true);
         // FIXME: why do we need this? Without this, if you add a WMS layer and do not move the mouse, sometimes, tiles do not
         // start loading.
         Main.map.repaint(500);
+    }
+
+    @Override
+    public LayerPainter attachToMapView(MapViewEvent event) {
+        event.getMapView().addMouseListener(adapter);
+        MapView.addZoomChangeListener(AbstractTileSourceLayer.this);
+
+        return new DefaultLayerPainter() {
+            @Override
+            public void detachFromMapView(MapViewEvent event) {
+                event.getMapView().removeMouseListener(adapter);
+                MapView.removeZoomChangeListener(AbstractTileSourceLayer.this);
+                super.detachFromMapView(event);
+            }
+        };
     }
 
     /**
