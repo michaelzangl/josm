@@ -1,13 +1,16 @@
 language: java
 
+before_script:
+  - sudo apt-get -qq update
+  - sudo apt-get install ant
+
 jdk:
   - oraclejdk8
   - oraclejdk7
   - openjdk7
 
-
 env:
-  - TARGET=run
+  - TARGET=dist-optimized
   - TARGET=test
 
 script: ANT_OPTS="-Xmx2048m" ant $TARGET
