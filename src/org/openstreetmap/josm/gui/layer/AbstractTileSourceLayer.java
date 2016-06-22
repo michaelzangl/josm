@@ -653,7 +653,7 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
 
     @Override
     protected LayerPainter createMapViewPainter(MapViewEvent event) {
-        return new DefaultLayerPainter() {
+        return new CompatibilityModeLayerPainter() {
             @Override
             public void detachFromMapView(MapViewEvent event) {
                 event.getMapView().removeMouseListener(adapter);

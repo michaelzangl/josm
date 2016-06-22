@@ -3,10 +3,8 @@ package org.openstreetmap.josm.gui.layer;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
-import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -49,32 +47,6 @@ import org.openstreetmap.josm.tools.Utils;
  * @author imi
  */
 public abstract class Layer extends AbstractMapViewPaintable implements Destroyable, ProjectionChangeListener {
-
-    /**
-     * This is the default implementation of the layer painter.
-     * <p>
-     * You should not use it. Write your own implementation and put your paint code into that class.
-     * <p>
-     * It propagates all calls to the
-     * {@link MapViewPaintable#paint(java.awt.Graphics2D, org.openstreetmap.josm.gui.MapView, org.openstreetmap.josm.data.Bounds)} method.
-     * @author Michael Zangl
-     * @since xxx
-     */
-    protected class DefaultLayerPainter implements LayerPainter {
-        @Override
-        public void paint(MapViewGraphics graphics) {
-            Graphics2D g = graphics.getDefaultGraphics();
-            if (getOpacity() < 1) {
-                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) getOpacity()));
-            }
-            Layer.this.paint(g, graphics.getMapView(), graphics.getClipBounds().getLatLonBoundsBox());
-        }
-
-        @Override
-        public void detachFromMapView(MapViewEvent event) {
-            // ignored in old implementation
-        }
-    }
 
     /**
      * Action related to a single layer.
@@ -216,31 +188,6 @@ public abstract class Layer extends AbstractMapViewPaintable implements Destroya
                             + "Currently you have {1,number,#}MB memory allocated for JOSM",
                             memoryBytesRequired / 1024 / 1024, Runtime.getRuntime().maxMemory() / 1024 / 1024));
         }
-    }
-
-    /**
-     * This method is called whenever this layer is added to a map view.
-     * <p>
-     * You need to return a painter here. The {@link LayerPainter#detachFromMapView(MapViewEvent)} method is called when the layer is removed
-     * from that map view. You are free to reuse painters.
-     * <p>
-     * You should always call the super method. See {@link #createMapViewPainter()} if you want to influence painter creation.
-     * <p>
-     * This replaces {@link #hookUpMapView()} in the long run.
-     * @param event the event.
-     * @return A layer painter.
-     */
-    public LayerPainter attachToMapView(MapViewEvent event) {
-        return createMapViewPainter(event);
-    }
-
-    /**
-     * Creates a new LayerPainter.
-     * @param event The event that triggered the creation.
-     * @return The painter.
-     */
-    protected LayerPainter createMapViewPainter(MapViewEvent event) {
-        return new DefaultLayerPainter();
     }
 
     /**

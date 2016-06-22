@@ -3,6 +3,7 @@ package org.openstreetmap.josm.gui;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -785,6 +786,10 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
             }
             MapViewRectangle clipBounds = getState().getViewArea(g.getClipBounds());
             MapViewGraphics paintGraphics = new MapViewGraphics(this, g, clipBounds);
+
+            if (layer.getOpacity() < 1) {
+                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) layer.getOpacity()));
+            }
             painter.paint(paintGraphics);
             g.setPaintMode();
         } catch (RuntimeException t) {
