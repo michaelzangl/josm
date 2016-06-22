@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.RepaintManager;
 import javax.swing.SwingUtilities;
@@ -528,6 +529,17 @@ public class MainApplication extends Main {
             info("Enabled EDT checker, wrongful access to gui from non EDT thread will be printed to console");
             RepaintManager.setCurrentManager(new CheckThreadViolationRepaintManager());
         }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrame mapViewFrame = new JFrame();
+                MapView view = new MapView(Main.getLayerManager(), null, null);
+                mapViewFrame.add(view);
+                mapViewFrame.setSize(500, 400);
+                mapViewFrame.setVisible(true);
+            }
+        });
     }
 
     static Collection<PluginInformation> updateAndLoadEarlyPlugins(SplashScreen splash, SplashProgressMonitor monitor) {
