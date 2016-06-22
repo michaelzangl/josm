@@ -203,7 +203,7 @@ public final class MapViewState {
      */
     public MapViewState movedTo(MapViewPoint mapViewPoint, EastNorth newEastNorthThere) {
         EastNorth delta = newEastNorthThere.subtract(mapViewPoint.getEastNorth());
-        if (delta.distanceSq(0, 0) < .000001) {
+        if (delta.distanceSq(0, 0) < .1e-20) {
             return this;
         } else {
             return new MapViewState(topLeft.add(delta), this);

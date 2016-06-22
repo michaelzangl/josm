@@ -3,8 +3,10 @@ package org.openstreetmap.josm.gui.layer;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -61,7 +63,11 @@ public abstract class Layer extends AbstractMapViewPaintable implements Destroya
     protected class DefaultLayerPainter implements LayerPainter {
         @Override
         public void paint(MapViewGraphics graphics) {
-            Layer.this.paint(graphics.getDefaultGraphics(), graphics.getMapView(), graphics.getClipBounds().getLatLonBoundsBox());
+            Graphics2D g = graphics.getDefaultGraphics();
+            if (getOpacity() < 1) {
+                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) getOpacity()));
+            }
+            Layer.this.paint(g, graphics.getMapView(), graphics.getClipBounds().getLatLonBoundsBox());
         }
 
         @Override

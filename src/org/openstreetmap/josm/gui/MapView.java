@@ -3,7 +3,6 @@ package org.openstreetmap.josm.gui;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
-import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -787,9 +786,6 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
 
     private void paintLayer(Layer layer, Graphics2D g, Bounds box) {
         try {
-            if (layer.getOpacity() < 1) {
-                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) layer.getOpacity()));
-            }
             LayerPainter painter = registeredLayers.get(layer);
             if (painter == null) {
                 throw new IllegalArgumentException("Cannot paint layer, it is not registered.");
@@ -799,6 +795,7 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
             painter.paint(paintGraphics);
             g.setPaintMode();
         } catch (RuntimeException t) {
+            //TODO: only display.
             throw BugReport.intercept(t).put("layer", layer).put("bounds", box);
         }
     }
