@@ -82,14 +82,24 @@ public abstract class OsmPrimitivesTable extends JosmTable {
     protected JPopupMenu buildPopupMenu() {
         JPopupMenu menu = new JPopupMenu();
         zoomToAction = buildZoomToAction();
-        Main.getLayerManager().addLayerChangeListener(zoomToAction);
-        Main.getLayerManager().addActiveLayerChangeListener(zoomToAction);
         getSelectionModel().addListSelectionListener(zoomToAction);
         menu.add(zoomToAction);
         return menu;
     }
 
-    public void unlinkAsListener() {
+    /**
+     * Adds all registered listeners by this table
+     * @see #unregisterListeners()
+     */
+    public void registerListeners() {
+        Main.getLayerManager().addLayerChangeListener(zoomToAction);
+        Main.getLayerManager().addActiveLayerChangeListener(zoomToAction);
+    }
+
+    /**
+     * Removes all registered listeners by this table
+     */
+    public void unregisterListeners() {
         Main.getLayerManager().removeLayerChangeListener(zoomToAction);
         Main.getLayerManager().removeActiveLayerChangeListener(zoomToAction);
     }

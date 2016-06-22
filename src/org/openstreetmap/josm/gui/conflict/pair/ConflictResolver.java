@@ -346,11 +346,20 @@ public class ConflictResolver extends JPanel implements PropertyChangeListener {
     }
 
     /**
+     * Adds all registered listeners by this conflict resolver
+     * @see #unregisterListeners()
+     */
+    public void registerListeners() {
+        nodeListMerger.registerListeners();
+        relationMemberMerger.registerListeners();
+    }
+
+    /**
      * Removes all registered listeners by this conflict resolver
      */
     public void unregisterListeners() {
-        nodeListMerger.unlinkAsListener();
-        relationMemberMerger.unlinkAsListener();
+        nodeListMerger.unregisterListeners();
+        relationMemberMerger.unregisterListeners();
     }
 
     /**
