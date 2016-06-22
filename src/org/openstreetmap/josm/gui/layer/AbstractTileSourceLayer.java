@@ -614,14 +614,9 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
     public void hookUpMapView() {
         // this needs to be here and not in constructor to allow empty TileSource class construction
         // using SessionWriter
-        this.tileSource = getTileSource(info);
-        if (this.tileSource == null) {
-            throw new IllegalArgumentException(tr("Failed to create tile source"));
-        }
+        initializeIfRequired();
 
         super.hookUpMapView();
-        projectionChanged(null, Main.getProjection()); // check if projection is supported
-        initTileSource(this.tileSource);
         // FIXME: why do we need this? Without this, if you add a WMS layer and do not move the mouse, sometimes, tiles do not
         // start loading.
         Main.map.repaint(500);
@@ -629,9 +624,33 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
 
     @Override
     public LayerPainter attachToMapView(MapViewEvent event) {
+        initializeIfRequired();
+
         event.getMapView().addMouseListener(adapter);
         MapView.addZoomChangeListener(AbstractTileSourceLayer.this);
 
+        if (this instanceof NativeScaleLayer) {
+            event.getMapView().setNativeScaleLayer((NativeScaleLayer) this);
+        }
+
+        return super.attachToMapView(event);
+    }
+
+    private void initializeIfRequired() {
+        if (tileSource == null) {
+            tileSource = getTileSource(info);
+            if (tileSource == null) {
+                throw new IllegalArgumentException(tr("Failed to create tile source"));
+            }
+            checkLayerMemoryDoesNotExceedMaximum();
+            // check if projection is supported
+            projectionChanged(null, Main.getProjection());
+            initTileSource(this.tileSource);
+        }
+    }
+
+    @Override
+    protected LayerPainter createMapViewPainter(MapViewEvent event) {
         return new DefaultLayerPainter() {
             @Override
             public void detachFromMapView(MapViewEvent event) {

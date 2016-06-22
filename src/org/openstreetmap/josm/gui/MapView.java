@@ -69,7 +69,6 @@ import org.openstreetmap.josm.gui.layer.MapViewPaintable.LayerPainter;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable.MapViewEvent;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable.PaintableInvalidationEvent;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable.PaintableInvalidationListener;
-import org.openstreetmap.josm.gui.layer.NativeScaleLayer;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.layer.geoimage.GeoImageLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.MarkerLayer;
@@ -603,26 +602,29 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
 
     @Override
     public void layerAdded(LayerAddEvent e) {
-        Layer layer = e.getAddedLayer();
-        if (layer instanceof MarkerLayer && playHeadMarker == null) {
-            playHeadMarker = PlayHeadMarker.create();
-        }
-        if (layer instanceof NativeScaleLayer) {
-            setNativeScaleLayer((NativeScaleLayer) layer);
-        }
-        registeredLayers.put(layer, layer.attachToMapView(new MapViewEvent(this, false)));
+        try {
+            Layer layer = e.getAddedLayer();
+            registeredLayers.put(layer, layer.attachToMapView(new MapViewEvent(this, false)));
 
-        ProjectionBounds viewProjectionBounds = layer.getViewProjectionBounds();
-        if (viewProjectionBounds != null) {
-            scheduleZoomTo(new ViewportData(viewProjectionBounds));
+            // Note: Layers should do things like this themselves.
+            if (layer instanceof MarkerLayer && playHeadMarker == null) {
+                playHeadMarker = PlayHeadMarker.create();
+            }
+
+            ProjectionBounds viewProjectionBounds = layer.getViewProjectionBounds();
+            if (viewProjectionBounds != null) {
+                scheduleZoomTo(new ViewportData(viewProjectionBounds));
+            }
+
+            layer.addPropertyChangeListener(this);
+            Main.addProjectionChangeListener(layer);
+            invalidatedListener.addTo(layer);
+            AudioPlayer.reset();
+
+            repaint();
+        } catch (RuntimeException t) {
+            throw BugReport.intercept(t).put("layer", e.getAddedLayer());
         }
-
-        layer.addPropertyChangeListener(this);
-        Main.addProjectionChangeListener(layer);
-        invalidatedListener.addTo(layer);
-        AudioPlayer.reset();
-
-        repaint();
     }
 
     /**

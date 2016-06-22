@@ -16,6 +16,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.JSeparator;
+import javax.swing.SwingUtilities;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.GpxExportAction;
@@ -190,19 +191,24 @@ public abstract class Layer extends AbstractMapViewPaintable implements Destroya
      * Remember to call {@code super.hookUpMapView()} when overriding this method
      */
     public void hookUpMapView() {
+        checkLayerMemoryDoesNotExceedMaximum();
+    }
+
+    /**
+     * Checks that the memory required for the layers is no greather than the max memory.
+     */
+    protected static void checkLayerMemoryDoesNotExceedMaximum() {
         // calculate total memory needed for all layers
         long memoryBytesRequired = 50L * 1024L * 1024L; // assumed minimum JOSM memory footprint
-        if (Main.map != null && Main.map.mapView != null) {
-            for (Layer layer: Main.getLayerManager().getLayers()) {
-                memoryBytesRequired += layer.estimateMemoryUsage();
-            }
-            if (memoryBytesRequired > Runtime.getRuntime().maxMemory()) {
-                throw new IllegalArgumentException(
-                        tr("To add another layer you need to allocate at least {0,number,#}MB memory to JOSM using -Xmx{0,number,#}M "
-                        + "option (see http://forum.openstreetmap.org/viewtopic.php?id=25677).\n"
-                        + "Currently you have {1,number,#}MB memory allocated for JOSM",
-                        memoryBytesRequired / 1024 / 1024, Runtime.getRuntime().maxMemory() / 1024 / 1024));
-            }
+        for (Layer layer: Main.getLayerManager().getLayers()) {
+            memoryBytesRequired += layer.estimateMemoryUsage();
+        }
+        if (memoryBytesRequired > Runtime.getRuntime().maxMemory()) {
+            throw new IllegalArgumentException(
+                    tr("To add another layer you need to allocate at least {0,number,#}MB memory to JOSM using -Xmx{0,number,#}M "
+                            + "option (see http://forum.openstreetmap.org/viewtopic.php?id=25677).\n"
+                            + "Currently you have {1,number,#}MB memory allocated for JOSM",
+                            memoryBytesRequired / 1024 / 1024, Runtime.getRuntime().maxMemory() / 1024 / 1024));
         }
     }
 
@@ -212,11 +218,22 @@ public abstract class Layer extends AbstractMapViewPaintable implements Destroya
      * You need to return a painter here. The {@link LayerPainter#detachFromMapView(MapViewEvent)} method is called when the layer is removed
      * from that map view. You are free to reuse painters.
      * <p>
+     * You should always call the super method. See {@link #createMapViewPainter()} if you want to influence painter creation.
+     * <p>
      * This replaces {@link #hookUpMapView()} in the long run.
      * @param event the event.
      * @return A layer painter.
      */
     public LayerPainter attachToMapView(MapViewEvent event) {
+        return createMapViewPainter(event);
+    }
+
+    /**
+     * Creates a new LayerPainter.
+     * @param event The event that triggered the creation.
+     * @return The painter.
+     */
+    protected LayerPainter createMapViewPainter(MapViewEvent event) {
         return new DefaultLayerPainter();
     }
 
@@ -561,15 +578,21 @@ public abstract class Layer extends AbstractMapViewPaintable implements Destroya
     @Override
     public void projectionChanged(Projection oldValue, Projection newValue) {
         if (!isProjectionSupported(newValue)) {
-            String message = "<html><body><p>" +
+            final String message = "<html><body><p>" +
                     tr("The layer {0} does not support the new projection {1}.", getName(), newValue.toCode()) + "</p>" +
                     "<p style='width: 450px;'>" + tr("Supported projections are: {0}", nameSupportedProjections()) + "</p>" +
                     tr("Change the projection again or remove the layer.");
 
-            JOptionPane.showMessageDialog(Main.parent,
-                    message,
-                    tr("Warning"),
-                    JOptionPane.WARNING_MESSAGE);
+            // run later to not block loading the UI.
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    JOptionPane.showMessageDialog(Main.parent,
+                            message,
+                            tr("Warning"),
+                            JOptionPane.WARNING_MESSAGE);
+                }
+            });
         }
     }
 
