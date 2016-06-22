@@ -70,7 +70,6 @@ import org.openstreetmap.josm.gui.layer.MapViewPaintable.PaintableInvalidationEv
 import org.openstreetmap.josm.gui.layer.MapViewPaintable.PaintableInvalidationListener;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.layer.geoimage.GeoImageLayer;
-import org.openstreetmap.josm.gui.layer.markerlayer.MarkerLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.PlayHeadMarker;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.AudioPlayer;
@@ -604,11 +603,6 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
         try {
             Layer layer = e.getAddedLayer();
             registeredLayers.put(layer, layer.attachToMapView(new MapViewEvent(this, false)));
-
-            // Note: Layers should do things like this themselves.
-            if (layer instanceof MarkerLayer && playHeadMarker == null) {
-                playHeadMarker = PlayHeadMarker.create();
-            }
 
             ProjectionBounds viewProjectionBounds = layer.getViewProjectionBounds();
             if (viewProjectionBounds != null) {
