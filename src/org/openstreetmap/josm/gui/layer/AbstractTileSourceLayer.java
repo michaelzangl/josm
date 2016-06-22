@@ -617,9 +617,6 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
         initializeIfRequired();
 
         super.hookUpMapView();
-        // FIXME: why do we need this? Without this, if you add a WMS layer and do not move the mouse, sometimes, tiles do not
-        // start loading.
-        Main.map.repaint(500);
     }
 
     @Override
@@ -632,6 +629,11 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
         if (this instanceof NativeScaleLayer) {
             event.getMapView().setNativeScaleLayer((NativeScaleLayer) this);
         }
+
+        // FIXME: why do we need this? Without this, if you add a WMS layer and do not move the mouse, sometimes, tiles do not
+        // start loading.
+        // FIXME: Check if this is still required.
+        Main.map.repaint(500);
 
         return super.attachToMapView(event);
     }
