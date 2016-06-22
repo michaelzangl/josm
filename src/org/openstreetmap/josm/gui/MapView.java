@@ -71,7 +71,6 @@ import org.openstreetmap.josm.gui.layer.MapViewPaintable.PaintableInvalidationLi
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.layer.geoimage.GeoImageLayer;
 import org.openstreetmap.josm.gui.layer.markerlayer.PlayHeadMarker;
-import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.AudioPlayer;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.openstreetmap.josm.tools.Utils;
@@ -1089,23 +1088,22 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
 
     @Override
     public void activeOrEditLayerChanged(ActiveLayerChangeEvent e) {
-        /* This only makes the buttons look disabled. Disabling the actions as well requires
-         * the user to re-select the tool after i.e. moving a layer. While testing I found
-         * that I switch layers and actions at the same time and it was annoying to mind the
-         * order. This way it works as visual clue for new users */
-        for (final AbstractButton b: Main.map.allMapModeButtons) {
-            MapMode mode = (MapMode) b.getAction();
-            final boolean activeLayerSupported = mode.layerIsSupported(layerManager.getActiveLayer());
-            if (activeLayerSupported) {
-                Main.registerActionShortcut(mode, mode.getShortcut()); //fix #6876
-            } else {
-                Main.unregisterShortcut(mode.getShortcut());
-            }
-            GuiHelper.runInEDTAndWait(new Runnable() {
-                @Override public void run() {
-                    b.setEnabled(activeLayerSupported);
+        if  (Main.map != null) {
+            /* This only makes the buttons look disabled. Disabling the actions as well requires
+             * the user to re-select the tool after i.e. moving a layer. While testing I found
+             * that I switch layers and actions at the same time and it was annoying to mind the
+             * order. This way it works as visual clue for new users */
+            // FIXME: This does not belong here.
+            for (final AbstractButton b: Main.map.allMapModeButtons) {
+                MapMode mode = (MapMode) b.getAction();
+                final boolean activeLayerSupported = mode.layerIsSupported(layerManager.getActiveLayer());
+                if (activeLayerSupported) {
+                    Main.registerActionShortcut(mode, mode.getShortcut()); //fix #6876
+                } else {
+                    Main.unregisterShortcut(mode.getShortcut());
                 }
-            });
+                b.setEnabled(activeLayerSupported);
+            }
         }
         AudioPlayer.reset();
         repaint();
