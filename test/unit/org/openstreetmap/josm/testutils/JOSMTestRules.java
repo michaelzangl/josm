@@ -165,6 +165,8 @@ public class JOSMTestRules implements TestRule {
         System.setProperty("java.awt.headless", "true");
         // All tests use the same timezone.
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        // Set log level to info
+        Main.logLevel = 3;
 
         // Set up i18n
         if (i18n != null) {
