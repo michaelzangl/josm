@@ -175,7 +175,7 @@ public class LayerListDialog extends ToggleDialog {
      * Creates a layer list and attach it to the given mapView.
      * @param layerManager The layer manager this list is for
      */
-    private LayerListDialog(MainLayerManager layerManager) {
+    public LayerListDialog(MainLayerManager layerManager) {
         super(tr("Layers"), "layerlist", tr("Open a list of all loaded layers."),
                 Shortcut.registerShortcut("subwindow:layers", tr("Toggle: {0}", tr("Layers")), KeyEvent.VK_L,
                         Shortcut.ALT_SHIFT), 100, true);
