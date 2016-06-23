@@ -3,6 +3,7 @@ package org.openstreetmap.josm.testutils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.TimeZone;
 
 import org.junit.rules.DisableOnDebug;
 import org.junit.rules.TemporaryFolder;
@@ -162,6 +163,8 @@ public class JOSMTestRules implements TestRule {
 
         // Tests are running headless by default.
         System.setProperty("java.awt.headless", "true");
+        // All tests use the same timezone.
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
         // Set up i18n
         if (i18n != null) {

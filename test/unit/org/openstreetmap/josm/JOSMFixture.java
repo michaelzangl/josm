@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.text.MessageFormat;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import org.openstreetmap.josm.data.projection.Projections;
 import org.openstreetmap.josm.gui.MainApplication;
@@ -88,6 +89,7 @@ public class JOSMFixture {
             }
         }
         System.setProperty("josm.home", josmHome);
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         Main.initApplicationPreferences();
         Main.pref.enableSaveOnPut(false);
         I18n.init();
