@@ -205,7 +205,7 @@ public class OpeningHourTest extends Test.TagTest {
             final Object r = parse(value, mode, locale);
             String prettifiedValue = null;
             try {
-                prettifiedValue = (String) ((Invocable) ENGINE).invokeMethod(r, "prettifyValue", false);
+                prettifiedValue = (String) ((Invocable) ENGINE).invokeMethod(r, "prettifyValue");
             } catch (ScriptException | NoSuchMethodException e) {
                 Main.warn(e);
             }
