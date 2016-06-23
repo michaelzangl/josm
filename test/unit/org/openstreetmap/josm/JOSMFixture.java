@@ -14,6 +14,7 @@ import java.util.Locale;
 
 import org.openstreetmap.josm.data.projection.Projections;
 import org.openstreetmap.josm.gui.MainApplication;
+import org.openstreetmap.josm.gui.layer.LayerManagerTest.TestLayer;
 import org.openstreetmap.josm.gui.preferences.ToolbarPreferences;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.CertificateAmendment;
@@ -127,15 +128,18 @@ public class JOSMFixture {
     }
 
     private void setupGUI() {
+        Main.getLayerManager().resetState();
+        assertTrue(Main.getLayerManager().getLayers().isEmpty());
+        assertNull(Main.getLayerManager().getEditLayer());
+        assertNull(Main.getLayerManager().getActiveLayer());
+
         if (Main.toolbar == null) {
             Main.toolbar = new ToolbarPreferences();
         }
         if (Main.main == null) {
             new MainApplication().initialize();
         }
-        Main.getLayerManager().resetState();
-        assertTrue(Main.getLayerManager().getLayers().isEmpty());
-        assertNull(Main.getLayerManager().getEditLayer());
-        assertNull(Main.getLayerManager().getActiveLayer());
+        // Add a test layer to the layer manager to get the MapFrame
+        Main.getLayerManager().addLayer(new TestLayer());
     }
 }
