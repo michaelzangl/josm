@@ -12,6 +12,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openstreetmap.josm.JOSMFixture;
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
@@ -29,6 +30,7 @@ public class InspectPrimitiveDialogTest {
     @BeforeClass
     public static void setUpBeforeClass() {
         JOSMFixture.createUnitTestFixture().init(true);
+        Main.map.mapView.zoomTo(new EastNorth(0, 0), 10);
     }
 
     /**
