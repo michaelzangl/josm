@@ -1,6 +1,7 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -144,5 +145,8 @@ public class JOSMFixture {
         }
         // Add a test layer to the layer manager to get the MapFrame
         Main.getLayerManager().addLayer(new TestLayer());
+        assertNotNull("Main.map", Main.map);
+        assertNotNull("Main.map.mapView", Main.map.mapView);
+        Main.map.mapView.setBounds(50, 50, 400, 300);
     }
 }

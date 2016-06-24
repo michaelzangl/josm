@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.openstreetmap.josm.JOSMFixture;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.TestUtils;
+import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.gui.MapScaler.AccessibleMapScaler;
 
 /**
@@ -33,6 +34,7 @@ public class MapScalerTest {
     @Test
     public void testMapScaler() {
         assertEquals(Color.WHITE, MapScaler.getColor());
+        Main.map.mapView.zoomTo(new EastNorth(0, 0), 10);
         MapScaler ms = new MapScaler(Main.map.mapView);
         assertEquals("/MapView/Scaler", ms.helpTopic());
         ms.paint(TestUtils.newGraphics());
