@@ -385,6 +385,10 @@ public class NavigatableComponent extends JComponent implements Helpful {
         int h = getHeight()/2;
         LatLon ll1 = getLatLon(w-50, h);
         LatLon ll2 = getLatLon(w+50, h);
+        System.out.println("Points: " + getState().getForView(w-50, h) + ", " + getState().getForView(w+50, h));
+        System.out.println("Points: " + getState().getForView(w-50, h).getEastNorth() + ", " + getState().getForView(w+50, h).getEastNorth());
+        System.out.println("Distance: " + ll1 + "," + ll2 + " using projection " + getProjection());
+        System.out.println("Scale: " + getState().getScale());
         double gcd = ll1.greatCircleDistance(ll2);
         if (alwaysPositive && gcd <= 0)
             return 0.1;

@@ -36,7 +36,7 @@ public class MapScalerTest {
         assertEquals(Color.WHITE, MapScaler.getColor());
         Main.map.mapView.zoomTo(new EastNorth(0, 0), 10);
         assertEquals(10, Main.map.mapView.getScale(), 1e-5);
-        assertEquals(1000, Main.map.mapView.getDist100Pixel(), 1e-3);
+        assertEquals("initial distance", 1000, Main.map.mapView.getDist100Pixel(), 1e-3);
 
         MapScaler ms = new MapScaler(Main.map.mapView);
         assertEquals("/MapView/Scaler", ms.helpTopic());
