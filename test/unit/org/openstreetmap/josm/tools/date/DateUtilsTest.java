@@ -34,6 +34,7 @@ public class DateUtilsTest {
      */
     public static void setTimeZone(TimeZone zone) {
         DateUtils.setTimeZone(zone);
+        TimeZone.setDefault(zone);
     }
 
     /**
