@@ -73,6 +73,7 @@ public class JOSMFixture {
      * @param createGui if {@code true} creates main GUI components
      */
     public void init(boolean createGui) {
+        assertNull(Main.map);
 
         // check josm.home
         //
