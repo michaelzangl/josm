@@ -73,7 +73,6 @@ public class JOSMFixture {
      * @param createGui if {@code true} creates main GUI components
      */
     public void init(boolean createGui) {
-        assertNull(Main.map);
 
         // check josm.home
         //
@@ -121,6 +120,7 @@ public class JOSMFixture {
             fail(MessageFormat.format("configured server url ''{0}'' seems to be a productive url, aborting.", url));
         }
 
+        resetMapLayers();
         if (createGui) {
             GuiHelper.runInEDTAndWaitWithException(new Runnable() {
                 @Override
@@ -132,10 +132,7 @@ public class JOSMFixture {
     }
 
     private void setupGUI() {
-        Main.getLayerManager().resetState();
-        assertTrue(Main.getLayerManager().getLayers().isEmpty());
-        assertNull(Main.getLayerManager().getEditLayer());
-        assertNull(Main.getLayerManager().getActiveLayer());
+        resetMapLayers();
 
         if (Main.toolbar == null) {
             Main.toolbar = new ToolbarPreferences();
@@ -145,5 +142,13 @@ public class JOSMFixture {
         }
         // Add a test layer to the layer manager to get the MapFrame
         Main.getLayerManager().addLayer(new TestLayer());
+    }
+
+    private void resetMapLayers() {
+        Main.getLayerManager().resetState();
+        assertTrue(Main.getLayerManager().getLayers().isEmpty());
+        assertNull(Main.getLayerManager().getEditLayer());
+        assertNull(Main.getLayerManager().getActiveLayer());
+        assertNull(Main.map);
     }
 }
