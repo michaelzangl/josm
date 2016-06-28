@@ -94,6 +94,47 @@ public class MainLayerManager extends LayerManager {
     }
 
     /**
+     * This event is fired for {@link LayerAvailabilityListener}
+     * @author Michael Zangl
+     * @since  xxx
+     */
+    public class LayerAvailabilityEvent extends LayerManagerEvent {
+        private final boolean hasLayers;
+
+        LayerAvailabilityEvent(LayerManager source, boolean hasLayers) {
+            super(source);
+            this.hasLayers = hasLayers;
+        }
+
+        /**
+         * Checks if this layer manager will have layers afterwards
+         * @return true if layers will be added.
+         */
+        public boolean hasLayers() {
+            return hasLayers;
+        }
+    }
+
+    /**
+     * A listener that gets informed before any layer is displayed and after all layers are removed.
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public interface LayerAvailabilityListener {
+        /**
+         * This method is called in the UI thread right before the first layer is added.
+         * @param e The event.
+         */
+        void beforeFirstLayerAdded(LayerAvailabilityEvent e);
+
+        /**
+         * This method is called in the UI thread after the last layer was removed.
+         * @param e The event.
+         */
+        void afterLastLayerRemoved(LayerAvailabilityEvent e);
+    }
+
+    /**
      * The layer from the layers list that is currently active.
      */
     private Layer activeLayer;
@@ -104,6 +145,7 @@ public class MainLayerManager extends LayerManager {
     private OsmDataLayer editLayer;
 
     private final List<ActiveLayerChangeListener> activeLayerChangeListeners = new CopyOnWriteArrayList<>();
+    private final List<LayerAvailabilityListener> layerAvailabilityListeners = new CopyOnWriteArrayList<>();
 
     /**
      * Adds a active/edit layer change listener
@@ -155,6 +197,29 @@ public class MainLayerManager extends LayerManager {
     }
 
     /**
+     * Add a new {@link LayerAvailabilityListener}.
+     * @param listener The listener
+     * @since xxx
+     */
+    public synchronized void addLayerAvailabilityListener(LayerAvailabilityListener listener) {
+        if (!layerAvailabilityListeners.add(listener)) {
+            throw new IllegalArgumentException("Attempted to add listener that was already in list: " + listener);
+        }
+    }
+
+    /**
+     * Remove an {@link LayerAvailabilityListener}.
+     * @param listener The listener
+     * @since xxx
+     */
+    public synchronized void removeLayerAvailabilityListener(LayerAvailabilityListener listener) {
+        if (!layerAvailabilityListeners.remove(listener)) {
+            throw new IllegalArgumentException("Attempted to remove listener that was not in list: " + listener);
+        }
+
+    }
+
+    /**
      * Set the active layer. If the layer is an OsmDataLayer, the edit layer is also changed.
      * @param layer The active layer.
      */
@@ -197,6 +262,12 @@ public class MainLayerManager extends LayerManager {
 
     @Override
     protected synchronized void realAddLayer(Layer layer) {
+        if (getLayers().isEmpty()) {
+            LayerAvailabilityEvent e = new LayerAvailabilityEvent(this, true);
+            for (LayerAvailabilityListener  l : layerAvailabilityListeners) {
+                l.beforeFirstLayerAdded(e);
+            }
+        }
         super.realAddLayer(layer);
 
         // update the active layer automatically.
@@ -213,6 +284,13 @@ public class MainLayerManager extends LayerManager {
         }
 
         super.realRemoveLayer(layer);
+
+        if (getLayers().isEmpty()) {
+            LayerAvailabilityEvent e = new LayerAvailabilityEvent(this, false);
+            for (LayerAvailabilityListener  l : layerAvailabilityListeners) {
+                l.afterLastLayerRemoved(e);
+            }
+        }
     }
 
     /**
@@ -318,5 +396,6 @@ public class MainLayerManager extends LayerManager {
         super.resetState();
 
         activeLayerChangeListeners.clear();
+        layerAvailabilityListeners.clear();
     }
 }
