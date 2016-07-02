@@ -71,6 +71,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -626,7 +627,7 @@ public final class Utils {
      */
     public static boolean copyToClipboard(String s) {
         try {
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(s), new ClipboardOwner() {
+            OsmTransferHandler.getClippboard().setContents(new StringSelection(s), new ClipboardOwner() {
                 @Override
                 public void lostOwnership(Clipboard clpbrd, Transferable t) {
                     // Do nothing

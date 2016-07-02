@@ -8,10 +8,12 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.swing.JOptionPane;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
 import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferData;
@@ -22,7 +24,7 @@ import org.openstreetmap.josm.tools.Shortcut;
  * Copy OSM primitives to clipboard in order to paste them, or their tags, somewhere else.
  * @since 404
  */
-public final class CopyAction extends JosmAction {
+public class CopyAction extends JosmAction {
     /**
      * Constructs a new {@code CopyAction}.
      */
@@ -38,7 +40,8 @@ public final class CopyAction extends JosmAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        Collection<OsmPrimitive> selection = getLayerManager().getEditDataSet().getSelected();
+        DataSet set = getLayerManager().getEditDataSet();
+        Collection<OsmPrimitive> selection = set == null ? Collections.<OsmPrimitive>emptySet() : set.getSelected();
         if (selection.isEmpty()) {
             showEmptySelectionWarning();
             return;

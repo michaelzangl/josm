@@ -57,7 +57,10 @@ public class PrimitiveTransferable implements Transferable {
     protected String getStringData() {
         final StringBuilder sb = new StringBuilder();
         for (PrimitiveData primitive : primitives.getAll()) {
-            sb.append(OsmPrimitiveType.from(primitive).getAPIName()).append(' ').append(primitive.getId()).append(',');
+            if (sb.length() > 0) {
+                sb.append("\n");
+            }
+            sb.append(OsmPrimitiveType.from(primitive).getAPIName()).append(' ').append(primitive.getId());
         }
         return sb.toString().replace("\u200E", "").replace("\u200F", "");
     }

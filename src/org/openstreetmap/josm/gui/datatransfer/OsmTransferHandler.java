@@ -1,6 +1,7 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.gui.datatransfer;
 
+import java.awt.HeadlessException;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
@@ -32,6 +33,7 @@ public class OsmTransferHandler extends TransferHandler {
     private static final Collection<AbstractDataFlavorSupport> SUPPORTED = Arrays.asList(
             new FileSupport(), new PrimitiveDataSupport(),
             new TagTransferSupport(), new TextTagSupport());
+    private static Clipboard clippboard;
 
     @Override
     public boolean canImport(TransferSupport support) {
@@ -148,8 +150,16 @@ public class OsmTransferHandler extends TransferHandler {
      * It will default to the system clippboard except for cases where that clippboard is not accessible.
      * @return A clippboard.
      */
-    public static Clipboard getClippboard() {
-        //TODO: Might be unsupported in some cases, we need a fake clippboard then.
-        return Toolkit.getDefaultToolkit().getSystemClipboard();
+    public static synchronized Clipboard getClippboard() {
+        // Might be unsupported in some more cases, we need a fake clippboard then.
+        if (clippboard == null) {
+            try {
+                return Toolkit.getDefaultToolkit().getSystemClipboard();
+            } catch (HeadlessException e) {
+                Main.warn("Headless. Using fake clippboard.", e);
+                clippboard = new Clipboard("fake");
+            }
+        }
+        return clippboard;
     }
 }

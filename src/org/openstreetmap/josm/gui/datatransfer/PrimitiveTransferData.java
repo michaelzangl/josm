@@ -112,7 +112,7 @@ public class PrimitiveTransferData implements Serializable {
      * @param primitives The primitives to contain.
      * @return That set.
      */
-    public static PrimitiveTransferData getData(Collection<OsmPrimitive> primitives) {
+    public static PrimitiveTransferData getData(Collection<? extends OsmPrimitive> primitives) {
         return new PrimitiveTransferData(primitives, new ReferenceGetter() {
             @Override
             public Collection<? extends OsmPrimitive> getReferedPrimitives(OsmPrimitive primitive) {
