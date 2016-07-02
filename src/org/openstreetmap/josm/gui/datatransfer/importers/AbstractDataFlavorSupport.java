@@ -52,6 +52,15 @@ public abstract class AbstractDataFlavorSupport {
         return !support.isDrop() || (OsmTransferHandler.COPY & support.getSourceDropActions()) == OsmTransferHandler.COPY;
     }
 
+    /**
+     * Attempts to import the given transfer data.
+     * @param support The transfer support to import from.
+     * @param layer The layer to paste at.
+     * @param pasteAt The position to paste at.
+     * @return <code>true</code> if the import was successful.
+     * @throws UnsupportedFlavorException
+     * @throws IOException
+     */
     public abstract boolean importData(TransferSupport support, OsmDataLayer layer, EastNorth pasteAt)
             throws UnsupportedFlavorException, IOException;
 
@@ -59,9 +68,9 @@ public abstract class AbstractDataFlavorSupport {
      * Imports only if this import changes the tags only. Does nothing if more than tags would be changed.
      * @param support The support
      * @param selection The primitives to apply on.
+     * @return <code>true</code> if an import was done.
      * @throws UnsupportedFlavorException
      * @throws IOException
-     * @return <code>true</code> if an import was done.
      */
     public boolean importTagsOn(TransferSupport support, Collection<? extends OsmPrimitive> selection)
             throws UnsupportedFlavorException, IOException {

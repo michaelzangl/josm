@@ -10,7 +10,6 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Map;
 
 import javax.swing.TransferHandler;
 
@@ -25,7 +24,7 @@ import org.openstreetmap.josm.gui.datatransfer.importers.TextTagSupport;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 
 /**
- * This transfer hanlder provides the ability to transfer OSM data. It allows you to receive files and {@link Data} objects.
+ * This transfer hanlder provides the ability to transfer OSM data. It allows you to receive files, primitives or tags.
  * @author Michael Zangl
  */
 public class OsmTransferHandler extends TransferHandler {
@@ -81,28 +80,22 @@ public class OsmTransferHandler extends TransferHandler {
         return super.importData(support);
     }
 
-    public Map<String, String> getPasteTags(TransferSupport support) {
-        Transferable transferable = getClippboard().getContents(null);
-//        for (AbstractDataFlavorSupport df : SUPPORTED) {
-//            if (df.supports(support)) {
-//                try {
-//                    Map<String, String> map = df.getTags(support);
-//                    if (map != null) {
-//                        return map;
-//                    }
-//                } catch (UnsupportedFlavorException | IOException e) {
-//                    Main.warn(e);
-//                }
-//            }
-//        }
-        return null;
-    }
-
+    /**
+     * Paste the current clippboard current at the given position
+     * @param editLayer The layer to paste on.
+     * @param mPosition The position to paste at.
+     */
     public void pasteOn(OsmDataLayer editLayer, EastNorth mPosition) {
         Transferable transferable = getClippboard().getContents(null);
         pasteOn(editLayer, mPosition, transferable);
     }
 
+    /**
+     * Paste the given clippboard current at the given position
+     * @param editLayer The layer to paste on.
+     * @param mPosition The position to paste at.
+     * @param transferable The transferable to use.
+     */
     public void pasteOn(OsmDataLayer editLayer, EastNorth mPosition, Transferable transferable) {
         importData(new TransferSupport(Main.panel, transferable), editLayer, mPosition);
     }
@@ -114,12 +107,6 @@ public class OsmTransferHandler extends TransferHandler {
     public void pasteTags(Collection<? extends OsmPrimitive> primitives) {
         Transferable transferable = getClippboard().getContents(null);
         importTags(new TransferSupport(Main.panel, transferable), primitives);
-    }
-
-    // REMOVE!
-    public Map<String, String> getPasteTags() {
-        Transferable transferable = getClippboard().getContents(null);
-        return getPasteTags(new TransferSupport(Main.panel, transferable));
     }
 
     /**

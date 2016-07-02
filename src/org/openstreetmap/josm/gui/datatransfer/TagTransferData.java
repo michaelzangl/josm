@@ -18,6 +18,8 @@ import org.openstreetmap.josm.data.osm.Tagged;
  */
 public class TagTransferData implements Serializable {
 
+    private static final long serialVersionUID = 1;
+
     /**
      * This is a data flavor added
      */

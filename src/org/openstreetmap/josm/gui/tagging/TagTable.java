@@ -279,29 +279,6 @@ public class TagTable extends JosmTable implements EndEditListener {
             model.applyToPrimitive(relation);
             new OsmTransferHandler().pasteTags(Collections.singleton(relation));
             model.updateTags(new TagMap(relation.getKeys()).getTags());
-
-//            String buf = Utils.getClipboardContent();
-//            if (buf == null || buf.isEmpty() || buf.matches(CopyAction.CLIPBOARD_REGEXP)) {
-//                List<PrimitiveData> directlyAdded = Main.pasteBuffer.getDirectlyAdded();
-//                if (directlyAdded == null || directlyAdded.isEmpty()) return;
-//                PasteTagsAction.TagPaster tagPaster = new PasteTagsAction.TagPaster(directlyAdded,
-//                        Collections.<OsmPrimitive>singletonList(relation));
-//                model.updateTags(tagPaster.execute());
-//            } else {
-//                 // Paste tags from arbitrary text
-//                 Map<String, String> tags = TextTagParser.readTagsFromText(buf);
-//                 if (tags == null || tags.isEmpty()) {
-//                    TextTagParser.showBadBufferMessage(ht("/Action/PasteTags"));
-//                 } else if (TextTagParser.validateTags(tags)) {
-//                     List<Tag> newTags = new ArrayList<>();
-//                     for (Map.Entry<String, String> entry: tags.entrySet()) {
-//                        String k = entry.getKey();
-//                        String v = entry.getValue();
-//                        newTags.add(new Tag(k, v));
-//                     }
-//                     model.updateTags(newTags);
-//                 }
-//            }
         }
 
         protected final void updateEnabledState() {

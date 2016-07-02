@@ -25,7 +25,7 @@ import org.openstreetmap.josm.data.osm.visitor.BoundingXYVisitor;
  * @author Michael Zangl
  * @since xxx
  */
-public class PrimitiveTransferData implements Serializable {
+public final class PrimitiveTransferData implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**

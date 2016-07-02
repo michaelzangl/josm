@@ -45,5 +45,12 @@ public abstract class AbstractTagTransferSupport extends AbstractDataFlavorSuppo
         return true;
     }
 
+    /**
+     * Gets the tags that should be pasted.
+     * @param support The TransferSupport to get the tags from.
+     * @return The tags
+     * @throws UnsupportedFlavorException
+     * @throws IOException
+     */
     protected abstract Map<String, String> getTags(TransferSupport support) throws UnsupportedFlavorException, IOException;
 }

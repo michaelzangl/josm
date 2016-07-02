@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
@@ -39,7 +40,7 @@ public class RelationMemberTransferable implements Transferable {
          * @return the contained {@link RelationMemberData}
          */
         public Collection<RelationMemberData> getRelationMemberData() {
-            return relationMemberDatas;
+            return Collections.unmodifiableCollection(relationMemberDatas);
         }
     }
 
@@ -54,7 +55,7 @@ public class RelationMemberTransferable implements Transferable {
      * @param members list of relation members
      */
     public RelationMemberTransferable(Collection<RelationMember> members) {
-        this.members = members;
+        this.members = new ArrayList<>(members);
     }
 
     @Override

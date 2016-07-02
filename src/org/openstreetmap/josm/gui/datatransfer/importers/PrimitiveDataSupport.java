@@ -58,7 +58,7 @@ public final class PrimitiveDataSupport extends AbstractDataFlavorSupport {
         return true;
     }
 
-    private AddPrimitivesCommand createNewPrimitives(PrimitiveTransferData pasteBuffer, EastNorth offset, OsmDataLayer layer) throws AssertionError {
+    private static AddPrimitivesCommand createNewPrimitives(PrimitiveTransferData pasteBuffer, EastNorth offset, OsmDataLayer layer) {
         // Make a copy of pasteBuffer and map from old id to copied data id
         List<PrimitiveData> bufferCopy = new ArrayList<>();
         List<PrimitiveData> toSelect = new ArrayList<>();
@@ -78,7 +78,7 @@ public final class PrimitiveDataSupport extends AbstractDataFlavorSupport {
         return new AddPrimitivesCommand(bufferCopy, toSelect, layer);
     }
 
-    private EnumMap<OsmPrimitiveType, Map<Long, Long>> generateNewPrimitives(PrimitiveTransferData pasteBuffer,
+    private static EnumMap<OsmPrimitiveType, Map<Long, Long>> generateNewPrimitives(PrimitiveTransferData pasteBuffer,
             List<PrimitiveData> bufferCopy, List<PrimitiveData> toSelect) {
         EnumMap<OsmPrimitiveType, Map<Long, Long>> newIds = new EnumMap<>(OsmPrimitiveType.class);
         newIds.put(OsmPrimitiveType.NODE, new HashMap<Long, Long>());
@@ -104,7 +104,7 @@ public final class PrimitiveDataSupport extends AbstractDataFlavorSupport {
         return newIds;
     }
 
-    private void updateMembers(EnumMap<OsmPrimitiveType, Map<Long, Long>> newIds, PrimitiveData data) {
+    private static void updateMembers(EnumMap<OsmPrimitiveType, Map<Long, Long>> newIds, PrimitiveData data) {
         List<RelationMemberData> newMembers = new ArrayList<>();
         for (RelationMemberData member : ((RelationData) data).getMembers()) {
             OsmPrimitiveType memberType = member.getMemberType();
@@ -116,7 +116,7 @@ public final class PrimitiveDataSupport extends AbstractDataFlavorSupport {
         ((RelationData) data).setMembers(newMembers);
     }
 
-    private void updateNodes(Map<Long, Long> newNodeIds, PrimitiveData data) {
+    private static void updateNodes(Map<Long, Long> newNodeIds, PrimitiveData data) {
         List<Long> newNodes = new ArrayList<>();
         for (Long oldNodeId : ((WayData) data).getNodes()) {
             Long newNodeId = newNodeIds.get(oldNodeId);
