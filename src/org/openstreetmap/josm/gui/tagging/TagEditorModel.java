@@ -149,7 +149,6 @@ public class TagEditorModel extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object value, int row, int col) {
-        commitPendingEdit();
         TagModel tag = get(row);
         if (tag != null) {
             switch(col) {
@@ -582,7 +581,6 @@ public class TagEditorModel extends AbstractTableModel {
      * @param newName  the new name
      */
     public void updateTagName(TagModel tag, String newName) {
-        commitPendingEdit();
         String oldName = tag.getName();
         tag.setName(newName);
         if (!newName.equals(oldName)) {
@@ -601,7 +599,6 @@ public class TagEditorModel extends AbstractTableModel {
      * @param newValue  the new value
      */
     public void updateTagValue(TagModel tag, String newValue) {
-        commitPendingEdit();
         String oldValue = tag.getValue();
         tag.setValue(newValue);
         if (!newValue.equals(oldValue)) {

@@ -154,7 +154,7 @@ public class OsmTransferHandler extends TransferHandler {
         // Might be unsupported in some more cases, we need a fake clippboard then.
         if (clippboard == null) {
             try {
-                return Toolkit.getDefaultToolkit().getSystemClipboard();
+                clippboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             } catch (HeadlessException e) {
                 Main.warn("Headless. Using fake clippboard.", e);
                 clippboard = new Clipboard("fake");

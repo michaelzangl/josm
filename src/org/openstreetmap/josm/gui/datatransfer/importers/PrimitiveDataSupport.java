@@ -51,18 +51,17 @@ public final class PrimitiveDataSupport extends AbstractDataFlavorSupport {
         EastNorth center = pasteBuffer.getCenter();
         EastNorth offset = center == null ? null : pasteAt.subtract(center);
 
-        // Make a copy of pasteBuffer and map from old id to copied data id
-        List<PrimitiveData> bufferCopy = new ArrayList<>();
-        List<PrimitiveData> toSelect = new ArrayList<>();
-        createNewPrimitives(pasteBuffer, offset, bufferCopy, toSelect);
+        AddPrimitivesCommand command = createNewPrimitives(pasteBuffer, offset, layer);
 
         /* Now execute the commands to add the duplicated contents of the paste buffer to the map */
-        Main.main.undoRedo.add(new AddPrimitivesCommand(bufferCopy, toSelect, layer));
+        Main.main.undoRedo.add(command);
         return true;
     }
 
-    private void createNewPrimitives(PrimitiveTransferData pasteBuffer, EastNorth offset,
-            List<PrimitiveData> bufferCopy, List<PrimitiveData> toSelect) throws AssertionError {
+    private AddPrimitivesCommand createNewPrimitives(PrimitiveTransferData pasteBuffer, EastNorth offset, OsmDataLayer layer) throws AssertionError {
+        // Make a copy of pasteBuffer and map from old id to copied data id
+        List<PrimitiveData> bufferCopy = new ArrayList<>();
+        List<PrimitiveData> toSelect = new ArrayList<>();
         EnumMap<OsmPrimitiveType, Map<Long, Long>> newIds = generateNewPrimitives(pasteBuffer, bufferCopy, toSelect);
 
         // Update references in copied buffer
@@ -76,6 +75,7 @@ public final class PrimitiveDataSupport extends AbstractDataFlavorSupport {
                 updateMembers(newIds, data);
             }
         }
+        return new AddPrimitivesCommand(bufferCopy, toSelect, layer);
     }
 
     private EnumMap<OsmPrimitiveType, Map<Long, Long>> generateNewPrimitives(PrimitiveTransferData pasteBuffer,
@@ -85,16 +85,19 @@ public final class PrimitiveDataSupport extends AbstractDataFlavorSupport {
         newIds.put(OsmPrimitiveType.WAY, new HashMap<Long, Long>());
         newIds.put(OsmPrimitiveType.RELATION, new HashMap<Long, Long>());
 
-        for (PrimitiveData data1 : pasteBuffer.getAll()) {
-            if (data1.isIncomplete()) {
+        for (PrimitiveData data : pasteBuffer.getAll()) {
+            if (data.isIncomplete()) {
                 continue;
             }
-            PrimitiveData copy = data1.makeCopy();
+            PrimitiveData copy = data.makeCopy();
+            // don't know why this is reset, but we need it to not crash on copying incomplete nodes.
+            boolean wasIncomplete = copy.isIncomplete();
             copy.clearOsmMetadata();
-            newIds.get(data1.getType()).put(data1.getUniqueId(), copy.getUniqueId());
+            copy.setIncomplete(wasIncomplete);
+            newIds.get(data.getType()).put(data.getUniqueId(), copy.getUniqueId());
 
             bufferCopy.add(copy);
-            if (pasteBuffer.getDirectlyAdded().contains(data1)) {
+            if (pasteBuffer.getDirectlyAdded().contains(data)) {
                 toSelect.add(copy);
             }
         }

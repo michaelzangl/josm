@@ -22,7 +22,11 @@ import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferData;
 import org.openstreetmap.josm.gui.datatransfer.RelationMemberTransferable;
 import org.openstreetmap.josm.tools.Utils.Function;
 
-class MemberTransferHandler extends TransferHandler {
+/**
+ * A transfer handler that helps with importing / exporting members for relations.
+ * @since xxx
+ */
+public class MemberTransferHandler extends TransferHandler {
 
     @Override
     public int getSourceActions(JComponent c) {
@@ -45,7 +49,12 @@ class MemberTransferHandler extends TransferHandler {
     @Override
     public boolean importData(TransferSupport support) {
         final MemberTable destination = (MemberTable) support.getComponent();
-        final int insertRow = ((JTable.DropLocation) support.getDropLocation()).getRow();
+        final int insertRow;
+        if (support.isDrop()) {
+            insertRow = ((JTable.DropLocation) support.getDropLocation()).getRow();
+        } else {
+            insertRow = destination.getSelectedRow();
+        }
 
         try {
             if (support.isDataFlavorSupported(RelationMemberTransferable.RELATION_MEMBER_DATA)) {
@@ -114,6 +123,7 @@ class MemberTransferHandler extends TransferHandler {
         if (action != MOVE) {
             return;
         }
+        // Note: RelationMemberTransferable relationData = (RelationMemberTransferable) data;
         final MemberTable source = (MemberTable) sourceComponent;
         final MemberTableModel model = source.getMemberTableModel();
         model.remove(source.getSelectedRows());

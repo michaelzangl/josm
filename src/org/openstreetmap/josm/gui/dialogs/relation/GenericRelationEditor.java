@@ -273,7 +273,7 @@ public class GenericRelationEditor extends RelationEditor {
                 getRootPane(), memberTable, selectionTable);
         // CHECKSTYLE.ON: LineLength
 
-        registerCopyPasteAction(new PasteMembersAction(memberTableModel, getLayer(), this) {
+        registerCopyPasteAction(new PasteMembersAction(memberTable, getLayer(), this) {
             @Override
             public void actionPerformed(ActionEvent e) {
                 super.actionPerformed(e);
