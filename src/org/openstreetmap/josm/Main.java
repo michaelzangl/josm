@@ -83,6 +83,7 @@ import org.openstreetmap.josm.gui.MainMenu;
 import org.openstreetmap.josm.gui.MainPanel;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.MapFrameListener;
+import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
 import org.openstreetmap.josm.gui.help.HelpUtil;
 import org.openstreetmap.josm.gui.io.SaveLayersDialog;
 import org.openstreetmap.josm.gui.layer.AbstractModifiableLayer;
@@ -177,7 +178,9 @@ public abstract class Main {
 
     /**
      * The global paste buffer.
+     * @deprecated Use swing CCP instead. See {@link OsmTransferHandler}
      */
+    @Deprecated
     public static final PrimitiveDeepCopy pasteBuffer = new PrimitiveDeepCopy();
 
     /**

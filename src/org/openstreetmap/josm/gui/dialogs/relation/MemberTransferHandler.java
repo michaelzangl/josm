@@ -18,7 +18,7 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.PrimitiveData;
 import org.openstreetmap.josm.data.osm.RelationMember;
 import org.openstreetmap.josm.data.osm.RelationMemberData;
-import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferable;
+import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferData;
 import org.openstreetmap.josm.gui.datatransfer.RelationMemberTransferable;
 import org.openstreetmap.josm.tools.Utils.Function;
 
@@ -39,7 +39,7 @@ class MemberTransferHandler extends TransferHandler {
     public boolean canImport(TransferSupport support) {
         support.setShowDropLocation(true);
         return support.isDataFlavorSupported(RelationMemberTransferable.RELATION_MEMBER_DATA)
-                || support.isDataFlavorSupported(PrimitiveTransferable.PRIMITIVE_DATA);
+                || support.isDataFlavorSupported(PrimitiveTransferData.DATA_FLAVOR);
     }
 
     @Override
@@ -50,7 +50,7 @@ class MemberTransferHandler extends TransferHandler {
         try {
             if (support.isDataFlavorSupported(RelationMemberTransferable.RELATION_MEMBER_DATA)) {
                 importRelationMemberData(support, destination, insertRow);
-            } else if (support.isDataFlavorSupported(PrimitiveTransferable.PRIMITIVE_DATA)) {
+            } else if (support.isDataFlavorSupported(PrimitiveTransferData.DATA_FLAVOR)) {
                 importPrimitiveData(support, destination, insertRow);
             }
         } catch (IOException | UnsupportedFlavorException e) {
@@ -81,9 +81,9 @@ class MemberTransferHandler extends TransferHandler {
 
     protected void importPrimitiveData(TransferSupport support, final MemberTable destination, int insertRow)
             throws UnsupportedFlavorException, IOException {
-        final PrimitiveTransferable.Data data = (PrimitiveTransferable.Data)
-                support.getTransferable().getTransferData(PrimitiveTransferable.PRIMITIVE_DATA);
-        importData(destination, insertRow, data.getPrimitiveData(), new Function<PrimitiveData, RelationMember>() {
+        final PrimitiveTransferData data = (PrimitiveTransferData)
+                support.getTransferable().getTransferData(PrimitiveTransferData.DATA_FLAVOR);
+        importData(destination, insertRow, data.getAll(), new Function<PrimitiveData, RelationMember>() {
             @Override
             public RelationMember apply(PrimitiveData data) {
                 final OsmPrimitive p = destination.getLayer().data.getPrimitiveById(data);
