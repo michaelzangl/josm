@@ -226,9 +226,15 @@ public class LayerManager {
             iterator.remove();
             checkContainsLayer(layerToRemove);
 
-            toRemove.addAll(fireLayerRemoving(layerToRemove));
-            layers.remove(layerToRemove);
+            Collection<Layer> newToRemove = realRemoveSingleLayer(layerToRemove);
+            toRemove.addAll(newToRemove);
         }
+    }
+
+    protected Collection<Layer> realRemoveSingleLayer(Layer layerToRemove) {
+        Collection<Layer> newToRemove = fireLayerRemoving(layerToRemove);
+        layers.remove(layerToRemove);
+        return newToRemove;
     }
 
     /**
