@@ -4,6 +4,7 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 import org.openstreetmap.josm.Main;
@@ -65,7 +66,10 @@ public class MemoryManager {
      * @param maxBytes The memory to check for
      * @return <code>true</code> if that memory is available.
      */
-    public boolean isAvailable(long maxBytes) {
+    public synchronized boolean isAvailable(long maxBytes) {
+        if (maxBytes < 0) {
+            throw new IllegalArgumentException(MessageFormat.format("Cannot allocate negative number of bytes: {0]", maxBytes));
+        }
         return getAvailableMemory() >= maxBytes;
     }
 
@@ -73,7 +77,7 @@ public class MemoryManager {
      * Gets the maximum amount of memory available for use in this manager.
      * @return The maximum amount of memory.
      */
-    public long getMaxMemory() {
+    public synchronized long getMaxMemory() {
         return Runtime.getRuntime().maxMemory() - JOSM_CORE_FOOTPRINT;
     }
 
@@ -81,7 +85,7 @@ public class MemoryManager {
      * Gets the memory that is considered free.
      * @return The memory that can be used for new allocations.
      */
-    public long getAvailableMemory() {
+    public synchronized long getAvailableMemory() {
         return getMaxMemory() - activeHandles.stream().mapToLong(h -> h.getSize()).sum();
     }
 
@@ -91,6 +95,16 @@ public class MemoryManager {
      */
     public static MemoryManager getInstance() {
         return INSTANCE;
+    }
+
+    /**
+     * Reset the state of this manager to the default state.
+     * @return true if there were entries that have been reset.
+     */
+    protected synchronized List<MemoryHandle<?>> resetState() {
+        ArrayList<MemoryHandle<?>> toFree = new ArrayList<>(activeHandles);
+        toFree.stream().forEach(h -> h.free());
+        return toFree;
     }
 
     /**
@@ -135,7 +149,7 @@ public class MemoryManager {
         @Override
         public T get() {
             if (content == null) {
-                throw new IllegalStateException("Memory area was accessed after free().");
+                throw new IllegalStateException(MessageFormat.format("Memory area was accessed after free(): {0}", name));
             }
             return content;
         }
@@ -146,19 +160,19 @@ public class MemoryManager {
         }
 
         @Override
-        public String toString() {
-            return "MemoryHandle [name=" + name + ", size=" + size + "]";
-        }
-
-        @Override
         public void free() {
             if (content == null) {
-                throw new IllegalStateException("Memory area was already marked as freed.");
+                throw new IllegalStateException(MessageFormat.format("Memory area was already marked as freed: {0}", name));
             }
             content = null;
             synchronized (MemoryManager.this) {
                 activeHandles.remove(this);
             }
+        }
+
+        @Override
+        public String toString() {
+            return "MemoryHandle [name=" + name + ", size=" + size + "]";
         }
     }
 

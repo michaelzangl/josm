@@ -19,6 +19,7 @@ import org.openstreetmap.josm.io.OsmApi;
 import org.openstreetmap.josm.io.OsmApiInitializationException;
 import org.openstreetmap.josm.io.OsmTransferCanceledException;
 import org.openstreetmap.josm.tools.I18n;
+import org.openstreetmap.josm.tools.MemoryManagerTest;
 import org.openstreetmap.josm.tools.date.DateUtils;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -39,6 +40,7 @@ public class JOSMTestRules implements TestRule {
     private String i18n = null;
     private boolean platform;
     private boolean useProjection;
+    private boolean allowMemoryManagerLeaks;
 
     /**
      * Disable the default timeout for this test. Use with care.
@@ -130,6 +132,15 @@ public class JOSMTestRules implements TestRule {
      */
     public JOSMTestRules projection() {
         useProjection = true;
+        return this;
+    }
+
+    /**
+     * Allow the memory manager to contain items after execution of the test cases.
+     * @return this instance, for easy chaining
+     */
+    public JOSMTestRules memoryManagerLeaks() {
+        allowMemoryManagerLeaks = true;
         return this;
     }
 
@@ -225,6 +236,7 @@ public class JOSMTestRules implements TestRule {
      */
     @SuppressFBWarnings("DM_GC")
     private void cleanUpFromJosmFixture() {
+        MemoryManagerTest.resetState(true);
         Main.getLayerManager().resetState();
         Main.pref = null;
         Main.platform = null;
@@ -244,6 +256,7 @@ public class JOSMTestRules implements TestRule {
         });
         // Remove all layers
         Main.getLayerManager().resetState();
+        MemoryManagerTest.resetState(allowMemoryManagerLeaks);
 
         // TODO: Remove global listeners and other global state.
         Main.pref = null;
