@@ -85,6 +85,9 @@ import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.WMSLayerImporter;
 import org.openstreetmap.josm.tools.GBC;
+import org.openstreetmap.josm.tools.MemoryManager;
+import org.openstreetmap.josm.tools.MemoryManager.MemoryHandle;
+import org.openstreetmap.josm.tools.MemoryManager.NotEnoughMemoryException;
 
 /**
  * Base abstract class that supports displaying images provided by TileSource. It might be TMS source, WMS or WMTS
@@ -644,7 +647,6 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
             if (tileSource == null) {
                 throw new IllegalArgumentException(tr("Failed to create tile source"));
             }
-            checkLayerMemoryDoesNotExceedMaximum();
             // check if projection is supported
             projectionChanged(null, Main.getProjection());
             initTileSource(this.tileSource);
@@ -653,14 +655,7 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
 
     @Override
     protected LayerPainter createMapViewPainter(MapViewEvent event) {
-        return new CompatibilityModeLayerPainter() {
-            @Override
-            public void detachFromMapView(MapViewEvent event) {
-                event.getMapView().removeMouseListener(adapter);
-                MapView.removeZoomChangeListener(AbstractTileSourceLayer.this);
-                super.detachFromMapView(event);
-            }
-        };
+        return new TileSourcePainter();
     }
 
     /**
@@ -682,11 +677,6 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
             add(new JMenuItem(new LoadTileAction()));
             add(new JMenuItem(new ShowTileInfoAction()));
         }
-    }
-
-    @Override
-    protected long estimateMemoryUsage() {
-        return 4L * tileSource.getTileSize() * tileSource.getTileSize() * estimateTileCacheSize();
     }
 
     protected int estimateTileCacheSize() {
@@ -1822,5 +1812,47 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
     @Override
     public File createAndOpenSaveFileChooser() {
         return SaveActionBase.createAndOpenSaveFileChooser(tr("Save WMS file"), WMSLayerImporter.FILE_FILTER);
+    }
+
+    private class TileSourcePainter extends CompatibilityModeLayerPainter {
+        /**
+         * The memory handle that will hold our tile source.
+         */
+        private MemoryHandle<?> memory;
+
+        @Override
+        public void paint(MapViewGraphics graphics) {
+            allocateCacheMemory();
+            if (memory != null) {
+                super.paint(graphics);
+            }
+        }
+
+        private void allocateCacheMemory() {
+            if (memory == null) {
+                MemoryManager manager = MemoryManager.getInstance();
+                if (manager.isAvailable(getEstimatedCacheSize())) {
+                    try {
+                        memory = manager.allocateMemory("tile source layer", getEstimatedCacheSize(), () -> new Object());
+                    } catch (NotEnoughMemoryException e) {
+                        Main.warn("Could not allocate tile source memory", e);
+                    }
+                }
+            }
+        }
+
+        protected long getEstimatedCacheSize() {
+            return 4L * tileSource.getTileSize() * tileSource.getTileSize() * estimateTileCacheSize();
+        }
+
+        @Override
+        public void detachFromMapView(MapViewEvent event) {
+            event.getMapView().removeMouseListener(adapter);
+            MapView.removeZoomChangeListener(AbstractTileSourceLayer.this);
+            super.detachFromMapView(event);
+            if (memory != null) {
+                memory.free();
+            }
+        }
     }
 }
