@@ -185,8 +185,6 @@ public abstract class Command extends PseudoCommand {
      * @return true if this command is invalid after that layer is removed.
      */
     public boolean invalidBecauselayerRemoved(Layer oldLayer) {
-        if (!(oldLayer instanceof OsmDataLayer))
-            return false;
         return layer == oldLayer;
     }
 
