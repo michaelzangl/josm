@@ -54,7 +54,7 @@ public class ChangeNodesCommandTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testPreventEmptyWays() {
-        new ChangeNodesCommand(testData.existingWay, Collections.<Node>emptyList());
+        new ChangeNodesCommand(testData.existingWay, Collections.<Node> emptyList());
     }
 
     /**
@@ -72,6 +72,7 @@ public class ChangeNodesCommandTest {
         assertEquals("existing", testData.existingWay.get("existing"));
         assertTrue(testData.existingWay.isModified());
     }
+
     /**
      * Test {@link ChangeCommand#undoCommand()}
      */
@@ -97,11 +98,12 @@ public class ChangeNodesCommandTest {
         ArrayList<OsmPrimitive> modified = new ArrayList<>();
         ArrayList<OsmPrimitive> deleted = new ArrayList<>();
         ArrayList<OsmPrimitive> added = new ArrayList<>();
-        new ChangeNodesCommand(testData.existingWay, Arrays.asList(testData.existingNode)).fillModifiedData(modified, deleted, added);
-        assertArrayEquals(new Object[] {testData.existingWay}, modified.toArray());
+        new ChangeNodesCommand(testData.existingWay, Arrays.asList(testData.existingNode)).fillModifiedData(modified,
+                deleted, added);
+        assertArrayEquals(new Object[] { testData.existingWay }, modified.toArray());
         assertArrayEquals(new Object[] {}, deleted.toArray());
         assertArrayEquals(new Object[] {}, added.toArray());
-   }
+    }
 
     /**
      * Test {@link ChangeNodesCommand#getDescriptionText()}
@@ -115,9 +117,9 @@ public class ChangeNodesCommandTest {
         way.addNode(node);
         way.put("name", "xy");
 
-        assertTrue(new ChangeNodesCommand(way, Arrays.asList(node)).getDescriptionText().matches("Change nodes of.*xy.*"));
+        assertTrue(
+                new ChangeNodesCommand(way, Arrays.asList(node)).getDescriptionText().matches("Change nodes of.*xy.*"));
     }
-
 
     /**
      * Unit test of methods {@link ChangeNodesCommand#equals} and {@link ChangeNodesCommand#hashCode}.
@@ -125,15 +127,11 @@ public class ChangeNodesCommandTest {
     @Test
     public void equalsContract() {
         EqualsVerifier.forClass(ChangeNodesCommand.class).usingGetClass()
-            .withPrefabValues(Way.class,
-                new Way(1), new Way(2))
-            .withPrefabValues(DataSet.class,
-                    new DataSet(), new DataSet())
-            .withPrefabValues(User.class,
-                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-            .withPrefabValues(OsmDataLayer.class,
-                    new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
-            .suppress(Warning.NONFINAL_FIELDS)
-            .verify();
+                .withPrefabValues(Way.class, new Way(1), new Way(2))
+                .withPrefabValues(DataSet.class, new DataSet(), new DataSet())
+                .withPrefabValues(User.class, User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+                .withPrefabValues(OsmDataLayer.class, new OsmDataLayer(new DataSet(), "1", null),
+                        new OsmDataLayer(new DataSet(), "2", null))
+                .suppress(Warning.NONFINAL_FIELDS).verify();
     }
 }
