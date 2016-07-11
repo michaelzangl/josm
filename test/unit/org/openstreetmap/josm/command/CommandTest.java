@@ -94,7 +94,7 @@ public class CommandTest {
             .verify();
     }
 
-    private final class NopCommand extends Command {
+    private static final class NopCommand extends Command {
         public NopCommand() {
             super();
         }
