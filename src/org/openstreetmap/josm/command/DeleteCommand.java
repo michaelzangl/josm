@@ -64,8 +64,6 @@ public class DeleteCommand extends Command {
      */
     public DeleteCommand(Collection<? extends OsmPrimitive> data) {
         CheckParameterUtil.ensureParameterNotNull(data, "data");
-        if (data.isEmpty())
-            throw new IllegalArgumentException(tr("At least one object to delete required, got empty collection"));
         this.toDelete = data;
         checkConsistency();
     }
@@ -105,13 +103,14 @@ public class DeleteCommand extends Command {
     public DeleteCommand(OsmDataLayer layer, Collection<? extends OsmPrimitive> data) {
         super(layer);
         CheckParameterUtil.ensureParameterNotNull(data, "data");
-        if (data.isEmpty())
-            throw new IllegalArgumentException(tr("At least one object to delete required, got empty collection"));
         this.toDelete = data;
         checkConsistency();
     }
 
     private void checkConsistency() {
+        if (toDelete.isEmpty()) {
+            throw new IllegalArgumentException(tr("At least one object to delete required, got empty collection"));
+        }
         for (OsmPrimitive p : toDelete) {
             if (p == null) {
                 throw new IllegalArgumentException("Primitive to delete must not be null");
