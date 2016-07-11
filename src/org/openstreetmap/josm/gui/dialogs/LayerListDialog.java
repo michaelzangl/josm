@@ -1164,7 +1164,7 @@ public class LayerListDialog extends ToggleDialog {
     /**
      * This class allows the user to transfer layers using drag+drop.
      * <p>
-     * It supports copy (dupplication) of layers, simple moves and linking layers to a new layer manager.
+     * It supports copy (duplication) of layers, simple moves and linking layers to a new layer manager.
      *
      * @author Michael Zangl
      * @since xxx
@@ -1173,7 +1173,25 @@ public class LayerListDialog extends ToggleDialog {
         @Override
         public int getSourceActions(JComponent c) {
             // we know that the source is a layer list, so don't check c.
-            return COPY | MOVE /* soon: | LINK*/;
+            LayerList list = (LayerList) c;
+            LayerListModel tableModel = list.getModel();
+            if (tableModel.getSelectedLayers().isEmpty()) {
+                return 0;
+            }
+            int actions = MOVE;
+            if (onlyDataLayersSelected(tableModel)) {
+                actions |= COPY;
+            }
+            return actions /* soon: | LINK*/;
+        }
+
+        private boolean onlyDataLayersSelected(LayerListModel tableModel) {
+            for (Layer l : tableModel.getSelectedLayers()) {
+                if (!(l instanceof OsmDataLayer)) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private final static List<DataFlavor> ACCEPTED = Arrays.asList(LayerTransferable.LAYER_DATA,
@@ -1256,7 +1274,7 @@ public class LayerListDialog extends ToggleDialog {
 
         private List<Layer> createCopy(List<Layer> layersToUse) {
             ArrayList<Layer> layers = new ArrayList<>();
-            //TODO: DupplicateAction
+            //TODO: DuplicateAction
             for (Layer layer : layersToUse) {
                 if (layer instanceof OsmDataLayer) {
                     layers.add(new OsmDataLayer(new DataSet(((OsmDataLayer) layer).data), "TODO", null));
