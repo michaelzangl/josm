@@ -48,7 +48,7 @@ public class RelationMemberTransferable implements Transferable {
     /**
      * Data flavor for {@link RelationMemberData} which is wrapped in {@link Data}.
      */
-    public static final DataFlavor RELATION_MEMBER_DATA = new DataFlavor(Data.class, Data.class.getName());
+    public static final DataFlavor RELATION_MEMBER_DATA = new DataFlavor(Data.class, "Relation member");
     private final Collection<RelationMember> members;
 
     /**

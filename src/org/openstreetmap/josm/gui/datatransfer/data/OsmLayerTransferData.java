@@ -3,15 +3,17 @@ package org.openstreetmap.josm.gui.datatransfer.data;
 
 import java.awt.datatransfer.DataFlavor;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import org.openstreetmap.josm.gui.datatransfer.LayerTransferable;
 import org.openstreetmap.josm.gui.layer.LayerManager;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 
 /**
  * A special form of {@link LayerTransferData} that ensures you that the layer is an OSM data layer
- * @author michael
- *
+ * @author Michael Zangl
+ * @since xxx
  */
 public class OsmLayerTransferData extends LayerTransferData {
 
@@ -22,12 +24,13 @@ public class OsmLayerTransferData extends LayerTransferData {
      * @see #FLAVORS
      */
     public static final DataFlavor FLAVOR = new DataFlavor(
-            DataFlavor.javaJVMLocalObjectMimeType + ";class=" + LayerTransferData.class.getCanonicalName(), "Layer");
+            DataFlavor.javaJVMLocalObjectMimeType + ";class=" + LayerTransferData.class.getName(), "Layer");
 
     /**
      * The flavors that are supported by this data type.
      */
-    public static final List<DataFlavor> FLAVORS = Arrays.asList(FLAVOR, LayerTransferData.FLAVOR);
+    public static final List<DataFlavor> FLAVORS = Collections
+            .unmodifiableList(Arrays.asList(FLAVOR, LayerTransferData.FLAVOR, LayerTransferable.LAYER_DATA));
 
     private final OsmDataLayer osmLayer;
 
@@ -41,8 +44,17 @@ public class OsmLayerTransferData extends LayerTransferData {
         osmLayer = layer;
     }
 
+    /**
+     * Gets the OSM data layer.
+     * @return The layer
+     */
     public OsmDataLayer getOsmLayer() {
         return osmLayer;
+    }
+
+    @Override
+    public List<DataFlavor> getSupportedFlavors() {
+        return FLAVORS;
     }
 
     @Override

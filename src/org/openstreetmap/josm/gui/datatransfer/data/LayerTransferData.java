@@ -2,7 +2,11 @@
 package org.openstreetmap.josm.gui.datatransfer.data;
 
 import java.awt.datatransfer.DataFlavor;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
+import org.openstreetmap.josm.gui.datatransfer.LayerTransferable;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.LayerManager;
 
@@ -11,12 +15,18 @@ import org.openstreetmap.josm.gui.layer.LayerManager;
  * @author Michael Zangl
  *
  */
-public class LayerTransferData {
+public class LayerTransferData extends LayerTransferable.Data {
     /**
      * This is a data flavor for all layer types
      */
     public static final DataFlavor FLAVOR = new DataFlavor(
-            DataFlavor.javaJVMLocalObjectMimeType + ";class=" + LayerTransferData.class.getCanonicalName(), "Layer");
+            DataFlavor.javaJVMLocalObjectMimeType + ";class=" + LayerTransferData.class.getName(), "Layer");
+
+    /**
+     * The flavors that are supported by this data type.
+     */
+    private static final List<DataFlavor> FLAVORS = Collections
+            .unmodifiableList(Arrays.asList(LayerTransferData.FLAVOR, LayerTransferable.LAYER_DATA));
 
     private final Layer layer;
 
@@ -26,6 +36,7 @@ public class LayerTransferData {
      * @param layer The layer
      */
     public LayerTransferData(LayerManager layerManager, Layer layer) {
+        super(layerManager, Collections.singletonList(layer));
         this.layer = layer;
     }
 
@@ -35,6 +46,14 @@ public class LayerTransferData {
      */
     public Layer getLayer() {
         return layer;
+    }
+
+    /**
+     * Gets a list of flavors supported by this data.
+     * @return The flavors.
+     */
+    public List<DataFlavor> getSupportedFlavors() {
+        return FLAVORS;
     }
 
     @Override

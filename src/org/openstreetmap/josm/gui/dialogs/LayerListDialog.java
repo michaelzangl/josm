@@ -9,12 +9,16 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,6 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.AbstractAction;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultListSelectionModel;
+import javax.swing.DropMode;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -32,6 +37,7 @@ import javax.swing.JTable;
 import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
+import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListSelectionEvent;
@@ -45,9 +51,12 @@ import javax.swing.table.TableModel;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.MergeLayerAction;
+import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.SideButton;
+import org.openstreetmap.josm.gui.datatransfer.LayerTransferable;
+import org.openstreetmap.josm.gui.datatransfer.data.LayerTransferData;
 import org.openstreetmap.josm.gui.dialogs.layer.ActivateLayerAction;
 import org.openstreetmap.josm.gui.dialogs.layer.DeleteLayerAction;
 import org.openstreetmap.josm.gui.dialogs.layer.DuplicateAction;
@@ -67,6 +76,7 @@ import org.openstreetmap.josm.gui.layer.MainLayerManager;
 import org.openstreetmap.josm.gui.layer.MainLayerManager.ActiveLayerChangeEvent;
 import org.openstreetmap.josm.gui.layer.MainLayerManager.ActiveLayerChangeListener;
 import org.openstreetmap.josm.gui.layer.NativeScaleLayer;
+import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.gui.widgets.DisableShortcutsOnFocusGainedTextField;
 import org.openstreetmap.josm.gui.widgets.JosmTextField;
@@ -1104,7 +1114,7 @@ public class LayerListDialog extends ToggleDialog {
 
         @Override
         public void layerOrderChanged(LayerOrderChangeEvent e) {
-            // ignored for now, since only we change layer order.
+            fireTableDataChanged();
         }
 
         /* ------------------------------------------------------------------------------ */
@@ -1130,6 +1140,9 @@ public class LayerListDialog extends ToggleDialog {
         LayerList(LayerListModel dataModel) {
             super(dataModel);
             dataModel.setLayerList(this);
+            setDragEnabled(true);
+            setDropMode(DropMode.INSERT_ROWS);
+            setTransferHandler(new LayerListTransferHandler());
         }
 
         public void scrollToVisible(int row, int col) {
@@ -1140,6 +1153,116 @@ public class LayerListDialog extends ToggleDialog {
             Point pt = viewport.getViewPosition();
             rect.setLocation(rect.x - pt.x, rect.y - pt.y);
             viewport.scrollRectToVisible(rect);
+        }
+
+        @Override
+        public LayerListModel getModel() {
+            return (LayerListModel) super.getModel();
+        }
+    }
+
+    /**
+     * This class allows the user to transfer layers using drag+drop.
+     * <p>
+     * It supports copy (dupplication) of layers, simple moves and linking layers to a new layer manager.
+     *
+     * @author Michael Zangl
+     * @since xxx
+     */
+    static class LayerListTransferHandler extends TransferHandler {
+        @Override
+        public int getSourceActions(JComponent c) {
+            // we know that the source is a layer list, so don't check c.
+            return COPY | MOVE /* soon: | LINK*/;
+        }
+
+        private final static List<DataFlavor> ACCEPTED = Arrays.asList(LayerTransferable.LAYER_DATA,
+                LayerTransferData.FLAVOR);
+
+        @Override
+        protected Transferable createTransferable(JComponent c) {
+            LayerList list = (LayerList) c;
+            LayerListModel tableModel = list.getModel();
+            return new LayerTransferable(tableModel.getLayerManager(), tableModel.getSelectedLayers());
+        }
+
+        @Override
+        public boolean canImport(TransferSupport support) {
+            if (support.isDrop()) {
+                support.setShowDropLocation(true);
+            }
+
+            if (!support.isDataFlavorSupported(LayerTransferable.LAYER_DATA)) {
+                return false;
+            }
+
+            if (support.getDropAction() == LINK) {
+                // cannot link yet.
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public boolean importData(TransferSupport support) {
+            try {
+                LayerList list = (LayerList) support.getComponent();
+
+                LayerTransferable.Data layers = ((LayerTransferable.Data) support.getTransferable()
+                        .getTransferData(LayerTransferable.LAYER_DATA));
+
+                int dropLocation;
+                if (support.isDrop()) {
+                    JTable.DropLocation dl = (JTable.DropLocation) support.getDropLocation();
+                    dropLocation = dl.getRow();
+                } else {
+                    dropLocation = layers.getLayers().get(0).getDefaultLayerPosition().getPosition(layers.getManager());
+                }
+
+                boolean isSameLayerManager = list.getModel().getLayerManager() == layers.getManager();
+
+                if (support.getDropAction() == MOVE && isSameLayerManager) {
+                    for (Layer layer : layers.getLayers()) {
+                        boolean wasBeforeInsert = layers.getManager().getLayers().indexOf(layer) <= dropLocation;
+                        if (wasBeforeInsert) {
+                            // need to move insertion point one down to preserve order
+                            dropLocation--;
+                        }
+                        layers.getManager().moveLayer(layer, dropLocation);
+                        dropLocation++;
+                    }
+                } else {
+                    List<Layer> layersToUse = layers.getLayers();
+                    if (support.getDropAction() == COPY) {
+                        layersToUse = createCopy(layersToUse);
+                    }
+                    for (Layer layer : layersToUse) {
+                        layers.getManager().addLayer(layer);
+                        layers.getManager().moveLayer(layer, dropLocation);
+                        dropLocation++;
+                    }
+                }
+
+                return true;
+            } catch (UnsupportedFlavorException e) {
+                Main.warn("Flavor not supported", e);
+                return false;
+            } catch (IOException e) {
+                Main.warn("Error while pasting layer", e);
+                return false;
+            }
+        }
+
+        private List<Layer> createCopy(List<Layer> layersToUse) {
+            ArrayList<Layer> layers = new ArrayList<>();
+            //TODO: DupplicateAction
+            for (Layer layer : layersToUse) {
+                if (layer instanceof OsmDataLayer) {
+                    layers.add(new OsmDataLayer(new DataSet(((OsmDataLayer) layer).data), "TODO", null));
+                }
+            }
+            return layers;
         }
     }
 
