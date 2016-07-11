@@ -48,6 +48,7 @@ public class ChangePropertyKeyCommandTest {
 
     /**
      * Tests that a key is changed.
+     * @since xxx
      */
     @Test
     public void testChangeKeySingle() {
@@ -60,6 +61,7 @@ public class ChangePropertyKeyCommandTest {
 
     /**
      * Tests that a key is changed.
+     * @since xxx
      */
     @Test
     public void testChangeKey() {
@@ -76,6 +78,7 @@ public class ChangePropertyKeyCommandTest {
 
     /**
      * Tests that nop operations are ignored.
+     * @since xxx
      */
     @Test
     public void testChangeKeyIgnored() {
@@ -120,6 +123,7 @@ public class ChangePropertyKeyCommandTest {
 
     /**
      * Test {@link ChangePropertyCommand#getChildren()}
+     * @since xxx
      */
     @Test
     public void testChildren() {
@@ -149,16 +153,14 @@ public class ChangePropertyKeyCommandTest {
      */
     @Test
     public void equalsContract() {
-        EqualsVerifier
-        .forClass(ChangePropertyKeyCommand.class)
-        .usingGetClass()
-        .withPrefabValues(DataSet.class,
+        EqualsVerifier.forClass(ChangePropertyKeyCommand.class).usingGetClass()
+            .withPrefabValues(DataSet.class,
                 new DataSet(), new DataSet())
-        .withPrefabValues(User.class,
-                User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-        .withPrefabValues(OsmDataLayer.class,
+            .withPrefabValues(User.class,
+                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+            .withPrefabValues(OsmDataLayer.class,
                 new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
-        .suppress(Warning.NONFINAL_FIELDS)
-        .verify();
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
     }
 }

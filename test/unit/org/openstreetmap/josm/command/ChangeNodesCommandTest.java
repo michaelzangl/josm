@@ -126,18 +126,16 @@ public class ChangeNodesCommandTest {
      */
     @Test
     public void equalsContract() {
-        EqualsVerifier
-        .forClass(ChangeNodesCommand.class)
-        .usingGetClass()
-        .withPrefabValues(Way.class,
+        EqualsVerifier.forClass(ChangeNodesCommand.class).usingGetClass()
+            .withPrefabValues(Way.class,
                 new Way(1), new Way(2))
-        .withPrefabValues(DataSet.class,
-                new DataSet(), new DataSet())
-        .withPrefabValues(User.class,
-                User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-        .withPrefabValues(OsmDataLayer.class,
-                new OsmDataLayer(new DataSet(), "1", null),new OsmDataLayer(new DataSet(), "2", null))
-        .suppress(Warning.NONFINAL_FIELDS)
-        .verify();
+            .withPrefabValues(DataSet.class,
+                    new DataSet(), new DataSet())
+            .withPrefabValues(User.class,
+                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+            .withPrefabValues(OsmDataLayer.class,
+                    new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
     }
 }

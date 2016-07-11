@@ -50,6 +50,7 @@ public class CommandTest {
 
     /**
      * Test {@link Command#invalidBecauselayerRemoved(org.openstreetmap.josm.gui.layer.Layer)}
+     * @since xxx
      */
     @Test
     public void testInvalidBecauselayerRemoved() {
@@ -66,6 +67,7 @@ public class CommandTest {
 
     /**
      * Test {@link Command#getLayer()}
+     * @since xxx
      */
     @Test
     public void testGetLayer() {
@@ -82,11 +84,14 @@ public class CommandTest {
     @Test
     public void equalsContract() {
         EqualsVerifier.forClass(Command.class).usingGetClass()
-                .withPrefabValues(DataSet.class, new DataSet(), new DataSet())
-                .withPrefabValues(User.class, User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-                .withPrefabValues(OsmDataLayer.class, new OsmDataLayer(new DataSet(), "1", null),
-                        new OsmDataLayer(new DataSet(), "2", null))
-                .suppress(Warning.NONFINAL_FIELDS).verify();
+            .withPrefabValues(DataSet.class,
+                new DataSet(), new DataSet())
+            .withPrefabValues(User.class,
+                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+            .withPrefabValues(OsmDataLayer.class,
+                new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
     }
 
     private final class NopCommand extends Command {

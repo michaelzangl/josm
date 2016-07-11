@@ -54,6 +54,7 @@ public class ChangePropertyCommandTest {
 
     /**
      * Checks that the short constructors create the right {@link ChangePropertyCommand}
+     * @since xxx
      */
     @Test
     public void testShortConstructor() {
@@ -70,6 +71,7 @@ public class ChangePropertyCommandTest {
 
     /**
      * Checks that {@link ChangePropertyCommand} adds/updates a property
+     * @since xxx
      */
     @Test
     public void testUpdateSingleProperty() {
@@ -89,6 +91,7 @@ public class ChangePropertyCommandTest {
 
     /**
      * Checks that {@link ChangePropertyCommand} removes a property
+     * @since xxx
      */
     @Test
     public void testRemoveProperty() {
@@ -108,6 +111,7 @@ public class ChangePropertyCommandTest {
 
     /**
      * Checks that {@link ChangePropertyCommand} adds/updates multiple properties
+     * @since xxx
      */
     @Test
     public void testUpdateMultipleProperties() {
@@ -135,6 +139,7 @@ public class ChangePropertyCommandTest {
 
     /**
      * Checks that {@link ChangePropertyCommand} adds/updates a property
+     * @since xxx
      */
     @Test
     public void testUpdateIgnoresExistingProperty() {
@@ -251,6 +256,7 @@ public class ChangePropertyCommandTest {
 
     /**
      * Test {@link ChangePropertyCommand#getChildren()}
+     * @since xxx
      */
     @Test
     public void testChildren() {
@@ -280,16 +286,14 @@ public class ChangePropertyCommandTest {
      */
     @Test
     public void equalsContract() {
-        EqualsVerifier
-        .forClass(ChangePropertyCommand.class)
-        .usingGetClass()
-        .withPrefabValues(DataSet.class,
+        EqualsVerifier.forClass(ChangePropertyCommand.class).usingGetClass()
+            .withPrefabValues(DataSet.class,
                 new DataSet(), new DataSet())
-        .withPrefabValues(User.class,
-                User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-        .withPrefabValues(OsmDataLayer.class,
+            .withPrefabValues(User.class,
+                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+            .withPrefabValues(OsmDataLayer.class,
                 new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
-        .suppress(Warning.NONFINAL_FIELDS)
-        .verify();
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
     }
 }

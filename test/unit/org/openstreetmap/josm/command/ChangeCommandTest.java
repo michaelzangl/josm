@@ -52,6 +52,7 @@ public class ChangeCommandTest {
 
     /**
      * Test that empty ways are prevented.
+     * @since xxx
      */
     @Test(expected = IllegalArgumentException.class)
     public void testPreventEmptyWays() {
@@ -61,6 +62,7 @@ public class ChangeCommandTest {
 
     /**
      * Test {@link ChangeCommand#executeCommand()}
+     * @since xxx
      */
     @Test
     public void testChange() {
@@ -85,6 +87,7 @@ public class ChangeCommandTest {
 
     /**
      * Test {@link ChangeCommand#executeCommand()} fails if ID is changed
+     * @since xxx
      */
     @Test(expected = DataIntegrityProblemException.class)
     public void testChangeIdChange() {
@@ -96,6 +99,7 @@ public class ChangeCommandTest {
 
     /**
      * Test {@link ChangeCommand#undoCommand()}
+     * @since xxx
      */
     @Test
     public void testUndo() {
@@ -154,18 +158,16 @@ public class ChangeCommandTest {
      */
     @Test
     public void equalsContract() {
-        EqualsVerifier
-        .forClass(ChangeCommand.class)
-        .usingGetClass()
-        .withPrefabValues(DataSet.class,
+        EqualsVerifier.forClass(ChangeCommand.class).usingGetClass()
+            .withPrefabValues(DataSet.class,
                 new DataSet(), new DataSet())
-        .withPrefabValues(User.class,
-                User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-        .withPrefabValues(OsmPrimitive.class,
+            .withPrefabValues(User.class,
+                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+            .withPrefabValues(OsmPrimitive.class,
                 new Node(1), new Node(2))
-        .withPrefabValues(OsmDataLayer.class,
+            .withPrefabValues(OsmDataLayer.class,
                 new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
-        .suppress(Warning.NONFINAL_FIELDS)
-        .verify();
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
     }
 }

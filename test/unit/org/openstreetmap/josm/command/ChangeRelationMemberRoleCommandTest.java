@@ -47,6 +47,7 @@ public class ChangeRelationMemberRoleCommandTest {
 
     /**
      * Test if {@link ChangeRelationMemberRoleCommand} changes the role by index
+     * @since xxx
      */
     @Test
     public void testRoleChanged() {
@@ -63,6 +64,7 @@ public class ChangeRelationMemberRoleCommandTest {
 
     /**
      * Wrong index should be ignored.
+     * @since xxx
      */
     @Test
     public void testWrongIndex() {
@@ -81,6 +83,7 @@ public class ChangeRelationMemberRoleCommandTest {
 
     /**
      * Same role should be ignored.
+     * @since xxx
      */
     @Test
     public void testSameRole() {
@@ -91,6 +94,7 @@ public class ChangeRelationMemberRoleCommandTest {
 
     /**
      * Test {@link ChangeRelationMemberRoleCommand#undoCommand()}.
+     * @since xxx
      */
     @Test
     public void testUndo() {
@@ -135,6 +139,7 @@ public class ChangeRelationMemberRoleCommandTest {
 
     /**
      * Test {@link ChangeRelationMemberRoleCommand#getChildren()}
+     * @since xxx
      */
     @Test
     public void testChildren() {
@@ -146,18 +151,16 @@ public class ChangeRelationMemberRoleCommandTest {
      */
     @Test
     public void equalsContract() {
-        EqualsVerifier
-        .forClass(ChangeRelationMemberRoleCommand.class)
-        .usingGetClass()
-        .withPrefabValues(Relation.class,
+        EqualsVerifier.forClass(ChangeRelationMemberRoleCommand.class).usingGetClass()
+            .withPrefabValues(Relation.class,
                 new Relation(1), new Relation(2))
-        .withPrefabValues(DataSet.class,
-                new DataSet(), new DataSet())
-        .withPrefabValues(User.class,
-                User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-        .withPrefabValues(OsmDataLayer.class,
+            .withPrefabValues(DataSet.class,
+                    new DataSet(), new DataSet())
+            .withPrefabValues(User.class,
+                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+            .withPrefabValues(OsmDataLayer.class,
                 new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
-        .suppress(Warning.NONFINAL_FIELDS)
-        .verify();
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
     }
 }

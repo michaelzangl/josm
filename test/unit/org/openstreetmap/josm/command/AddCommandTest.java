@@ -142,18 +142,16 @@ public class AddCommandTest {
      */
     @Test
     public void equalsContract() {
-        EqualsVerifier
-        .forClass(AddCommand.class)
-        .usingGetClass()
-        .withPrefabValues(OsmPrimitive.class,
+        EqualsVerifier.forClass(AddCommand.class).usingGetClass()
+            .withPrefabValues(OsmPrimitive.class,
                 new Node(1), new Node(2))
-        .withPrefabValues(DataSet.class,
-                new DataSet(), new DataSet())
-        .withPrefabValues(User.class,
-                User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-        .withPrefabValues(OsmDataLayer.class,
+            .withPrefabValues(DataSet.class,
+                    new DataSet(), new DataSet())
+            .withPrefabValues(User.class,
+                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+            .withPrefabValues(OsmDataLayer.class,
                 new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
-        .suppress(Warning.NONFINAL_FIELDS)
-        .verify();
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
     }
 }

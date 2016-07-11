@@ -154,10 +154,13 @@ public class SelectCommandTest {
     @Test
     public void equalsContract() {
         EqualsVerifier.forClass(SelectCommand.class).usingGetClass()
-                .withPrefabValues(DataSet.class, new DataSet(), new DataSet())
-                .withPrefabValues(User.class, User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-                .withPrefabValues(OsmDataLayer.class, new OsmDataLayer(new DataSet(), "1", null),
-                        new OsmDataLayer(new DataSet(), "2", null))
-                .suppress(Warning.NONFINAL_FIELDS).verify();
+            .withPrefabValues(DataSet.class,
+                new DataSet(), new DataSet())
+            .withPrefabValues(User.class,
+                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+            .withPrefabValues(OsmDataLayer.class,
+                new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
     }
 }

@@ -271,11 +271,15 @@ public class MoveCommandTest {
     @Test
     public void equalsContract() {
         EqualsVerifier.forClass(MoveCommand.class).usingGetClass()
-                .withPrefabValues(LatLon.class, LatLon.ZERO, new LatLon(45, 45))
-                .withPrefabValues(DataSet.class, new DataSet(), new DataSet())
-                .withPrefabValues(User.class, User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-                .withPrefabValues(OsmDataLayer.class, new OsmDataLayer(new DataSet(), "1", null),
-                        new OsmDataLayer(new DataSet(), "2", null))
-                .suppress(Warning.NONFINAL_FIELDS).verify();
+            .withPrefabValues(LatLon.class,
+                LatLon.ZERO, new LatLon(45, 45))
+            .withPrefabValues(DataSet.class,
+                new DataSet(), new DataSet())
+            .withPrefabValues(User.class,
+                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+            .withPrefabValues(OsmDataLayer.class,
+                new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
     }
 }

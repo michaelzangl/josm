@@ -139,14 +139,18 @@ public class PurgeCommandTest {
     @Test
     public void equalsContract() {
         EqualsVerifier.forClass(PurgeCommand.class).usingGetClass()
-                .withPrefabValues(DataSet.class, new DataSet(), new DataSet())
-                .withPrefabValues(User.class, User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-                .withPrefabValues(Conflict.class, new Conflict<>(new Node(1, 1), new Node(2, 1)),
-                        new Conflict<>(new Node(1, 1), new Node(3, 1)))
-                .withPrefabValues(OsmDataLayer.class, new OsmDataLayer(new DataSet(), "1", null),
-                        new OsmDataLayer(new DataSet(), "2", null))
-                .withPrefabValues(Hash.class, Storage.<OsmPrimitive> defaultHash(),
-                        Storage.<OsmPrimitive> defaultHash())
-                .suppress(Warning.NONFINAL_FIELDS).verify();
+            .withPrefabValues(DataSet.class,
+                new DataSet(), new DataSet())
+            .withPrefabValues(User.class,
+                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+            .withPrefabValues(Conflict.class,
+                    new Conflict<>(new Node(1, 1), new Node(2, 1)),
+                    new Conflict<>(new Node(1, 1), new Node(3, 1)))
+            .withPrefabValues(OsmDataLayer.class,
+                new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
+            .withPrefabValues(Hash.class,
+                Storage.<OsmPrimitive>defaultHash(), Storage.<OsmPrimitive>defaultHash())
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
     }
 }
