@@ -119,6 +119,7 @@ public class AddPrimitivesCommandTest {
         assertEquals(3, layer1.data.getNodes().size());
         assertEquals(1, layer1.data.getWays().size());
     }
+
     /**
      * Test {@link AddPrimitivesCommand#getDescriptionText()}
      * @since xxx
@@ -132,7 +133,7 @@ public class AddPrimitivesCommandTest {
         NodeData data2 = createTestNode(7);
 
         AddPrimitivesCommand command1 = new AddPrimitivesCommand(testData);
-        AddPrimitivesCommand command2 = new AddPrimitivesCommand(Arrays.<PrimitiveData>asList(data2));
+        AddPrimitivesCommand command2 = new AddPrimitivesCommand(Arrays.<PrimitiveData> asList(data2));
 
         assertEquals("Added 3 objects", command1.getDescriptionText());
         assertEquals("Added 1 object", command2.getDescriptionText());
@@ -218,7 +219,7 @@ public class AddPrimitivesCommandTest {
         assertArrayEquals(new Object[] {}, modified.toArray());
         assertArrayEquals(new Object[] {}, deleted.toArray());
         assertArrayEquals(new Object[] {}, added.toArray());
-   }
+    }
 
     private void testContainsTestData(OsmDataLayer layer1) {
         assertEquals(3, layer1.data.allPrimitives().size());
@@ -264,11 +265,16 @@ public class AddPrimitivesCommandTest {
      */
     @Test
     public void equalsContract() {
-        EqualsVerifier.forClass(AddPrimitivesCommand.class).usingGetClass()
-                .withPrefabValues(DataSet.class, new DataSet(), new DataSet())
-                .withPrefabValues(User.class, User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-                .withPrefabValues(OsmDataLayer.class, new OsmDataLayer(new DataSet(), "1", null),
-                        new OsmDataLayer(new DataSet(), "2", null))
-                .suppress(Warning.NONFINAL_FIELDS).verify();
+        EqualsVerifier
+        .forClass(AddPrimitivesCommand.class)
+        .usingGetClass()
+        .withPrefabValues(DataSet.class,
+                new DataSet(), new DataSet())
+        .withPrefabValues(User.class,
+                User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+        .withPrefabValues(OsmDataLayer.class,
+                new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
+        .suppress(Warning.NONFINAL_FIELDS)
+        .verify();
     }
 }
