@@ -1,5 +1,5 @@
 // License: GPL. For details, see LICENSE file.
-package org.openstreetmap.josm.gui.datatransfer;
+package org.openstreetmap.josm.gui.datatransfer.data;
 
 import java.awt.datatransfer.DataFlavor;
 import java.io.Serializable;
@@ -23,7 +23,7 @@ public class TagTransferData implements Serializable {
     /**
      * This is a data flavor added
      */
-    public static final DataFlavor DATA_FLAVOR = new DataFlavor(TagTransferData.class, "OSM Tags");
+    public static final DataFlavor FLAVOR = new DataFlavor(TagTransferData.class, "OSM Tags");
 
     private final TagMap tags = new TagMap();
 

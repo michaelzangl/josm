@@ -1,5 +1,5 @@
 // License: GPL. For details, see LICENSE file.
-package org.openstreetmap.josm.gui.datatransfer;
+package org.openstreetmap.josm.gui.datatransfer.data;
 
 import java.awt.datatransfer.DataFlavor;
 import java.io.Serializable;

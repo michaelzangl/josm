@@ -16,6 +16,7 @@ import javax.swing.TransferHandler;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
 import org.openstreetmap.josm.gui.datatransfer.importers.AbstractDataFlavorSupport;
 import org.openstreetmap.josm.gui.datatransfer.importers.FileSupport;
 import org.openstreetmap.josm.gui.datatransfer.importers.PrimitiveDataSupport;
@@ -121,14 +122,6 @@ public class OsmTransferHandler extends TransferHandler {
             }
         }
         return false;
-    }
-
-    /**
-     * Invoke a copy for the given data.
-     * @param data The data to copy.
-     */
-    public static void copyToClippboard(PrimitiveTransferData data) {
-        getClippboard().setContents(new PrimitiveTransferable(data), null);
     }
 
     /**

@@ -18,8 +18,8 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.PrimitiveData;
 import org.openstreetmap.josm.data.osm.RelationMember;
 import org.openstreetmap.josm.data.osm.RelationMemberData;
-import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferData;
 import org.openstreetmap.josm.gui.datatransfer.RelationMemberTransferable;
+import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
 import org.openstreetmap.josm.tools.Utils.Function;
 
 /**

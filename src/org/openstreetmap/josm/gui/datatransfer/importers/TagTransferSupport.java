@@ -7,7 +7,7 @@ import java.util.Map;
 
 import javax.swing.TransferHandler.TransferSupport;
 
-import org.openstreetmap.josm.gui.datatransfer.TagTransferData;
+import org.openstreetmap.josm.gui.datatransfer.data.TagTransferData;
 
 /**
  * This transfer support allows us to transfer tags from the copied primitives on to the selected ones.
@@ -19,7 +19,7 @@ public final class TagTransferSupport extends AbstractTagTransferSupport {
      * Create a new {@link TagTransferSupport}
      */
     public TagTransferSupport() {
-        super(TagTransferData.DATA_FLAVOR);
+        super(TagTransferData.FLAVOR);
     }
 
     @Override

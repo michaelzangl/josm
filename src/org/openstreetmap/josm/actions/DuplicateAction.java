@@ -12,8 +12,8 @@ import java.util.Collection;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
-import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferData;
 import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferable;
+import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
 import org.openstreetmap.josm.tools.Shortcut;
 
 /**

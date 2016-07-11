@@ -9,7 +9,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
-import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferData;
+import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferable;
+import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
 
 /**
  * This class allows to create and keep a deep copy of primitives. Provides methods to access directly added
@@ -49,7 +50,7 @@ public class PrimitiveDeepCopy {
      */
     @Deprecated
     public final void makeCopy(final Collection<? extends OsmPrimitive> primitives) {
-        OsmTransferHandler.copyToClippboard(PrimitiveTransferData.getDataWithReferences(primitives));
+        OsmTransferHandler.getClippboard().setContents(new PrimitiveTransferable(PrimitiveTransferData.getDataWithReferences(primitives)), null);
     }
 
     /**

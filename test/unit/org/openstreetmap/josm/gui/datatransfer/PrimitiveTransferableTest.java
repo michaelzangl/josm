@@ -17,6 +17,8 @@ import org.junit.Test;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.NodeData;
 import org.openstreetmap.josm.data.osm.PrimitiveData;
+import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
+import org.openstreetmap.josm.gui.datatransfer.data.TagTransferData;
 import org.openstreetmap.josm.testutils.JOSMTestRules;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -39,7 +41,7 @@ public class PrimitiveTransferableTest {
     public void testGetTransferDataFlavors() {
         List<DataFlavor> flavors = Arrays.asList(new PrimitiveTransferable(null).getTransferDataFlavors());
         int ptd = flavors.indexOf(PrimitiveTransferData.DATA_FLAVOR);
-        int tags = flavors.indexOf(TagTransferData.DATA_FLAVOR);
+        int tags = flavors.indexOf(TagTransferData.FLAVOR);
         int string = flavors.indexOf(DataFlavor.stringFlavor);
 
         assertTrue(ptd >= 0);
