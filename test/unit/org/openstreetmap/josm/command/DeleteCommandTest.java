@@ -1,11 +1,15 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.command;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -13,8 +17,11 @@ import org.junit.Test;
 import org.openstreetmap.josm.command.CommandTest.CommandTestDataWithRelation;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.User;
 import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.data.osm.WaySegment;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.testutils.JOSMTestRules;
 
@@ -45,6 +52,7 @@ public class DeleteCommandTest {
 
     /**
      * A simple deletion test with no references
+     * @since xxx
      */
     @Test
     public void testSimpleDelete() {
@@ -60,6 +68,7 @@ public class DeleteCommandTest {
 
     /**
      * A delete should not delete refered objects but should should remove the reference.
+     * @since xxx
      */
     @Test
     public void testDeleteIgnoresReferences() {
@@ -81,6 +90,7 @@ public class DeleteCommandTest {
 
     /**
      * A delete should delete all objects with references to the deleted one
+     * @since xxx
      */
     @Test(expected = IllegalArgumentException.class)
     public void testDeleteFailsOnDelted() {
@@ -91,6 +101,7 @@ public class DeleteCommandTest {
 
     /**
      * A delete should delete all objects with references to the deleted one
+     * @since xxx
      */
     @Test
     public void testReferedDelete() {
@@ -103,6 +114,7 @@ public class DeleteCommandTest {
 
     /**
      * Delete nodes that would be without reference afterwards.
+     * @since xxx
      */
     @Test
     public void testDelteNodesInWay() {
@@ -140,18 +152,239 @@ public class DeleteCommandTest {
     }
 
     /**
+     * Test that {@link DeleteCommand} checks for non-null.
+     * @since xxx
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testConsistency() {
+        new DeleteCommand(Arrays.asList(testData.existingNode, testData.existingWay, null));
+    }
+
+    /**
+     * Test that {@link DeleteCommand} checks for the dataset
+     * @since xxx
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testConsistencyDataset() {
+        testData.layer.data.removePrimitive(testData.existingNode);
+        new DeleteCommand(Arrays.asList(testData.existingNode, testData.existingWay));
+    }
+
+    /**
+     * Test that {@link DeleteCommand} checks for non-empty list
+     * @since xxx
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testConsistencyNonEmpty() {
+        new DeleteCommand(Arrays.<OsmPrimitive> asList());
+    }
+
+    /**
+     * Test that {@link DeleteCommand} checks for non-null list
+     * @since xxx
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testConsistencyNonNull() {
+        new DeleteCommand((Collection<OsmPrimitive>) null);
+    }
+
+    /**
+     * Test {@link DeleteCommand#undoCommand()}
+     * @since xxx
+     */
+    @Test
+    public void testUndo() {
+        DeleteCommand command = new DeleteCommand(
+                Arrays.asList(testData.existingNode, testData.existingNode2, testData.existingWay));
+        command.executeCommand();
+
+        assertTrue(testData.existingNode.isDeleted());
+        assertTrue(testData.existingWay.isDeleted());
+
+        command.undoCommand();
+
+        assertFalse(testData.existingNode.isDeleted());
+        assertFalse(testData.existingWay.isDeleted());
+        assertEquals("existing", testData.existingNode.get("existing"));
+
+        command.executeCommand();
+
+        assertTrue(testData.existingNode.isDeleted());
+        assertTrue(testData.existingWay.isDeleted());
+    }
+
+    /**
+     * Test {@link DeleteCommand#deleteWaySegment(OsmDataLayer, org.openstreetmap.josm.data.osm.WaySegment)}
+     * Way with only 1 segment
+     * @since xxx
+     */
+    @Test
+    public void testDeleteWaySegment() {
+        Way way1 = testData.createWay(100, testData.createNode(101), testData.createNode(102));
+        WaySegment ws = new WaySegment(way1, 0);
+        Command command = DeleteCommand.deleteWaySegment(testData.layer, ws);
+        command.executeCommand();
+
+        assertTrue(way1.isDeleted());
+    }
+
+    /**
+     * Test {@link DeleteCommand#deleteWaySegment(OsmDataLayer, org.openstreetmap.josm.data.osm.WaySegment)}
+     * Delete end of way
+     * @since xxx
+     */
+    @Test
+    public void testDeleteWaySegmentEndOfWay() {
+        Way way = testData.createWay(200, testData.createNode(201), testData.createNode(202), testData.createNode(203),
+                testData.createNode(204));
+        WaySegment ws = new WaySegment(way, 2);
+        Command command = DeleteCommand.deleteWaySegment(testData.layer, ws);
+        command.executeCommand();
+
+        assertEquals(3, way.getNodesCount());
+        assertEquals(201, way.getNodeId(0));
+        assertEquals(202, way.getNodeId(1));
+        assertEquals(203, way.getNodeId(2));
+    }
+
+    /**
+     * Test {@link DeleteCommand#deleteWaySegment(OsmDataLayer, org.openstreetmap.josm.data.osm.WaySegment)}
+     * Delete start of way
+     * @since xxx
+     */
+    @Test
+    public void testDeleteWaySegmentStartOfWay() {
+        Way way = testData.createWay(100, testData.createNode(101), testData.createNode(102), testData.createNode(103),
+                testData.createNode(104));
+        WaySegment ws = new WaySegment(way, 0);
+        Command command = DeleteCommand.deleteWaySegment(testData.layer, ws);
+        command.executeCommand();
+
+        assertEquals(3, way.getNodesCount());
+        assertEquals(102, way.getNodeId(0));
+        assertEquals(103, way.getNodeId(1));
+        assertEquals(104, way.getNodeId(2));
+    }
+
+    /**
+     * Test {@link DeleteCommand#deleteWaySegment(OsmDataLayer, org.openstreetmap.josm.data.osm.WaySegment)}
+     * Delete start of way
+     * @since xxx
+     */
+    @Test
+    public void testDeleteWaySegmentSplit() {
+        Node node103 = testData.createNode(103);
+        Node node104 = testData.createNode(104);
+        Way way = testData.createWay(100, testData.createNode(101), testData.createNode(102), node103, node104);
+        WaySegment ws = new WaySegment(way, 1);
+        Command command = DeleteCommand.deleteWaySegment(testData.layer, ws);
+        command.executeCommand();
+
+        assertEquals(2, way.getNodesCount());
+        assertEquals(101, way.getNodeId(0));
+        assertEquals(102, way.getNodeId(1));
+        // there needs to be a new way
+        assertEquals(1, node104.getReferrers().size());
+        Way newWay = (Way) node104.getReferrers().get(0);
+        assertEquals(2, newWay.getNodesCount());
+        assertEquals(103, newWay.getNodeId(0));
+        assertEquals(104, newWay.getNodeId(1));
+    }
+
+    /**
+     * Test {@link DeleteCommand#deleteWaySegment(OsmDataLayer, org.openstreetmap.josm.data.osm.WaySegment)}
+     * Delete start of way
+     * @since xxx
+     */
+    @Test
+    public void testDeleteWaySegmentCycle() {
+        Node n = testData.createNode(101);
+        Way way = testData.createWay(100, n, testData.createNode(102), testData.createNode(103),
+                testData.createNode(104), n);
+        WaySegment ws = new WaySegment(way, 2);
+        Command command = DeleteCommand.deleteWaySegment(testData.layer, ws);
+        command.executeCommand();
+
+        assertEquals(4, way.getNodesCount());
+        assertEquals(104, way.getNodeId(0));
+        assertEquals(101, way.getNodeId(1));
+        assertEquals(102, way.getNodeId(2));
+        assertEquals(103, way.getNodeId(3));
+    }
+
+    /**
+     * Tests {@link DeleteCommand#fillModifiedData(java.util.Collection, java.util.Collection, java.util.Collection)}
+     * @since xxx
+     */
+    @Test
+    public void testFillModifiedData() {
+        ArrayList<OsmPrimitive> modified = new ArrayList<>();
+        ArrayList<OsmPrimitive> deleted = new ArrayList<>();
+        ArrayList<OsmPrimitive> added = new ArrayList<>();
+        new DeleteCommand(Arrays.<OsmPrimitive> asList(testData.existingNode)).fillModifiedData(modified, deleted,
+                added);
+        // intentionally left empty.
+        assertArrayEquals(new Object[] {}, modified.toArray());
+        assertArrayEquals(new Object[] {}, deleted.toArray());
+        assertArrayEquals(new Object[] {}, added.toArray());
+    }
+
+    /**
+     * Tests {@link DeleteCommand#getParticipatingPrimitives()}
+     * @since xxx
+     */
+    @Test
+    public void testGetParticipatingPrimitives() {
+        DeleteCommand command = new DeleteCommand(Arrays.<OsmPrimitive> asList(testData.existingNode));
+        assertArrayEquals(new Object[] { testData.existingNode }, command.getParticipatingPrimitives().toArray());
+
+        DeleteCommand command2 = new DeleteCommand(
+                Arrays.<OsmPrimitive> asList(testData.existingNode, testData.existingWay));
+        assertArrayEquals(new Object[] { testData.existingNode, testData.existingWay },
+                command2.getParticipatingPrimitives().toArray());
+    }
+
+    /**
+     * Test {@link DeleteCommand#getDescriptionText()}
+     * @since xxx
+     */
+    @Test
+    public void testDescription() {
+        Node node = testData.createNode(100);
+        node.put("name", "xy");
+        Way way = testData.createWay(101);
+        way.put("name", "xy");
+        Relation relation = testData.createRelation(102);
+        relation.put("name", "xy");
+
+        List<OsmPrimitive> nodeList = Arrays.<OsmPrimitive> asList(node);
+        assertTrue(new DeleteCommand(nodeList).getDescriptionText().matches("Delete node .*xy.*"));
+        List<OsmPrimitive> wayList = Arrays.<OsmPrimitive> asList(way);
+        assertTrue(new DeleteCommand(wayList).getDescriptionText().matches("Delete way .*xy.*"));
+        List<OsmPrimitive> relationList = Arrays.<OsmPrimitive> asList(relation);
+        assertTrue(new DeleteCommand(relationList).getDescriptionText().matches("Delete relation .*xy.*"));
+
+        List<OsmPrimitive> nodesList = Arrays.<OsmPrimitive> asList(node, testData.createNode(110));
+        assertTrue(new DeleteCommand(nodesList).getDescriptionText().matches("Delete 2 nodes"));
+        List<OsmPrimitive> waysList = Arrays.<OsmPrimitive> asList(way, testData.createWay(111));
+        assertTrue(new DeleteCommand(waysList).getDescriptionText().matches("Delete 2 ways"));
+        List<OsmPrimitive> relationsList = Arrays.<OsmPrimitive> asList(relation, testData.createRelation(112));
+        assertTrue(new DeleteCommand(relationsList).getDescriptionText().matches("Delete 2 relations"));
+
+        List<OsmPrimitive> mixed = Arrays.<OsmPrimitive> asList(node, way, relation);
+        assertTrue(new DeleteCommand(mixed).getDescriptionText().matches("Delete 3 objects"));
+    }
+
+    /**
      * Unit test of methods {@link DeleteCommand#equals} and {@link DeleteCommand#hashCode}.
      */
     @Test
     public void equalsContract() {
         EqualsVerifier.forClass(DeleteCommand.class).usingGetClass()
-            .withPrefabValues(DataSet.class,
-                new DataSet(), new DataSet())
-            .withPrefabValues(User.class,
-                    User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
-            .withPrefabValues(OsmDataLayer.class,
-                new OsmDataLayer(new DataSet(), "1", null), new OsmDataLayer(new DataSet(), "2", null))
-            .suppress(Warning.NONFINAL_FIELDS)
-            .verify();
+                .withPrefabValues(DataSet.class, new DataSet(), new DataSet())
+                .withPrefabValues(User.class, User.createOsmUser(1, "foo"), User.createOsmUser(2, "bar"))
+                .withPrefabValues(OsmDataLayer.class, new OsmDataLayer(new DataSet(), "1", null),
+                        new OsmDataLayer(new DataSet(), "2", null))
+                .suppress(Warning.NONFINAL_FIELDS).verify();
     }
 }

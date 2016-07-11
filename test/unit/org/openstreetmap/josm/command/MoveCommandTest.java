@@ -197,7 +197,7 @@ public class MoveCommandTest {
     }
 
     /**
-     * Test the start point mechanism ignored.
+     * Test {@link MoveCommand#undoCommand()}
      * @since xxx
      */
     @Test
@@ -226,7 +226,7 @@ public class MoveCommandTest {
         ArrayList<OsmPrimitive> modified = new ArrayList<>();
         ArrayList<OsmPrimitive> deleted = new ArrayList<>();
         ArrayList<OsmPrimitive> added = new ArrayList<>();
-        new MoveCommand(Arrays.asList(testData.existingNode, testData.existingWay), 1, 2).fillModifiedData(modified,
+        new MoveCommand(Arrays.<OsmPrimitive>asList(testData.existingNode), 1, 2).fillModifiedData(modified,
                 deleted, added);
         assertArrayEquals(new Object[] { testData.existingNode }, modified.toArray());
         assertArrayEquals(new Object[] {}, deleted.toArray());
@@ -239,8 +239,15 @@ public class MoveCommandTest {
      */
     @Test
     public void testGetParticipatingPrimitives() {
-        MoveCommand command = new MoveCommand(Arrays.asList(testData.existingNode, testData.existingWay), 1, 2);
+        MoveCommand command = new MoveCommand(Arrays.<OsmPrimitive> asList(testData.existingNode), 1, 2);
+        command.executeCommand();
         assertArrayEquals(new Object[] { testData.existingNode }, command.getParticipatingPrimitives().toArray());
+
+        MoveCommand command2 = new MoveCommand(
+                Arrays.<OsmPrimitive> asList(testData.existingNode, testData.existingWay), 1, 2);
+        command2.executeCommand();
+        assertArrayEquals(new Object[] { testData.existingNode, testData.existingNode2 },
+                command2.getParticipatingPrimitives().toArray());
     }
 
     /**
@@ -252,7 +259,7 @@ public class MoveCommandTest {
         Node node = new Node(LatLon.ZERO);
         node.put("name", "xy");
 
-        List<OsmPrimitive> nodeList = Arrays.asList(node, testData.existingWay);
+        List<OsmPrimitive> nodeList = Arrays.<OsmPrimitive>asList(node);
         assertTrue(new MoveCommand(nodeList, 1, 2).getDescriptionText().matches("Move 1 node"));
         List<OsmPrimitive> nodes = Arrays.<OsmPrimitive> asList(node, testData.existingNode, testData.existingNode2);
         assertTrue(new MoveCommand(nodes, 1, 2).getDescriptionText().matches("Move 3 nodes"));

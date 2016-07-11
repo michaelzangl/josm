@@ -143,14 +143,12 @@ public class CommandTest {
             existingNode = createNode(5);
             existingNode2 = createNode(6);
 
-            existingWay = new Way(10);
-            existingWay.setNodes(Arrays.asList(existingNode, existingNode2));
-            existingWay.put("existing", "existing");
-            layer.data.addPrimitive(existingWay);
+            existingWay = createWay(10, existingNode, existingNode2);
         }
 
         /**
          * Create and add a new test node.
+         * @param id the id
          * @return The node.
          */
         public Node createNode(long id) {
@@ -160,6 +158,37 @@ public class CommandTest {
             node.put("existing", "existing");
             layer.data.addPrimitive(node);
             return node;
+        }
+
+        /**
+         * Create and add a new test way.
+         * @param id the id
+         * @param nodes The nodes
+         * @return The way.
+         */
+        public Way createWay(int id, Node...nodes) {
+            Way way = new Way();
+            way.setOsmId(id, 1);
+            way.setNodes(Arrays.asList(nodes));
+            way.put("existing", "existing");
+            layer.data.addPrimitive(way);
+            return way;
+        }
+
+        /**
+         * Create and add a new test relation.
+         * @param id the id
+         * @param members The members
+         * @return The relation.
+         */
+        public Relation createRelation(int id, RelationMember...members) {
+            Relation relation = new Relation(id, 1);
+            for (RelationMember member : members) {
+                relation.addMember(member);
+            }
+            relation.put("existing", "existing");
+            layer.data.addPrimitive(relation);
+            return relation;
         }
     }
 
@@ -178,10 +207,7 @@ public class CommandTest {
          * Creates the new test data and adds {@link #layer} to the layer manager.
          */
         public CommandTestDataWithRelation() {
-            existingRelation = new Relation(20, 1);
-            existingRelation.addMember(new RelationMember("node", existingNode));
-            existingRelation.addMember(new RelationMember("way", existingWay));
-            layer.data.addPrimitive(existingRelation);
+            existingRelation = createRelation(20, new RelationMember("node", existingNode), new RelationMember("way", existingWay));
         }
     }
 }
