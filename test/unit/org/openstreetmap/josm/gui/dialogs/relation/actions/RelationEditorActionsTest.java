@@ -57,7 +57,7 @@ public class RelationEditorActionsTest {
         new CancelAction(memberTable, memberTableModel, tagModel, layer, editor, tfRole).actionPerformed(null);
 
         new CopyMembersAction(memberTableModel, layer, editor).actionPerformed(null);
-        new PasteMembersAction(memberTableModel, layer, editor).actionPerformed(null);
+        new PasteMembersAction(memberTable, layer, editor).actionPerformed(null);
 
         new DeleteCurrentRelationAction(layer, editor).actionPerformed(null);
 
