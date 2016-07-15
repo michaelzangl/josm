@@ -58,7 +58,7 @@ public class PrimitiveTransferableTest {
     @Test
     public void testIsDataFlavorSupported() {
         assertTrue(new PrimitiveTransferable(null).isDataFlavorSupported(PrimitiveTransferData.DATA_FLAVOR));
-        assertFalse(new PrimitiveTransferable(null).isDataFlavorSupported(DataFlavor.allHtmlFlavor));
+        assertFalse(new PrimitiveTransferable(null).isDataFlavorSupported(DataFlavor.imageFlavor));
     }
 
     /**
@@ -87,6 +87,6 @@ public class PrimitiveTransferableTest {
     @Test(expected = UnsupportedFlavorException.class)
     public void testGetTransferDataError() throws UnsupportedFlavorException {
         PrimitiveTransferData data = PrimitiveTransferData.getData(Collections.singleton(new Node(1)));
-        new PrimitiveTransferable(data).getTransferData(DataFlavor.allHtmlFlavor);
+        new PrimitiveTransferable(data).getTransferData(DataFlavor.imageFlavor);
     }
 }
