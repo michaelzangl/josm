@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.openstreetmap.josm.data.osm.OsmPrimitiveType;
 import org.openstreetmap.josm.data.osm.PrimitiveData;
-import org.openstreetmap.josm.gui.datatransfer.data.OsmLayerTransferData;
 import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
 import org.openstreetmap.josm.gui.datatransfer.data.TagTransferData;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
@@ -51,9 +50,6 @@ public class PrimitiveTransferable implements Transferable {
     @Override
     public DataFlavor[] getTransferDataFlavors() {
         ArrayList<DataFlavor> flavors = new ArrayList<>(PRIMITIVE_FLAVORS);
-        if (sourceLayer != null) {
-            flavors.addAll(OsmLayerTransferData.FLAVORS);
-        }
         return flavors.toArray(new DataFlavor[flavors.size()]);
     }
 
@@ -76,8 +72,6 @@ public class PrimitiveTransferable implements Transferable {
             return primitives;
         } else if (TagTransferData.FLAVOR.equals(flavor)) {
             return new TagTransferData(primitives.getDirectlyAdded());
-        } else if (sourceLayer != null && OsmLayerTransferData.FLAVORS.contains(flavor)) {
-            return new OsmLayerTransferData(null, sourceLayer);
         } else {
             throw new UnsupportedFlavorException(flavor);
         }
