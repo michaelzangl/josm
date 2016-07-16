@@ -266,7 +266,7 @@ public class JOSMTestRules implements TestRule {
     }
 
     /**
-     * The junit timeout statement has problems when switchting timezones. We use our own one.
+     * The junit timeout statement has problems when switchting timezones. This one does not.
      * @author Michael Zangl
      * @since xxx
      */
@@ -283,10 +283,9 @@ public class JOSMTestRules implements TestRule {
         @Override
         public void evaluate() throws Throwable {
             TimeoutThread thread = new TimeoutThread(original);
+            thread.setDaemon(true);
             thread.start();
-            long endTime = System.currentTimeMillis() + timeout;
-            long remaining = endTime - System.currentTimeMillis();
-            thread.join(remaining);
+            thread.join(timeout);
             thread.interrupt();
             if (!thread.isDone) {
                 Throwable exception = thread.getExecutionException();
@@ -301,12 +300,12 @@ public class JOSMTestRules implements TestRule {
     }
 
     private static class TimeoutThread extends Thread {
-
         public boolean isDone;
         private Statement original;
         private Throwable exceptionCaught;
 
         private TimeoutThread(Statement original) {
+            super("Timeout runner");
             this.original = original;
         }
 
