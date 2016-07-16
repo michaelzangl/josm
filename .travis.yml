@@ -8,12 +8,16 @@ jdk:
   - oraclejdk8
 
 env:
-  - JDK=oraclejdk8 TARGET=dist-optimized
-  - JDK=oraclejdk8 TARGET=test
-  - JDK=oraclejdk8 TARGET=test-it
-  - JDK=oraclejdk9 TARGET=dist-optimized
-  - JDK=oraclejdk9 TARGET=test
-  - JDK=oraclejdk9 TARGET=test-it
+  - JDK=oraclejdk8 TARGET="dist-optimized"
+  - JDK=oraclejdk8 TARGET="test-single     -Dtest.family=unit"
+  - JDK=oraclejdk8 TARGET="test-single     -Dtest.family=functional"
+  - JDK=oraclejdk8 TARGET="test-single     -Dtest.family=performance -Dtest.coverage=false"
+  - JDK=oraclejdk8 TARGET="test-it"
+  - JDK=oraclejdk9 TARGET="dist-optimized"
+  - JDK=oraclejdk9 TARGET="test-single     -Dtest.family=unit"
+  - JDK=oraclejdk9 TARGET="test-single     -Dtest.family=functional"
+  - JDK=oraclejdk9 TARGET="test-single     -Dtest.family=performance -Dtest.coverage=false"
+  - JDK=oraclejdk9 TARGET="test-it"
 
 script:
   - travis/run.sh
