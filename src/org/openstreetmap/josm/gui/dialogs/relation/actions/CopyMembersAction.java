@@ -5,7 +5,7 @@ import java.awt.event.ActionEvent;
 import java.util.Collection;
 
 import org.openstreetmap.josm.data.osm.RelationMember;
-import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
+import org.openstreetmap.josm.gui.datatransfer.ClipboardUtils;
 import org.openstreetmap.josm.gui.datatransfer.RelationMemberTransferable;
 import org.openstreetmap.josm.gui.dialogs.relation.IRelationEditor;
 import org.openstreetmap.josm.gui.dialogs.relation.MemberTableModel;
@@ -32,7 +32,7 @@ public class CopyMembersAction extends AddFromSelectionAction {
         final Collection<RelationMember> members = memberTableModel.getSelectedMembers();
 
         if (!members.isEmpty()) {
-            OsmTransferHandler.getClippboard().setContents(new RelationMemberTransferable(members), null);
+            ClipboardUtils.copy(new RelationMemberTransferable(members));
         }
     }
 

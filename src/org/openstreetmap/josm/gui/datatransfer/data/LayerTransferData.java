@@ -13,7 +13,7 @@ import org.openstreetmap.josm.gui.layer.LayerManager;
 /**
  * This transferable implements a layer transfer.
  * @author Michael Zangl
- *
+ * @since xxx
  */
 public class LayerTransferData extends LayerTransferable.Data {
     /**

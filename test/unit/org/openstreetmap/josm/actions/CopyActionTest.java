@@ -21,7 +21,7 @@ import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
-import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
+import org.openstreetmap.josm.gui.datatransfer.ClipboardUtils;
 import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.testutils.JOSMTestRules;
@@ -55,7 +55,7 @@ public class CopyActionTest {
      */
     @Test
     public void testWarnOnEmpty() throws UnsupportedFlavorException, IOException {
-        Clipboard clippboard = OsmTransferHandler.getClippboard();
+        Clipboard clippboard = ClipboardUtils.getClipboard();
         clippboard.setContents(new StringSelection("test"), null);
 
         CapturingCopyAction action = new CapturingCopyAction();
@@ -108,7 +108,7 @@ public class CopyActionTest {
         assertTrue(action.isEnabled());
         action.actionPerformed(null);
 
-        Object copied = OsmTransferHandler.getClippboard().getContents(null).getTransferData(PrimitiveTransferData.DATA_FLAVOR);
+        Object copied = ClipboardUtils.getClipboard().getContents(null).getTransferData(PrimitiveTransferData.DATA_FLAVOR);
         assertNotNull(copied);
         assertTrue(copied instanceof PrimitiveTransferData);
         PrimitiveTransferData ptd = (PrimitiveTransferData) copied;

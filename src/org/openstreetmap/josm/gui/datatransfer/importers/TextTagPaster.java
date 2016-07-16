@@ -8,6 +8,7 @@ import java.util.Map;
 
 import javax.swing.TransferHandler.TransferSupport;
 
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.tools.TextTagParser;
 
 /**
@@ -15,12 +16,12 @@ import org.openstreetmap.josm.tools.TextTagParser;
  * @author Michael Zangl
  * @since xxx
  */
-public final class TextTagSupport extends AbstractTagTransferSupport {
+public final class TextTagPaster extends AbstractTagPaster {
 
     /**
-     * Create a new {@link TextTagSupport}
+     * Create a new {@link TextTagPaster}
      */
-    public TextTagSupport() {
+    public TextTagPaster() {
         super(DataFlavor.stringFlavor);
     }
 
@@ -29,6 +30,7 @@ public final class TextTagSupport extends AbstractTagTransferSupport {
         try {
             return super.supports(support) && getTags(support) != null;
         } catch (UnsupportedFlavorException | IOException e) {
+            Main.warn(e);
             return false;
         }
     }

@@ -63,7 +63,7 @@ import org.openstreetmap.josm.data.osm.Tag;
 import org.openstreetmap.josm.gui.ConditionalOptionPaneUtil;
 import org.openstreetmap.josm.gui.DefaultNameFormatter;
 import org.openstreetmap.josm.gui.MainMenu;
-import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
+import org.openstreetmap.josm.gui.datatransfer.ClipboardUtils;
 import org.openstreetmap.josm.gui.dialogs.relation.actions.AddSelectedAfterSelection;
 import org.openstreetmap.josm.gui.dialogs.relation.actions.AddSelectedAtEndAction;
 import org.openstreetmap.josm.gui.dialogs.relation.actions.AddSelectedAtStartAction;
@@ -749,7 +749,7 @@ public class GenericRelationEditor extends RelationEditor {
             tagEditorPanel.initAutoCompletion(getLayer());
         }
         super.setVisible(visible);
-        Clipboard clipboard = OsmTransferHandler.getClippboard();
+        Clipboard clipboard = ClipboardUtils.getClipboard();
         if (visible) {
             leftButtonToolbar.sortBelowButton.setVisible(ExpertToggleAction.isExpert());
             RelationDialogManager.getRelationDialogManager().positionOnScreen(this);

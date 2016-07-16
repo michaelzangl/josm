@@ -31,11 +31,11 @@ import org.openstreetmap.josm.gui.layer.OsmDataLayer;
  * @author Michael Zangl
  * @since xxx
  */
-public final class PrimitiveDataSupport extends AbstractDataFlavorSupport {
+public final class PrimitiveDataPaster extends AbstractOsmDataPaster {
     /**
-     * Create a new {@link PrimitiveDataSupport}
+     * Create a new {@link PrimitiveDataPaster}
      */
-    public PrimitiveDataSupport() {
+    public PrimitiveDataPaster() {
         super(PrimitiveTransferData.DATA_FLAVOR);
     }
 

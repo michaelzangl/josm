@@ -6,27 +6,28 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.Collection;
 
+import javax.swing.TransferHandler;
 import javax.swing.TransferHandler.TransferSupport;
 
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 
 /**
- * This is an abstract class that helps implementing the transfer support required by swing. It allows us to plug in multiple importers that
- * import OSM data from the clippboard.
+ * This is an abstract class that helps implementing the transfer support required by swing.
+ * <p>
+ * It implements a mechanism to import a given data flavor into the current OSM data layer.
  * @author Michael Zangl
  * @since xxx
  */
-public abstract class AbstractDataFlavorSupport {
+public abstract class AbstractOsmDataPaster {
     protected final DataFlavor df;
 
     /**
-     * Create a new {@link AbstractDataFlavorSupport}
+     * Create a new {@link AbstractOsmDataPaster}
      * @param df The data flavor that this support supports.
      */
-    AbstractDataFlavorSupport(DataFlavor df) {
+    protected AbstractOsmDataPaster(DataFlavor df) {
         this.df = df;
     }
 
@@ -49,7 +50,7 @@ public abstract class AbstractDataFlavorSupport {
     }
 
     private static boolean isCopy(TransferSupport support) {
-        return !support.isDrop() || (OsmTransferHandler.COPY & support.getSourceDropActions()) == OsmTransferHandler.COPY;
+        return !support.isDrop() || (TransferHandler.COPY & support.getSourceDropActions()) == TransferHandler.COPY;
     }
 
     /**

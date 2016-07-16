@@ -14,11 +14,11 @@ import org.openstreetmap.josm.gui.datatransfer.data.TagTransferData;
  * @author Michael Zangl
  * @since xxx
  */
-public final class TagTransferSupport extends AbstractTagTransferSupport {
+public final class TagTransferPaster extends AbstractTagPaster {
     /**
-     * Create a new {@link TagTransferSupport}
+     * Create a new {@link TagTransferPaster}
      */
-    public TagTransferSupport() {
+    public TagTransferPaster() {
         super(TagTransferData.FLAVOR);
     }
 

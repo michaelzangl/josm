@@ -16,13 +16,13 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 
 /**
- * This transfer support allows us to transfer tags.
+ * This transfer support allows us to transfer tags to the selected primitives
  * @author Michael Zangl
  * @since xxx
  */
-public abstract class AbstractTagTransferSupport extends AbstractDataFlavorSupport {
+public abstract class AbstractTagPaster extends AbstractOsmDataPaster {
 
-    AbstractTagTransferSupport(DataFlavor df) {
+    AbstractTagPaster(DataFlavor df) {
         super(df);
     }
 

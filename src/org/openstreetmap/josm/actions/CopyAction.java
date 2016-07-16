@@ -15,7 +15,7 @@ import javax.swing.JOptionPane;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
+import org.openstreetmap.josm.gui.datatransfer.ClipboardUtils;
 import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferable;
 import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
@@ -60,7 +60,7 @@ public class CopyAction extends JosmAction {
     public static void copy(OsmDataLayer source, Collection<OsmPrimitive> primitives) {
         // copy ids to the clipboard
         PrimitiveTransferData data = PrimitiveTransferData.getDataWithReferences(primitives);
-        OsmTransferHandler.getClippboard().setContents(new PrimitiveTransferable(data, source), null);
+        ClipboardUtils.copy(new PrimitiveTransferable(data, source));
     }
 
     @Override

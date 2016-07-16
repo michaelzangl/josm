@@ -6,13 +6,14 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.LayerManager;
 
 /**
- * This class allows to transfer multiple layers.
+ * This class allows to transfer multiple layers in the current JOSM instance.
  * @author Michael Zangl
  * @since xxx
  */
@@ -36,12 +37,20 @@ public class LayerTransferable implements Transferable {
             this.layers = new ArrayList<>(layers);
         }
 
+        /**
+         * Gets the layer manager the layers belong to.
+         * @return The layer manager. It may be <code>null</code>
+         */
         public LayerManager getManager() {
             return manager;
         }
 
+        /**
+         * Gets the list of layers that were copied.
+         * @return The layers.
+         */
         public List<Layer> getLayers() {
-            return layers;
+            return Collections.unmodifiableList(layers);
         }
 
         @Override

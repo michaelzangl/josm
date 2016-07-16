@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.openstreetmap.josm.gui.datatransfer.ClipboardUtils;
 import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
 import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferable;
 import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
@@ -50,7 +51,7 @@ public class PrimitiveDeepCopy {
      */
     @Deprecated
     public final void makeCopy(final Collection<? extends OsmPrimitive> primitives) {
-        OsmTransferHandler.getClippboard().setContents(new PrimitiveTransferable(PrimitiveTransferData.getDataWithReferences(primitives)), null);
+        ClipboardUtils.copy(new PrimitiveTransferable(PrimitiveTransferData.getDataWithReferences(primitives)));
     }
 
     /**
@@ -59,7 +60,7 @@ public class PrimitiveDeepCopy {
      */
     public List<PrimitiveData> getDirectlyAdded() {
         try {
-            PrimitiveTransferData data = (PrimitiveTransferData) OsmTransferHandler.getClippboard().getData(PrimitiveTransferData.DATA_FLAVOR);
+            PrimitiveTransferData data = (PrimitiveTransferData) ClipboardUtils.getClipboard().getData(PrimitiveTransferData.DATA_FLAVOR);
             return new ArrayList<>(data.getDirectlyAdded());
         } catch (UnsupportedFlavorException | IOException e) {
             return Collections.emptyList();
@@ -72,7 +73,7 @@ public class PrimitiveDeepCopy {
      */
     public List<PrimitiveData> getReferenced() {
         try {
-            PrimitiveTransferData data = (PrimitiveTransferData) OsmTransferHandler.getClippboard().getData(PrimitiveTransferData.DATA_FLAVOR);
+            PrimitiveTransferData data = (PrimitiveTransferData) ClipboardUtils.getClipboard().getData(PrimitiveTransferData.DATA_FLAVOR);
             return new ArrayList<>(data.getReferenced());
         } catch (UnsupportedFlavorException | IOException e) {
             return Collections.emptyList();
@@ -87,7 +88,7 @@ public class PrimitiveDeepCopy {
      */
     public List<PrimitiveData> getAll() {
         try {
-            PrimitiveTransferData data = (PrimitiveTransferData) OsmTransferHandler.getClippboard().getData(PrimitiveTransferData.DATA_FLAVOR);
+            PrimitiveTransferData data = (PrimitiveTransferData) ClipboardUtils.getClipboard().getData(PrimitiveTransferData.DATA_FLAVOR);
             return new ArrayList<>(data.getAll());
         } catch (UnsupportedFlavorException | IOException e) {
             return Collections.emptyList();
@@ -95,13 +96,13 @@ public class PrimitiveDeepCopy {
     }
 
     public boolean isEmpty() {
-        return !OsmTransferHandler.getClippboard().isDataFlavorAvailable(PrimitiveTransferData.DATA_FLAVOR);
+        return !ClipboardUtils.getClipboard().isDataFlavorAvailable(PrimitiveTransferData.DATA_FLAVOR);
     }
 
     /**
      * Deactivated. To be removed as soon as we think nobody uses it.
      * @param listener
-     * @deprecated You can detect buffer changes by registering a listener on {@link OsmTransferHandler#getClippboard()}
+     * @deprecated You can detect buffer changes by registering a listener on {@link OsmTransferHandler#getClipboard()}
      */
     @Deprecated
     public void addPasteBufferChangedListener(PasteBufferChangedListener listener) {

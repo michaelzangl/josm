@@ -1,9 +1,6 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.gui.datatransfer;
 
-import java.awt.HeadlessException;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -16,29 +13,28 @@ import javax.swing.TransferHandler;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
-import org.openstreetmap.josm.gui.datatransfer.importers.AbstractDataFlavorSupport;
-import org.openstreetmap.josm.gui.datatransfer.importers.FileSupport;
-import org.openstreetmap.josm.gui.datatransfer.importers.PrimitiveDataSupport;
-import org.openstreetmap.josm.gui.datatransfer.importers.TagTransferSupport;
-import org.openstreetmap.josm.gui.datatransfer.importers.TextTagSupport;
+import org.openstreetmap.josm.gui.datatransfer.importers.AbstractOsmDataPaster;
+import org.openstreetmap.josm.gui.datatransfer.importers.FilePaster;
+import org.openstreetmap.josm.gui.datatransfer.importers.PrimitiveDataPaster;
+import org.openstreetmap.josm.gui.datatransfer.importers.TagTransferPaster;
+import org.openstreetmap.josm.gui.datatransfer.importers.TextTagPaster;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 
 /**
  * This transfer hanlder provides the ability to transfer OSM data. It allows you to receive files, primitives or tags.
  * @author Michael Zangl
+ * @since xxx
  */
 public class OsmTransferHandler extends TransferHandler {
 
-    private static final Collection<AbstractDataFlavorSupport> SUPPORTED = Arrays.asList(
-            new FileSupport(), new PrimitiveDataSupport(),
-            new TagTransferSupport(), new TextTagSupport());
-    private static Clipboard clippboard;
+    private static final Collection<AbstractOsmDataPaster> SUPPORTED = Arrays.asList(
+            new FilePaster(), new PrimitiveDataPaster(),
+            new TagTransferPaster(), new TextTagPaster());
 
     @Override
     public boolean canImport(TransferSupport support) {
         // import everything for now, only support copy.
-        for (AbstractDataFlavorSupport df : SUPPORTED) {
+        for (AbstractOsmDataPaster df : SUPPORTED) {
             if (df.supports(support)) {
                 return true;
             }
@@ -52,7 +48,7 @@ public class OsmTransferHandler extends TransferHandler {
     }
 
     private boolean importData(TransferSupport support, OsmDataLayer layer, EastNorth center) {
-        for (AbstractDataFlavorSupport df : SUPPORTED) {
+        for (AbstractOsmDataPaster df : SUPPORTED) {
             if (df.supports(support)) {
                 try {
                     if (df.importData(support, layer, center)) {
@@ -67,7 +63,7 @@ public class OsmTransferHandler extends TransferHandler {
     }
 
     private boolean importTags(TransferSupport support, Collection<? extends OsmPrimitive> primitives) {
-        for (AbstractDataFlavorSupport df : SUPPORTED) {
+        for (AbstractOsmDataPaster df : SUPPORTED) {
             if (df.supports(support)) {
                 try {
                     if (df.importTagsOn(support, primitives)) {
@@ -87,7 +83,7 @@ public class OsmTransferHandler extends TransferHandler {
      * @param mPosition The position to paste at.
      */
     public void pasteOn(OsmDataLayer editLayer, EastNorth mPosition) {
-        Transferable transferable = getClippboard().getContents(null);
+        Transferable transferable = ClipboardUtils.getClipboard().getContents(null);
         pasteOn(editLayer, mPosition, transferable);
     }
 
@@ -106,7 +102,7 @@ public class OsmTransferHandler extends TransferHandler {
      * @param primitives The primitives to paste on.
      */
     public void pasteTags(Collection<? extends OsmPrimitive> primitives) {
-        Transferable transferable = getClippboard().getContents(null);
+        Transferable transferable = ClipboardUtils.getClipboard().getContents(null);
         importTags(new TransferSupport(Main.panel, transferable), primitives);
     }
 
@@ -115,31 +111,12 @@ public class OsmTransferHandler extends TransferHandler {
      * @return <code>true</code> if any flavor is supported.
      */
     public boolean isDataAvailable() {
-        Collection<DataFlavor> available = Arrays.asList(getClippboard().getAvailableDataFlavors());
-        for (AbstractDataFlavorSupport s : SUPPORTED) {
+        Collection<DataFlavor> available = Arrays.asList(ClipboardUtils.getClipboard().getAvailableDataFlavors());
+        for (AbstractOsmDataPaster s : SUPPORTED) {
             if (s.supports(available)) {
                 return true;
             }
         }
         return false;
-    }
-
-    /**
-     * This method should be used from all of JOSM to access the clippboard.
-     * <p>
-     * It will default to the system clippboard except for cases where that clippboard is not accessible.
-     * @return A clippboard.
-     */
-    public static synchronized Clipboard getClippboard() {
-        // Might be unsupported in some more cases, we need a fake clippboard then.
-        if (clippboard == null) {
-            try {
-                clippboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            } catch (HeadlessException e) {
-                Main.warn("Headless. Using fake clippboard.", e);
-                clippboard = new Clipboard("fake");
-            }
-        }
-        return clippboard;
     }
 }

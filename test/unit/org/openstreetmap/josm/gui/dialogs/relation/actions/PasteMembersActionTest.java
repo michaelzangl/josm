@@ -6,7 +6,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import java.awt.datatransfer.StringSelection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -14,7 +13,7 @@ import org.junit.Test;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
-import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
+import org.openstreetmap.josm.gui.datatransfer.ClipboardUtils;
 import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferable;
 import org.openstreetmap.josm.gui.datatransfer.RelationMemberTransferable;
 import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
@@ -34,7 +33,7 @@ public class PasteMembersActionTest extends AbstractRelationEditorActionTest {
         copyString();
 
         PasteMembersAction action = new PasteMembersAction(memberTable, layer, editor);
-        OsmTransferHandler.getClippboard().addFlavorListener(action);
+        ClipboardUtils.getClipboard().addFlavorListener(action);
 
         try {
             assertFalse(action.isEnabled());
@@ -49,7 +48,7 @@ public class PasteMembersActionTest extends AbstractRelationEditorActionTest {
             copyString();
             assertFalse(action.isEnabled());
         } finally {
-            OsmTransferHandler.getClippboard().removeFlavorListener(action);
+            ClipboardUtils.getClipboard().removeFlavorListener(action);
         }
     }
 
@@ -106,18 +105,18 @@ public class PasteMembersActionTest extends AbstractRelationEditorActionTest {
 
     private void copyNode(Node node) {
         PrimitiveTransferData data = PrimitiveTransferData.getData(Collections.singleton(node));
-        OsmTransferHandler.getClippboard().setContents(new PrimitiveTransferable(data), null);
+        ClipboardUtils.copy(new PrimitiveTransferable(data));
         sync();
     }
 
     private void copyMember(Node node) {
         Set<RelationMember> members = Collections.singleton(new RelationMember("test", node));
-        OsmTransferHandler.getClippboard().setContents(new RelationMemberTransferable(members), null);
+        ClipboardUtils.copy(new RelationMemberTransferable(members));
         sync();
     }
 
     private void copyString() {
-        OsmTransferHandler.getClippboard().setContents(new StringSelection(""), null);
+        ClipboardUtils.copyString("");
         sync();
     }
 

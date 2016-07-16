@@ -15,6 +15,7 @@ import org.openstreetmap.josm.data.osm.Tagged;
  * <p>
  * It currently contains all tags contained in the selection that was copied.
  * @author Michael Zangl
+ * @since xxx
  */
 public class TagTransferData implements Serializable {
 

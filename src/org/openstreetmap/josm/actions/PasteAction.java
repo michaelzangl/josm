@@ -14,6 +14,7 @@ import java.awt.event.KeyEvent;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.gui.datatransfer.ClipboardUtils;
 import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
 import org.openstreetmap.josm.tools.Shortcut;
 
@@ -36,7 +37,7 @@ public final class PasteAction extends JosmAction implements FlavorListener {
         Main.registerActionShortcut(this,
                 Shortcut.registerShortcut("system:paste:cua", tr("Edit: {0}", tr("Paste")), KeyEvent.VK_INSERT, Shortcut.SHIFT));
         transferHandler = new OsmTransferHandler();
-        OsmTransferHandler.getClippboard().addFlavorListener(this);
+        ClipboardUtils.getClipboard().addFlavorListener(this);
     }
 
     @Override

@@ -19,11 +19,11 @@ import org.openstreetmap.josm.gui.layer.OsmDataLayer;
  * @author Michael Zangl
  * @since xxx
  */
-public final class FileSupport extends AbstractDataFlavorSupport {
+public final class FilePaster extends AbstractOsmDataPaster {
     /**
-     * Create a new {@link FileSupport}
+     * Create a new {@link FilePaster}
      */
-    public FileSupport() {
+    public FilePaster() {
         super(DataFlavor.javaFileListFlavor);
     }
 
