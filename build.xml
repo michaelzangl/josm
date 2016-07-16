@@ -450,6 +450,13 @@ Build-Date: ${build.tstamp}
         <call-junit testfamily="performance" testITsuffix="IT" coverage="false"/>
         <fail message="IT tests failed." if="test.failed" />
     </target>
+    <target name="test-single" depends="test-compile"
+        description="Run unit, functional and performance tests. OSM API (TEST) account shall be set with -Dosm.username and -Dosm.password. Test family should be set with -Dtest.family">
+        <property name="test.coverage" value="true"/>
+        <property name="test.suffix" value=""/>
+        <call-junit testfamily="${test.family}" coverage="${test.coverage}" testITsuffix="${test.suffix}"/>
+        <fail message="Tests failed." if="test.failed" />
+    </target>
     <target name="test-html" depends="test, test-it" description="Generate HTML test reports">
         <!-- May require additional ant dependencies like ant-trax package -->
         <junitreport todir="${test.dir}/report">
