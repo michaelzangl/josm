@@ -81,6 +81,7 @@ import org.openstreetmap.josm.gui.NavigatableComponent.ZoomChangeListener;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.LayerListDialog;
 import org.openstreetmap.josm.gui.dialogs.LayerListPopup;
+import org.openstreetmap.josm.gui.layer.imagery.ImageryFilterSettings.FilterChangeListener;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.WMSLayerImporter;
@@ -98,7 +99,7 @@ import org.openstreetmap.josm.tools.GBC;
  * @since 8526 (copied from TMSLayer)
  */
 public abstract class AbstractTileSourceLayer<T extends AbstractTMSTileSource> extends ImageryLayer
-implements ImageObserver, TileLoaderListener, ZoomChangeListener {
+implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeListener {
     private static final String PREFERENCE_PREFIX = "imagery.generic";
 
     /** maximum zoom level supported */
@@ -174,6 +175,12 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
         super(info);
         setBackgroundLayer(true);
         this.setVisible(true);
+        getFilterSettings().addFilterChangeListener(this);
+    }
+
+    @Override
+    public void filterChanged() {
+        redraw();
     }
 
     protected abstract TileLoaderFactory getTileLoaderFactory();
@@ -260,24 +267,6 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener {
     protected void redraw() {
         needRedraw = true;
         if (isVisible()) Main.map.repaint();
-    }
-
-    @Override
-    public void setGamma(double gamma) {
-        super.setGamma(gamma);
-        redraw();
-    }
-
-    @Override
-    public void setSharpenLevel(double sharpenLevel) {
-        super.setSharpenLevel(sharpenLevel);
-        redraw();
-    }
-
-    @Override
-    public void setColorfulness(double colorfulness) {
-        super.setColorfulness(colorfulness);
-        redraw();
     }
 
     /**
