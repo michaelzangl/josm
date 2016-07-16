@@ -265,6 +265,11 @@ public class JOSMTestRules implements TestRule {
         NONE, FAKE, DEV
     }
 
+    /**
+     * The junit timeout statement has problems when switchting timezones. We use our own one.
+     * @author Michael Zangl
+     * @since xxx
+     */
     private static class FailOnTimeoutStatement extends Statement {
 
         private int timeout;
@@ -280,10 +285,8 @@ public class JOSMTestRules implements TestRule {
             TimeoutThread thread = new TimeoutThread(original);
             thread.start();
             long endTime = System.currentTimeMillis() + timeout;
-            System.out.println("Start: " + endTime);
             long remaining = endTime - System.currentTimeMillis();
             thread.join(remaining);
-            System.out.println("After join:" + System.currentTimeMillis());
             thread.interrupt();
             if (!thread.isDone) {
                 Throwable exception = thread.getExecutionException();

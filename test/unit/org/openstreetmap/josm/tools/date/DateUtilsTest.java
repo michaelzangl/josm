@@ -204,6 +204,5 @@ public class DateUtilsTest {
     @SuppressFBWarnings(value = "ISC_INSTANTIATE_STATIC_CLASS")
     public void testCoverage() {
         assertNotNull(new DateUtils());
-        for (;;);
     }
 }
