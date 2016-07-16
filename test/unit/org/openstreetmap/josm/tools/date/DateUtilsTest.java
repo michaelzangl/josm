@@ -28,7 +28,7 @@ public class DateUtilsTest {
      */
     @Rule
     @SuppressFBWarnings(value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
-    public JOSMTestRules test = new JOSMTestRules().i18n().preferences().noTimeout();
+    public JOSMTestRules test = new JOSMTestRules().i18n().preferences();
 
     /**
      * Allows to override the timezone used in {@link DateUtils} for unit tests.
@@ -204,5 +204,6 @@ public class DateUtilsTest {
     @SuppressFBWarnings(value = "ISC_INSTANTIATE_STATIC_CLASS")
     public void testCoverage() {
         assertNotNull(new DateUtils());
+        for (;;);
     }
 }
