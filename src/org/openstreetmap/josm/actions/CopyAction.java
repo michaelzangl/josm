@@ -8,25 +8,24 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.swing.JOptionPane;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.data.osm.OsmPrimitiveType;
+import org.openstreetmap.josm.gui.datatransfer.ClipboardUtils;
+import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferable;
+import org.openstreetmap.josm.gui.datatransfer.data.PrimitiveTransferData;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.tools.Shortcut;
-import org.openstreetmap.josm.tools.Utils;
 
 /**
  * Copy OSM primitives to clipboard in order to paste them, or their tags, somewhere else.
  * @since 404
  */
-public final class CopyAction extends JosmAction {
-
-    /** regular expression that matches text clipboard contents after copying */
-    public static final String CLIPBOARD_REGEXP = "((node|way|relation)\\s\\d+,)*(node|way|relation)\\s\\d+";
-
+public class CopyAction extends JosmAction {
     /**
      * Constructs a new {@code CopyAction}.
      */
@@ -42,8 +41,12 @@ public final class CopyAction extends JosmAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (isEmptySelection()) return;
-        Collection<OsmPrimitive> selection = getLayerManager().getEditDataSet().getSelected();
+        DataSet set = getLayerManager().getEditDataSet();
+        Collection<OsmPrimitive> selection = set == null ? Collections.<OsmPrimitive>emptySet() : set.getSelected();
+        if (selection.isEmpty()) {
+            showEmptySelectionWarning();
+            return;
+        }
 
         copy(getLayerManager().getEditLayer(), selection);
     }
@@ -56,19 +59,8 @@ public final class CopyAction extends JosmAction {
      */
     public static void copy(OsmDataLayer source, Collection<OsmPrimitive> primitives) {
         // copy ids to the clipboard
-        String ids = getCopyString(primitives);
-        Utils.copyToClipboard(ids);
-
-        Main.pasteBuffer.makeCopy(primitives);
-        Main.pasteSource = source;
-    }
-
-    static String getCopyString(Collection<? extends OsmPrimitive> primitives) {
-        StringBuilder idsBuilder = new StringBuilder();
-        for (OsmPrimitive p : primitives) {
-            idsBuilder.append(OsmPrimitiveType.from(p).getAPIName()).append(' ').append(p.getId()).append(',');
-        }
-        return idsBuilder.substring(0, idsBuilder.length() - 1);
+        PrimitiveTransferData data = PrimitiveTransferData.getDataWithReferences(primitives);
+        ClipboardUtils.copy(new PrimitiveTransferable(data, source));
     }
 
     @Override
@@ -81,17 +73,12 @@ public final class CopyAction extends JosmAction {
         setEnabled(selection != null && !selection.isEmpty());
     }
 
-    private boolean isEmptySelection() {
-        Collection<OsmPrimitive> sel = getLayerManager().getEditDataSet().getSelected();
-        if (sel.isEmpty()) {
-            JOptionPane.showMessageDialog(
-                    Main.parent,
-                    tr("Please select something to copy."),
-                    tr("Information"),
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-            return true;
-        }
-        return false;
+    protected void showEmptySelectionWarning() {
+        JOptionPane.showMessageDialog(
+                Main.parent,
+                tr("Please select something to copy."),
+                tr("Information"),
+                JOptionPane.INFORMATION_MESSAGE
+        );
     }
 }

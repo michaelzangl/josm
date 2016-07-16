@@ -5,6 +5,7 @@ import java.awt.Dimension;
 
 import javax.swing.JScrollPane;
 
+import org.openstreetmap.josm.gui.datatransfer.ClipboardUtils;
 import org.openstreetmap.josm.gui.widgets.JosmTextArea;
 import org.openstreetmap.josm.tools.Utils;
 
@@ -34,6 +35,6 @@ public class DebugTextDisplay extends JScrollPane {
      * @return <code>true</code> if copy was successful
      */
     public boolean copyToClippboard() {
-        return Utils.copyToClipboard(text);
+        return ClipboardUtils.copyString(text);
     }
 }
