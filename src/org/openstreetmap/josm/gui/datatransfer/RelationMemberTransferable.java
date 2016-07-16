@@ -43,6 +43,19 @@ public class RelationMemberTransferable implements Transferable {
         public Collection<RelationMemberData> getRelationMemberData() {
             return Collections.unmodifiableCollection(relationMemberDatas);
         }
+
+        /**
+         * Gets the Data for the given list of members.
+         * @param members The collection. The order is preserved.
+         * @return The data.
+         */
+        public static Data getData(Collection<RelationMember> members) {
+            final Collection<RelationMemberData> r = new ArrayList<>(members.size());
+            for (RelationMember member : members) {
+                r.add(new RelationMemberData(member.getRole(), member.getType(), member.getUniqueId()));
+            }
+            return new Data(r);
+        }
     }
 
     /**
@@ -102,10 +115,6 @@ public class RelationMemberTransferable implements Transferable {
     }
 
     protected Data getRelationMemberData() {
-        final Collection<RelationMemberData> r = new ArrayList<>(members.size());
-        for (RelationMember member : members) {
-            r.add(new RelationMemberData(member.getRole(), member.getType(), member.getUniqueId()));
-        }
-        return new Data(r);
+        return Data.getData(members);
     }
 }
