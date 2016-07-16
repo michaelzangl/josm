@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openstreetmap.josm.JOSMFixture;
 import org.openstreetmap.josm.Main;
@@ -18,6 +19,7 @@ import org.openstreetmap.josm.Main;
 /**
  * Unit tests of {@link PlatformHookOsx} class.
  */
+@Ignore
 public class PlatformHookOsxTest {
 
     static PlatformHookOsx hook;
