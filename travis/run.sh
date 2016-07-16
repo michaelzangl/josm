@@ -26,5 +26,8 @@ echo "java -version:"
 java -Xmx32m -version
 echo "javac -version:"
 javac -J-Xmx32m -version
+echo
 
-ANT_OPTS="-Xmx600m" $ANT/bin/ant $TARGET
+echo "Using osm dev user $OSM_USERDEF"
+
+ANT_OPTS="-Xmx600m" $ANT/bin/ant $OSM_USERDEF $OSM_PASSWORDDEF $TARGET
