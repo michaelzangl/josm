@@ -110,6 +110,7 @@ public final class ClipboardUtils {
             } catch (IllegalStateException e) {
                 // Clipboard currently unavailable.
                 // On some platforms, the system clipboard is unavailable while it is accessed by another application.
+                Main.trace("Clipboard unavailable.", e);
                 try {
                     Thread.sleep(1);
                 } catch (InterruptedException ex) {

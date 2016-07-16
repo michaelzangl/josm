@@ -28,7 +28,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  */
 public class ClipboardUtilsTest {
     private final static class ThrowIllegalStateClipboard extends Clipboard {
-        int failingAccesses = 3;
+        private int failingAccesses = 3;
 
         private ThrowIllegalStateClipboard(String name) {
             super(name);
@@ -41,6 +41,10 @@ public class ClipboardUtilsTest {
                 throw new IllegalStateException();
             }
             return super.getContents(requestor);
+        }
+
+        protected synchronized void setFailingAccesses(int failingAccesses) {
+            this.failingAccesses = failingAccesses;
         }
     }
 
@@ -103,7 +107,7 @@ public class ClipboardUtilsTest {
         Transferable content = ClipboardUtils.getClipboardContent(throwingClipboard);
         assertTrue(content.isDataFlavorSupported(DataFlavor.stringFlavor));
 
-        throwingClipboard.failingAccesses = 50;
+        throwingClipboard.setFailingAccesses(50);
         content = ClipboardUtils.getClipboardContent(new ThrowIllegalStateClipboard("test"));
         assertNull(content);
     }

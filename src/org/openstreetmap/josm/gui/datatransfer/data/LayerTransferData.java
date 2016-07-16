@@ -25,8 +25,7 @@ public class LayerTransferData extends LayerTransferable.Data {
     /**
      * The flavors that are supported by this data type.
      */
-    private static final List<DataFlavor> FLAVORS = Collections
-            .unmodifiableList(Arrays.asList(LayerTransferData.FLAVOR, LayerTransferable.LAYER_DATA));
+    private static final List<DataFlavor> FLAVORS = Arrays.asList(LayerTransferData.FLAVOR, LayerTransferable.LAYER_DATA);
 
     private final Layer layer;
 
@@ -53,7 +52,7 @@ public class LayerTransferData extends LayerTransferable.Data {
      * @return The flavors.
      */
     public List<DataFlavor> getSupportedFlavors() {
-        return FLAVORS;
+        return Collections.unmodifiableList(FLAVORS);
     }
 
     @Override

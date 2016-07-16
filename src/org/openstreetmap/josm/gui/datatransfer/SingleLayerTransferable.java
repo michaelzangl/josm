@@ -5,6 +5,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
+import java.util.List;
 
 import org.openstreetmap.josm.gui.datatransfer.data.LayerTransferData;
 import org.openstreetmap.josm.gui.datatransfer.data.OsmLayerTransferData;
@@ -35,7 +36,8 @@ public class SingleLayerTransferable implements Transferable {
 
     @Override
     public DataFlavor[] getTransferDataFlavors() {
-        return data.getSupportedFlavors().toArray(new DataFlavor[0]);
+        List<DataFlavor> flavors = data.getSupportedFlavors();
+        return flavors.toArray(new DataFlavor[flavors.size()]);
     }
 
     @Override

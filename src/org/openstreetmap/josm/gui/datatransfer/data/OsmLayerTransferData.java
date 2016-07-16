@@ -23,14 +23,14 @@ public class OsmLayerTransferData extends LayerTransferData {
      * @see LayerTransferData#FLAVOR
      * @see #FLAVORS
      */
-    public static final DataFlavor FLAVOR = new DataFlavor(
+    public static final DataFlavor OSM_FLAVOR = new DataFlavor(
             DataFlavor.javaJVMLocalObjectMimeType + ";class=" + LayerTransferData.class.getName(), "Layer");
 
     /**
      * The flavors that are supported by this data type.
      */
     public static final List<DataFlavor> FLAVORS = Collections
-            .unmodifiableList(Arrays.asList(FLAVOR, LayerTransferData.FLAVOR, LayerTransferable.LAYER_DATA));
+            .unmodifiableList(Arrays.asList(OSM_FLAVOR, LayerTransferData.FLAVOR, LayerTransferable.LAYER_DATA));
 
     private final OsmDataLayer osmLayer;
 

@@ -263,13 +263,6 @@ public final class PasteTagsAction extends JosmAction {
             return;
 
         transferHandler.pasteTags(selection);
-//        String buf = Utils.getClipboardContent();
-//        if (buf == null || buf.isEmpty() || buf.matches(CopyAction.CLIPBOARD_REGEXP)) {
-//            pasteTagsFromJOSMBuffer(selection);
-//        } else {
-//            // Paste tags from arbitrary text
-//            pasteTagsFromText(selection, buf);
-//        }
     }
 
     /**
