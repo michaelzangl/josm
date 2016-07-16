@@ -40,16 +40,28 @@ public class PasteMembersActionTest extends AbstractRelationEditorActionTest {
 
             Node node = new Node();
             copyNode(node);
+            syncListener();
             assertTrue(action.isEnabled());
 
             copyMember(node);
+            syncListener();
             assertTrue(action.isEnabled());
 
             copyString();
+            syncListener();
             assertFalse(action.isEnabled());
         } finally {
             ClipboardUtils.getClipboard().removeFlavorListener(action);
         }
+    }
+
+    private void syncListener() {
+        GuiHelper.runInEDTAndWait(new Runnable() {
+            @Override
+            public void run() {
+                // nop
+            }
+        });
     }
 
     /**
@@ -65,7 +77,6 @@ public class PasteMembersActionTest extends AbstractRelationEditorActionTest {
         memberTableModel.applyToRelation(relation);
         assertEquals(0, relation.getMembersCount());
     }
-
 
     /**
      * Test that pasting produces the result required
@@ -106,26 +117,14 @@ public class PasteMembersActionTest extends AbstractRelationEditorActionTest {
     private void copyNode(Node node) {
         PrimitiveTransferData data = PrimitiveTransferData.getData(Collections.singleton(node));
         ClipboardUtils.copy(new PrimitiveTransferable(data));
-        sync();
     }
 
     private void copyMember(Node node) {
         Set<RelationMember> members = Collections.singleton(new RelationMember("test", node));
         ClipboardUtils.copy(new RelationMemberTransferable(members));
-        sync();
     }
 
     private void copyString() {
         ClipboardUtils.copyString("");
-        sync();
-    }
-
-    private void sync() {
-        // let GUI catch up...
-        GuiHelper.runInEDTAndWait(new Runnable() {
-            @Override
-            public void run() {
-            }
-        });
     }
 }

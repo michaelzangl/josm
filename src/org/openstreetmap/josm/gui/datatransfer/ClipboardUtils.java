@@ -6,10 +6,15 @@ import java.awt.HeadlessException;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
+import java.util.concurrent.Callable;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.Utils;
 
 /**
@@ -68,6 +73,22 @@ public final class ClipboardUtils {
     }
 
     /**
+     * Gets the clipboard content as string.
+     * @return the content if available, <code>null</code> otherwise.
+     */
+    public static String getClipboardStringContent() {
+        try {
+            Transferable t = getClipboardContent();
+            if (t != null && t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                return (String) t.getTransferData(DataFlavor.stringFlavor);
+            }
+        } catch (UnsupportedFlavorException | IOException ex) {
+            Main.error(ex);
+        }
+        return null;
+    }
+
+    /**
      * Extracts clipboard content as {@code Transferable} object. Using this method avoids some problems on some platforms.
      * @return The content.
      */
@@ -115,15 +136,20 @@ public final class ClipboardUtils {
     /**
      * Copies the given transferable to the clipboard. Handles state problems that occur on some platforms.
      * @param transferable The transferable to copy.
-     * @return True if the  copy was successful
+     * @return True if the copy was successful
      */
-    public static boolean copy(Transferable transferable) {
-        try {
-            getClipboard().setContents(transferable, new DoNothingClipboardOwner());
-            return true;
-        } catch (IllegalStateException ex) {
-            Main.error(ex);
-            return false;
-        }
+    public static boolean copy(final Transferable transferable) {
+        return GuiHelper.runInEDTAndWaitAndReturn(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                try {
+                    getClipboard().setContents(transferable, new DoNothingClipboardOwner());
+                    return true;
+                } catch (IllegalStateException ex) {
+                    Main.error(ex);
+                    return false;
+                }
+            }
+        });
     }
 }

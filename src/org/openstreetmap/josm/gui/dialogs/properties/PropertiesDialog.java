@@ -1265,7 +1265,7 @@ implements SelectionChangedListener, ActiveLayerChangeListener, DataSetListenerA
                 return;
             String key = editHelper.getDataKey(tagTable.getSelectedRow());
             Collection<OsmPrimitive> sel = Main.main.getInProgressSelection();
-            String clipboard = Utils.getClipboardContent();
+            String clipboard = ClipboardUtils.getClipboardStringContent();
             if (sel.isEmpty() || clipboard == null)
                 return;
             Main.main.undoRedo.add(new ChangePropertyCommand(sel, key, Utils.strip(clipboard)));

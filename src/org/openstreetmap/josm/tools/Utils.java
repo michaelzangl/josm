@@ -7,11 +7,8 @@ import static org.openstreetmap.josm.tools.I18n.trn;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.HeadlessException;
 import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.io.BufferedReader;
@@ -643,18 +640,11 @@ public final class Utils {
     /**
      * Extracts clipboard content as string.
      * @return string clipboard contents if available, {@code null} otherwise.
+     * @deprecated Use {@link ClipboardUtils#getClipboardStringContent()}. To be removed end of 2016
      */
+    @Deprecated
     public static String getClipboardContent() {
-        try {
-            Transferable t = ClipboardUtils.getClipboardContent();
-            if (t != null && t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-                return (String) t.getTransferData(DataFlavor.stringFlavor);
-            }
-        } catch (UnsupportedFlavorException | IOException | HeadlessException ex) {
-            Main.error(ex);
-            return null;
-        }
-        return null;
+        return ClipboardUtils.getClipboardStringContent();
     }
 
     /**
