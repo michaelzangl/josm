@@ -90,7 +90,7 @@ public final class ClipboardUtils {
 
     /**
      * Extracts clipboard content as {@code Transferable} object. Using this method avoids some problems on some platforms.
-     * @return The content.
+     * @return The content or <code>null</code> if it is not available
      */
     public static synchronized Transferable getClipboardContent() {
         return getClipboardContent(getClipboard());
