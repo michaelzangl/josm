@@ -26,7 +26,7 @@ public class DateUtilsTest {
      */
     @Rule
     @SuppressFBWarnings(value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
-    public JOSMTestRules test = new JOSMTestRules().i18n().preferences();
+    public JOSMTestRules test = new JOSMTestRules().i18n().preferences().timezoneChangeTimeout();
 
     /**
      * Allows to override the timezone used in {@link DateUtils} for unit tests.

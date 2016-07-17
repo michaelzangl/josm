@@ -32,7 +32,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * @author Michael Zangl
  */
 public class JOSMTestRules implements TestRule {
-    private Timeout timeout = Timeout.seconds(10);
+    private Timeout timeout = Timeout.seconds(30);
     private TemporaryFolder josmHome;
     private boolean usePreferences = false;
     private APIType useAPI = APIType.NONE;
@@ -50,9 +50,22 @@ public class JOSMTestRules implements TestRule {
     }
 
     /**
+     * Sets the timeout to a timeout suitable for timezone changes.
+     * <p>
+     * Currently, the timeout is simply disabled.
+     * @return this instance, for easy chaining
+     */
+    public JOSMTestRules timezoneChangeTimeout() {
+        return noTimeout();
+    }
+
+    /**
      * Set a timeout for all tests in this class. Local method timeouts may only reduce this timeout.
+     * <p>
+     * Timezone changes may confuse the timeout mechanism.
      * @param millis The timeout duration in milliseconds.
      * @return this instance, for easy chaining
+     * @see #timezoneChangeTimeout()
      */
     public JOSMTestRules timeout(int millis) {
         timeout = Timeout.millis(millis);

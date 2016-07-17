@@ -29,7 +29,7 @@ public class NmeaReaderTest {
      */
     @Rule
     @SuppressFBWarnings(value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
-    public JOSMTestRules test = new JOSMTestRules();
+    public JOSMTestRules test = new JOSMTestRules().timezoneChangeTimeout();
 
     /**
      * Unit test of methods {@link NMEA_TYPE#equals} and {@link NMEA_TYPE#hashCode}.
