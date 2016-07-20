@@ -128,7 +128,6 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
      * Initial zoom lvl is set to bestZoom
      */
     public int currentZoomLevel;
-    private boolean needRedraw;
 
     private final AttributionSupport attribution = new AttributionSupport();
     private final TileHolder clickedTileHolder = new TileHolder();
@@ -252,10 +251,8 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
             tile.setImage(null);
         }
         tile.setLoaded(success);
-        needRedraw = true;
-        if (Main.map != null) {
-            Main.map.repaint(100);
-        }
+        // TODO: Delay 100 ms
+        invalidate();
         if (Main.isDebugEnabled()) {
             Main.debug("tileLoadingFinished() tile: " + tile + " success: " + success);
         }
@@ -284,8 +281,7 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
      * @see MapFrame#repaint()
      */
     protected void redraw() {
-        needRedraw = true;
-        if (isVisible()) Main.map.repaint();
+        invalidate();
     }
 
     @Override
@@ -842,7 +838,7 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
         if (tileLoader instanceof TMSCachedTileLoader) {
             ((TMSCachedTileLoader) tileLoader).cancelOutstandingTasks();
         }
-        needRedraw = true;
+        invalidate();
     }
 
     protected int getMaxZoomLvl() {
@@ -1016,11 +1012,11 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
     @Override
     public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
         boolean done = (infoflags & (ERROR | FRAMEBITS | ALLBITS)) != 0;
-        needRedraw = true;
         if (Main.isDebugEnabled()) {
             Main.debug("imageUpdate() done: " + done + " calling repaint");
         }
-        Main.map.repaint(done ? 0 : 100);
+        // TODO: Trigger delayed invalidation if !done.
+        invalidate();
         return !done;
     }
 
@@ -1537,8 +1533,6 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
             return;
         }
 
-        needRedraw = false;
-
         int zoom = currentZoomLevel;
         if (getDisplaySettings().isAutoZoom()) {
             zoom = getBestZoom();
@@ -1786,7 +1780,8 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
 
     @Override
     public boolean isChanged() {
-        return needRedraw;
+        // we use #invalidate()
+        return false;
     }
 
     /**
