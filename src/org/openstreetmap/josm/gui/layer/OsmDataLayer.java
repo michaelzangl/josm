@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -420,7 +419,6 @@ public class OsmDataLayer extends AbstractModifiableLayer implements Listener, S
         Rendering painter = MapRendererFactory.getInstance().createActiveRenderer(g, mv, inactive);
         painter.render(data, virtual, box);
         Main.map.conflictDialog.paintConflicts(g, mv);
-        throw new ConcurrentModificationException("x");
     }
 
     @Override public String getToolTipText() {
