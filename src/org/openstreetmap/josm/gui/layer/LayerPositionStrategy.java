@@ -10,6 +10,7 @@ import org.openstreetmap.josm.tools.Predicates;
  * This class defines a position to insert a given layer in the list of layers.
  * @author Michael Zangl
  * @since 10008
+ * @since xxx functional interface
  */
 @FunctionalInterface
 public interface LayerPositionStrategy {
