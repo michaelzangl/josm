@@ -13,14 +13,15 @@ package org.openstreetmap.josm.tools.bugreport;
  * <p>
  * You should then add some debug information there. This can be the OSM ids that caused the error, information on the data you were working on
  * or other local variables. Make sure that no excpetions may occur while computing the values. It is best to send plain local variables to
- * put(...). Then simply throw the throwable you got from the bug report. The global exception handler will do the rest.
+ * put(...). If you need to do computations, put them into a lambda expression. Then simply throw the throwable you got from the bug report.
+ * The global exception handler will do the rest.
  * <pre>
  * int id = ...;
  * String tag = "...";
  * try {
  *   ... your code ...
  * } catch (Throwable t) {
- *   throw BugReport.intercept(t).put("id", id).put("tag", tag);
+ *   throw BugReport.intercept(t).put("id", id).put("tag", () -> x.getTag());
  * }
  * </pre>
  *
