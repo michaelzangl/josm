@@ -140,9 +140,7 @@ public class Text extends KeyedItem {
                     // TODO there must be a better way to parse a number like "+3" than this.
                     final int buttonvalue = (NumberFormat.getIntegerInstance().parse(ai.replace("+", ""))).intValue();
                     if (auto_increment_selected == buttonvalue) aibutton.setSelected(true);
-                    aibutton.addActionListener(e -> {
-                        auto_increment_selected = buttonvalue;
-                    });
+                    aibutton.addActionListener(e -> auto_increment_selected = buttonvalue);
                     pnl.add(aibutton, GBC.std());
                 } catch (ParseException x) {
                     Main.error("Cannot parse auto-increment value of '" + ai + "' into an integer");

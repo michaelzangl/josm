@@ -399,12 +399,7 @@ public class TaggingPreset extends AbstractAction implements ActiveLayerChangeLi
                 r.addMember(rm);
                 members.add(rm);
             }
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    RelationEditor.getEditor(Main.getLayerManager().getEditLayer(), r, members).setVisible(true);
-                }
-            });
+            SwingUtilities.invokeLater(() -> RelationEditor.getEditor(Main.getLayerManager().getEditLayer(), r, members).setVisible(true));
         }
         ds.setSelected(ds.getSelected()); // force update
     }
