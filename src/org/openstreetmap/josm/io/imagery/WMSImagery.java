@@ -81,15 +81,9 @@ public class WMSImagery {
         private final String incomingData;
 
         /**
-<<<<<<< ours
          * Constructs a new {@code WMSGetCapabilitiesException}
          * @param cause the cause (which is saved for later retrieval by the {@link #getCause()} method)
          * @param incomingData the answer from WMS server
-=======
-         * Create a new {@link WMSGetCapabilitiesException}
-         * @param cause The cause.
-         * @param incomingData The server response to the capabilites request.
->>>>>>> theirs
          */
         public WMSGetCapabilitiesException(Throwable cause, String incomingData) {
             super(cause);
@@ -97,7 +91,6 @@ public class WMSImagery {
         }
 
         /**
-<<<<<<< ours
          * Constructs a new {@code WMSGetCapabilitiesException}
          * @param message   the detail message. The detail message is saved for later retrieval by the {@link #getMessage()} method
          * @param incomingData the answer from the server
@@ -109,12 +102,8 @@ public class WMSImagery {
         }
 
         /**
-         * Returns the answer from WMS server.
-         * @return the answer from WMS server
-=======
          * The data that caused this exception.
          * @return The server response to the capabilites request.
->>>>>>> theirs
          */
         public String getIncomingData() {
             return incomingData;
