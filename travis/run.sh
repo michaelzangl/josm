@@ -11,7 +11,8 @@ ANT=$HOME/travis/apache-ant-1.9.7
 
 if [ "$JDK" = "oraclejdk9" ]; then
 	if ! [ -d "$path/jdk-9" ]; then
-		wget -qO- http://www.java.net/download/java/jdk9/archive/125/binaries/jdk-9-ea+125_linux-x64_bin.tar.gz | tar xz -C "$path" || die "Could not install JDK."
+		V=128
+		wget -qO- http://www.java.net/download/java/jdk9/archive/$V/binaries/jdk-9-ea+${V}_linux-x64_bin.tar.gz | tar xz -C "$path" || die "Could not install JDK."
 	fi
 	export JAVA_HOME="$path/jdk-9"
 	export PATH="$JAVA_HOME/bin:$PATH"
