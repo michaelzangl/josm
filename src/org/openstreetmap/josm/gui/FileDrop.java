@@ -32,7 +32,6 @@ import javax.swing.border.Border;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.OpenFileAction;
-import org.openstreetmap.josm.gui.FileDrop.TransferableObject;
 
 // CHECKSTYLE.OFF: HideUtilityClassConstructor
 
@@ -74,7 +73,9 @@ import org.openstreetmap.josm.gui.FileDrop.TransferableObject;
  * @author  rharder@users.sf.net
  * @version 1.0.1
  * @since 1231
+ * @deprecated To be removed from JOSM in the end of 2016.
  */
+@Deprecated
 public class FileDrop {
 
     // CHECKSTYLE.ON: HideUtilityClassConstructor
