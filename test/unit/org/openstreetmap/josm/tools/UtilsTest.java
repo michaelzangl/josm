@@ -7,6 +7,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 import org.junit.Assert;
@@ -190,6 +192,16 @@ public class UtilsTest {
     @Test(expected = IllegalArgumentException.class)
     public void testSizeStringNegative() throws Exception {
         Utils.getSizeString(-1, Locale.ENGLISH);
+    }
+
+    /**
+     * Test {@link Utils#joinAsHtmlUnorderedList(Iterable)}
+     */
+    @Test
+    public void joinAsHtmlUnorderedList() {
+        List<? extends Object> items = Arrays.asList("1", new Integer(2));
+        assertEquals("<ul><li>1</li><li>2</li></ul>", Utils.joinAsHtmlUnorderedList(items));
+        assertEquals("<ul></ul>",  Utils.joinAsHtmlUnorderedList(Collections.emptyList()));
     }
 
 }
