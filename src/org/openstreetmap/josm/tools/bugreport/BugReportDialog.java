@@ -52,13 +52,13 @@ public class BugReportDialog extends JDialog {
         addMessageSection();
 
         addUpToDateSection();
+        // TODO: Notify user about plugin updates
+
+        addCreateTicketSection();
 
         if (ExpertToggleAction.isExpert()) {
             addDebugTextSection();
         }
-
-        addCreateTicketSection();
-        // TODO: Notify user about plugin updates
 
         addIgnoreButton();
 
