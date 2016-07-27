@@ -50,6 +50,34 @@ import org.openstreetmap.josm.tools.Utils;
  * @since 23
  */
 public class DeleteCommand extends Command {
+    private final class DeleteChildCommand extends PseudoCommand {
+        private final OsmPrimitive osm;
+
+        private DeleteChildCommand(OsmPrimitive osm) {
+            this.osm = osm;
+        }
+
+        @Override
+        public String getDescriptionText() {
+            return tr("Deleted ''{0}''", osm.getDisplayName(DefaultNameFormatter.getInstance()));
+        }
+
+        @Override
+        public Icon getDescriptionIcon() {
+            return ImageProvider.get(osm.getDisplayType());
+        }
+
+        @Override
+        public Collection<? extends OsmPrimitive> getParticipatingPrimitives() {
+            return Collections.singleton(osm);
+        }
+
+        @Override
+        public String toString() {
+            return "DeleteChildCommand [osm=" + osm + "]";
+        }
+    }
+
     /**
      * The primitives that get deleted.
      */
@@ -64,8 +92,6 @@ public class DeleteCommand extends Command {
      */
     public DeleteCommand(Collection<? extends OsmPrimitive> data) {
         CheckParameterUtil.ensureParameterNotNull(data, "data");
-        if (data.isEmpty())
-            throw new IllegalArgumentException(tr("At least one object to delete required, got empty collection"));
         this.toDelete = data;
         checkConsistency();
     }
@@ -105,13 +131,14 @@ public class DeleteCommand extends Command {
     public DeleteCommand(OsmDataLayer layer, Collection<? extends OsmPrimitive> data) {
         super(layer);
         CheckParameterUtil.ensureParameterNotNull(data, "data");
-        if (data.isEmpty())
-            throw new IllegalArgumentException(tr("At least one object to delete required, got empty collection"));
         this.toDelete = data;
         checkConsistency();
     }
 
     private void checkConsistency() {
+        if (toDelete.isEmpty()) {
+            throw new IllegalArgumentException(tr("At least one object to delete required, got empty collection"));
+        }
         for (OsmPrimitive p : toDelete) {
             if (p == null) {
                 throw new IllegalArgumentException("Primitive to delete must not be null");
@@ -215,21 +242,7 @@ public class DeleteCommand extends Command {
         else {
             List<PseudoCommand> children = new ArrayList<>(toDelete.size());
             for (final OsmPrimitive osm : toDelete) {
-                children.add(new PseudoCommand() {
-
-                    @Override public String getDescriptionText() {
-                        return tr("Deleted ''{0}''", osm.getDisplayName(DefaultNameFormatter.getInstance()));
-                    }
-
-                    @Override public Icon getDescriptionIcon() {
-                        return ImageProvider.get(osm.getDisplayType());
-                    }
-
-                    @Override public Collection<? extends OsmPrimitive> getParticipatingPrimitives() {
-                        return Collections.singleton(osm);
-                    }
-
-                });
+                children.add(new DeleteChildCommand(osm));
             }
             return children;
 
