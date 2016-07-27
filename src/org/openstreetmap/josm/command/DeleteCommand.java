@@ -50,6 +50,34 @@ import org.openstreetmap.josm.tools.Utils;
  * @since 23
  */
 public class DeleteCommand extends Command {
+    private final class DeleteChildCommand extends PseudoCommand {
+        private final OsmPrimitive osm;
+
+        private DeleteChildCommand(OsmPrimitive osm) {
+            this.osm = osm;
+        }
+
+        @Override
+        public String getDescriptionText() {
+            return tr("Deleted ''{0}''", osm.getDisplayName(DefaultNameFormatter.getInstance()));
+        }
+
+        @Override
+        public Icon getDescriptionIcon() {
+            return ImageProvider.get(osm.getDisplayType());
+        }
+
+        @Override
+        public Collection<? extends OsmPrimitive> getParticipatingPrimitives() {
+            return Collections.singleton(osm);
+        }
+
+        @Override
+        public String toString() {
+            return "DeleteChildCommand [osm=" + osm + "]";
+        }
+    }
+
     /**
      * The primitives that get deleted.
      */
@@ -214,21 +242,7 @@ public class DeleteCommand extends Command {
         else {
             List<PseudoCommand> children = new ArrayList<>(toDelete.size());
             for (final OsmPrimitive osm : toDelete) {
-                children.add(new PseudoCommand() {
-
-                    @Override public String getDescriptionText() {
-                        return tr("Deleted ''{0}''", osm.getDisplayName(DefaultNameFormatter.getInstance()));
-                    }
-
-                    @Override public Icon getDescriptionIcon() {
-                        return ImageProvider.get(osm.getDisplayType());
-                    }
-
-                    @Override public Collection<? extends OsmPrimitive> getParticipatingPrimitives() {
-                        return Collections.singleton(osm);
-                    }
-
-                });
+                children.add(new DeleteChildCommand(osm));
             }
             return children;
 
