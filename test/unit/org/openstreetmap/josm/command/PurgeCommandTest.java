@@ -3,6 +3,7 @@ package org.openstreetmap.josm.command;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -20,6 +21,8 @@ import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Hash;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.Relation;
+import org.openstreetmap.josm.data.osm.RelationMember;
 import org.openstreetmap.josm.data.osm.Storage;
 import org.openstreetmap.josm.data.osm.User;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
@@ -55,14 +58,22 @@ public class PurgeCommandTest {
      */
     @Test
     public void testExecute() {
+        Relation relationParent = testData.createRelation(100, new RelationMember("child", testData.existingRelation));
+        Relation relationParent2 = testData.createRelation(101, new RelationMember("child", testData.existingRelation));
+        // to check that algorithm ignores it:
+        Relation relationParent3 = testData.createRelation(102, new RelationMember("child", testData.existingRelation));
         PurgeCommand command = new PurgeCommand(testData.layer,
                 Arrays.<OsmPrimitive> asList(testData.existingNode, testData.existingNode2, testData.existingWay,
-                        testData.existingRelation),
+                        testData.existingRelation, relationParent, relationParent2),
                 Arrays.<OsmPrimitive> asList(testData.existingNode2, testData.existingWay, testData.existingRelation));
         command.executeCommand();
         assertTrue(testData.existingNode2.isIncomplete());
         assertTrue(testData.existingWay.isIncomplete());
         assertTrue(testData.existingRelation.isIncomplete());
+        assertNull(relationParent.getDataSet());
+        assertNull(relationParent2.getDataSet());
+        assertNotNull(relationParent3.getDataSet());
+        assertFalse(relationParent3.isIncomplete());
         assertNull(testData.existingNode.getDataSet());
         assertFalse(testData.existingNode.isIncomplete());
     }
