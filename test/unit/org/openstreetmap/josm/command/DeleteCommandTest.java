@@ -313,6 +313,21 @@ public class DeleteCommandTest {
     }
 
     /**
+     * Tests {@link DeleteCommand#getChildren()}
+     * @since xxx
+     */
+    @Test
+    public void testGetChildren() {
+        testData.existingNode.put("name", "xy");
+        Collection<PseudoCommand> children = new DeleteCommand(Arrays.<OsmPrimitive> asList(testData.existingNode, testData.existingNode2)).getChildren();
+        assertEquals(2, children.size());
+        assertTrue(children.stream().allMatch(c -> c.getParticipatingPrimitives().size() == 1));
+        assertTrue(children.stream().anyMatch(c -> c.getParticipatingPrimitives().iterator().next() == testData.existingNode));
+        assertTrue(children.stream().anyMatch(c -> c.getParticipatingPrimitives().iterator().next() == testData.existingNode2));
+        assertTrue(children.stream().anyMatch(c -> c.getDescriptionText().matches("Deleted '.*xy.*'")));
+    }
+
+    /**
      * Tests {@link DeleteCommand#fillModifiedData(java.util.Collection, java.util.Collection, java.util.Collection)}
      * @since xxx
      */
