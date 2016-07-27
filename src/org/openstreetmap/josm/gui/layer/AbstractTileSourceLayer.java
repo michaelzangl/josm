@@ -1134,7 +1134,7 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
         }
     }
 
-    private List<Tile> paintTileImages(Graphics g, TileSet ts, int zoom) {
+    private List<Tile> paintTileImages(Graphics g, TileSet ts) {
         Object paintMutex = new Object();
         List<TilePosition> missed = Collections.synchronizedList(new ArrayList<>());
         ts.visitTiles(tile -> {
@@ -1670,7 +1670,7 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
 
         g.setColor(Color.DARK_GRAY);
 
-        List<Tile> missedTiles = this.paintTileImages(g, ts, displayZoomLevel);
+        List<Tile> missedTiles = this.paintTileImages(g, ts);
         int[] otherZooms = {-1, 1, -2, 2, -3, -4, -5};
         for (int zoomOffset : otherZooms) {
             if (!getDisplaySettings().isAutoZoom()) {
