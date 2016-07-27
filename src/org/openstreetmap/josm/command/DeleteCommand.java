@@ -50,7 +50,7 @@ import org.openstreetmap.josm.tools.Utils;
  * @since 23
  */
 public class DeleteCommand extends Command {
-    private final class DeleteChildCommand extends PseudoCommand {
+    private static final class DeleteChildCommand implements PseudoCommand {
         private final OsmPrimitive osm;
 
         private DeleteChildCommand(OsmPrimitive osm) {
@@ -453,6 +453,12 @@ public class DeleteCommand extends Command {
         return new SequenceCommand(tr("Delete"), cmds);
     }
 
+    /**
+     * Create a command that deletes a single way segment. The way may be split by this.
+     * @param layer The layer the segment is in.
+     * @param ws The way segment that should be deleted
+     * @return A matching command to safely delete that segment.
+     */
     public static Command deleteWaySegment(OsmDataLayer layer, WaySegment ws) {
         if (ws.way.getNodesCount() < 3)
             return delete(layer, Collections.singleton(ws.way), false);
