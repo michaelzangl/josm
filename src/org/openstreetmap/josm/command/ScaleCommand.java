@@ -34,7 +34,7 @@ public class ScaleCommand extends TransformNodesCommand {
      * @param objects objects to fetch nodes from
      * @param currentEN cuurent eats/north
      */
-    public ScaleCommand(Collection<OsmPrimitive> objects, EastNorth currentEN) {
+    public ScaleCommand(Collection<? extends OsmPrimitive> objects, EastNorth currentEN) {
         super(objects);
 
         pivot = getNodesCenter();

@@ -38,7 +38,7 @@ public class RotateCommand extends TransformNodesCommand {
      * @param objects objects to fetch nodes from
      * @param currentEN cuurent eats/north
      */
-    public RotateCommand(Collection<OsmPrimitive> objects, EastNorth currentEN) {
+    public RotateCommand(Collection<? extends OsmPrimitive> objects, EastNorth currentEN) {
         super(objects);
 
         pivot = getNodesCenter();
