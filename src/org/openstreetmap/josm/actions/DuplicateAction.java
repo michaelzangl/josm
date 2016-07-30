@@ -10,6 +10,7 @@ import java.awt.event.KeyEvent;
 import java.util.Collection;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.gui.datatransfer.OsmTransferHandler;
 import org.openstreetmap.josm.gui.datatransfer.PrimitiveTransferable;
@@ -34,7 +35,8 @@ public final class DuplicateAction extends JosmAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         PrimitiveTransferData data = PrimitiveTransferData.getDataWithReferences(getLayerManager().getEditDataSet().getSelected());
-        new OsmTransferHandler().pasteOn(Main.getLayerManager().getEditLayer(), data.getCenter(), new PrimitiveTransferable(data));
+        EastNorth mPosition = PasteAction.computePastePosition(e, getValue(NAME));
+        new OsmTransferHandler().pasteOn(Main.getLayerManager().getEditLayer(), mPosition, new PrimitiveTransferable(data));
     }
 
     @Override
