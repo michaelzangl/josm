@@ -29,9 +29,18 @@ public interface Tagged {
      * Sets a key/value pairs
      *
      * @param key the key
-     * @param value the value. If null, removes the key/value pair.
+     * @param value the value.
      */
     void put(String key, String value);
+
+    /**
+     * Sets a key/value pairs
+     *
+     * @param tag The tag to set.
+     */
+    default void put(Tag tag) {
+        put(tag.getKey(), tag.getValue());
+    }
 
     /**
      * Replies the value of the given key; null, if there is no value for this key
