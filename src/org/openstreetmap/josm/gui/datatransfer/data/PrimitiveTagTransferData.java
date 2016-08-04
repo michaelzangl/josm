@@ -76,12 +76,12 @@ public class PrimitiveTagTransferData implements Serializable {
      * @param type The type
      * @return The number of source primitives of that type
      */
-    public Integer getSourcePrimitiveCount(OsmPrimitiveType type) {
-        return counts.get(type);
+    public int getSourcePrimitiveCount(OsmPrimitiveType type) {
+        return counts.getOrDefault(type, 0);
     }
 
     /**
-     * Gets the statistics of the source primitive counts.
+     * Gets the statistics of the source primitive counts. May contain no entries for unused types.
      * @return The statistics as map
      */
     public Map<OsmPrimitiveType, Integer> getStatistics() {
