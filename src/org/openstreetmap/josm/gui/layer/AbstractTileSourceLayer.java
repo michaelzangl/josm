@@ -1247,7 +1247,7 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
     }
 
     private Projecting getProjecting() {
-        return new ShiftedProjecting(Main.getProjection(), getDisplaySettings().getDisplacement());
+        return new ShiftedProjecting(Main.getProjection(), new EastNorth(0, 0).subtract(getDisplaySettings().getDisplacement()));
     }
 
     private LatLon getShiftedLatLon(EastNorth en) {
