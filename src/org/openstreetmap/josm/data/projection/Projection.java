@@ -102,4 +102,5 @@ public interface Projection extends Projecting {
      * @return true if natural order of coordinates is North East, false if East North
      */
     boolean switchXY();
+
 }

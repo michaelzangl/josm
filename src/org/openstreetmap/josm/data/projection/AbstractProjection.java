@@ -1,6 +1,9 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.data.projection;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.DoubleUnaryOperator;
 
 import org.openstreetmap.josm.data.Bounds;
@@ -134,6 +137,32 @@ public abstract class AbstractProjection implements Projection {
         double lon = Math.toDegrees(latlonRad[1]) + lon0 + pm;
         LatLon ll = new LatLon(Math.toDegrees(latlonRad[0]), normalizeLon.applyAsDouble(lon));
         return datum.toWGS84(ll);
+    }
+
+    @Override
+    public Map<ProjectionBounds, Projecting> getProjectingsForArea(ProjectionBounds area) {
+        if (proj.lonIsLinearToEast()) {
+            //FIXME: Respect datum?
+            // wrap the wrold around
+            Bounds bounds = getWorldBoundsLatLon();
+            double minEast = latlon2eastNorth(bounds.getMin()).east();
+            double maxEast = latlon2eastNorth(bounds.getMax()).east();
+            double dEast = maxEast - minEast;
+            if ((area.minEast < minEast || area.maxEast > maxEast) && dEast > 0) {
+                // We could handle the dEast < 0 case but we don't need it atm.
+                int minChunk = (int) Math.floor((area.minEast - minEast) / dEast);
+                int maxChunk = (int) Math.floor((area.maxEast - minEast) / dEast);
+                HashMap<ProjectionBounds, Projecting> ret = new HashMap<>();
+                for (int chunk = minChunk; chunk <= maxChunk; chunk++) {
+                    ret.put(new ProjectionBounds(Math.max(area.minEast, minEast + chunk * dEast), area.minNorth,
+                            Math.min(area.maxEast, maxEast + chunk * dEast), area.maxNorth),
+                            new ShiftedProjecting(this, new EastNorth(-chunk * dEast, 0)));
+                }
+                return ret;
+            }
+        }
+
+        return Collections.singletonMap(area, this);
     }
 
     @Override
