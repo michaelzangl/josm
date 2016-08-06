@@ -367,6 +367,7 @@ public final class MapViewState {
         /**
          * Gets the latlon coordinate clamped to the current world area.
          * @return The lat/lon coordinate
+         * @since xxx
          */
         public LatLon getLatLonClamped() {
             return projecting.eastNorth2latlonClamped(getEastNorth());
