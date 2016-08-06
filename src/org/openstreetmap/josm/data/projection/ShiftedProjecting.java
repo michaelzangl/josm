@@ -29,12 +29,12 @@ public class ShiftedProjecting implements Projecting {
 
     @Override
     public EastNorth latlon2eastNorth(LatLon ll) {
-        return base.latlon2eastNorth(ll).subtract(offset);
+        return base.latlon2eastNorth(ll).add(offset);
     }
 
     @Override
     public LatLon eastNorth2latlonClamped(EastNorth en) {
-        return base.eastNorth2latlonClamped(en.add(offset));
+        return base.eastNorth2latlonClamped(en.subtract(offset));
     }
 
     @Override
@@ -45,10 +45,10 @@ public class ShiftedProjecting implements Projecting {
     @Override
     public Map<ProjectionBounds, Projecting> getProjectingsForArea(ProjectionBounds area) {
         Map<ProjectionBounds, Projecting> forArea = base
-                .getProjectingsForArea(new ProjectionBounds(area.getMin().add(offset), area.getMax().add(offset)));
+                .getProjectingsForArea(new ProjectionBounds(area.getMin().subtract(offset), area.getMax().subtract(offset)));
         HashMap<ProjectionBounds, Projecting> ret = new HashMap<>();
         forArea.forEach((pb, projecting) -> ret.put(
-                new ProjectionBounds(pb.getMin().subtract(offset), pb.getMax().subtract(offset)),
+                new ProjectionBounds(pb.getMin().add(offset), pb.getMax().add(offset)),
                 new ShiftedProjecting(projecting, offset)));
         return ret;
     }

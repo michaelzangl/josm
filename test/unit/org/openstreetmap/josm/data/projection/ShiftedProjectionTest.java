@@ -69,11 +69,11 @@ public class ShiftedProjectionTest {
 
         ShiftedProjecting shifted = new ShiftedProjecting(base, new EastNorth(5, 7));
         EastNorth shift_00 = shifted.latlon2eastNorth(new LatLon(0, 0));
-        assertEquals(-5, shift_00.east(), 1e-10);
-        assertEquals(-7, shift_00.north(), 1e-10);
+        assertEquals(5, shift_00.east(), 1e-10);
+        assertEquals(7, shift_00.north(), 1e-10);
         EastNorth shift_12 = shifted.latlon2eastNorth(new LatLon(1, 2));
-        assertEquals(2 - 5, shift_12.east(), 1e-10);
-        assertEquals(6 - 7, shift_12.north(), 1e-10);
+        assertEquals(2 + 5, shift_12.east(), 1e-10);
+        assertEquals(6 + 7, shift_12.north(), 1e-10);
     }
 
     /**
@@ -92,10 +92,10 @@ public class ShiftedProjectionTest {
         assertEquals(2, unshift_12.lon(), 1e-10);
 
         ShiftedProjecting shifted = new ShiftedProjecting(base, new EastNorth(5, 7));
-        LatLon shift_00 = shifted.eastNorth2latlonClamped(new EastNorth(-5, -7));
+        LatLon shift_00 = shifted.eastNorth2latlonClamped(new EastNorth(5, 7));
         assertEquals(0, shift_00.lat(), 1e-10);
         assertEquals(0, shift_00.lon(), 1e-10);
-        LatLon shift_12 = shifted.eastNorth2latlonClamped(new EastNorth(2 - 5, 6 - 7));
+        LatLon shift_12 = shifted.eastNorth2latlonClamped(new EastNorth(2 + 5, 6 + 7));
         assertEquals(1, shift_12.lat(), 1e-10);
         assertEquals(2, shift_12.lon(), 1e-10);
     }
@@ -131,16 +131,16 @@ public class ShiftedProjectionTest {
 
         // breach is at:
         EastNorth breachAt = shifted.latlon2eastNorth(base.eastNorth2latlonClamped(new EastNorth(0, 0)));
-        assertEquals(-5, breachAt.east(), 1e-7);
+        assertEquals(5, breachAt.east(), 1e-7);
 
         Map<ProjectionBounds, Projecting> areas = shifted.getProjectingsForArea(area);
         assertEquals(2, areas.size());
         List<Entry<ProjectionBounds, Projecting>> entries = areas.entrySet().stream().sorted(Comparator.comparingDouble(b -> b.getKey().minEast)).collect(Collectors.toList());
         assertEquals(area.minEast, entries.get(0).getKey().minEast, 1e-7);
-        assertEquals(-5, entries.get(0).getKey().maxEast, 1e-7);
+        assertEquals(5, entries.get(0).getKey().maxEast, 1e-7);
         assertEquals(area.minNorth, entries.get(0).getKey().minNorth, 1e-7);
         assertEquals(area.maxNorth, entries.get(0).getKey().maxNorth, 1e-7);
-        assertEquals(-5, entries.get(1).getKey().minEast, 1e-7);
+        assertEquals(5, entries.get(1).getKey().minEast, 1e-7);
         assertEquals(area.maxEast, entries.get(1).getKey().maxEast, 1e-7);
         assertEquals(area.minNorth, entries.get(1).getKey().minNorth, 1e-7);
         assertEquals(area.maxNorth, entries.get(1).getKey().maxNorth, 1e-7);
