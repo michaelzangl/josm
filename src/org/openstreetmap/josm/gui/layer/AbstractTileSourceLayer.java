@@ -77,6 +77,8 @@ import org.openstreetmap.josm.data.imagery.TMSCachedTileLoader;
 import org.openstreetmap.josm.data.imagery.TileLoaderFactory;
 import org.openstreetmap.josm.data.osm.visitor.BoundingXYVisitor;
 import org.openstreetmap.josm.data.preferences.IntegerProperty;
+import org.openstreetmap.josm.data.projection.Projecting;
+import org.openstreetmap.josm.data.projection.ShiftedProjecting;
 import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.MapView;
@@ -1244,8 +1246,12 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
         }
     }
 
+    private Projecting getProjecting() {
+        return new ShiftedProjecting(Main.getProjection(), getDisplaySettings().getDisplacement());
+    }
+
     private LatLon getShiftedLatLon(EastNorth en) {
-        return Main.getProjection().eastNorth2latlon(en.add(-getDisplaySettings().getDx(), -getDisplaySettings().getDy()));
+        return getProjecting().eastNorth2latlonClamped(en);
     }
 
     private ICoordinate getShiftedCoord(EastNorth en) {
@@ -1520,6 +1526,10 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
 
         needRedraw = false;
 
+        drawInViewArea(g, mv, pb);
+    }
+
+    private void drawInViewArea(Graphics2D g, MapView mv, ProjectionBounds pb) {
         int zoom = currentZoomLevel;
         if (getDisplaySettings().isAutoZoom()) {
             zoom = getBestZoom();
