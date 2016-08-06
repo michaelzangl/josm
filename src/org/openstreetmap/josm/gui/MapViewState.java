@@ -483,7 +483,8 @@ public final class MapViewState {
          * @since 10458
          */
         public Bounds getLatLonBoundsBox() {
-            return projecting.getLatLonBoundsBox(getProjectionBounds());
+            // TODO @michael2402: Use hillclimb.
+            return projecting.getBaseProjection().getLatLonBoundsBox(getProjectionBounds());
         }
 
         /**
