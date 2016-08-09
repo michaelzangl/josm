@@ -77,8 +77,6 @@ import org.openstreetmap.josm.data.imagery.TMSCachedTileLoader;
 import org.openstreetmap.josm.data.imagery.TileLoaderFactory;
 import org.openstreetmap.josm.data.osm.visitor.BoundingXYVisitor;
 import org.openstreetmap.josm.data.preferences.IntegerProperty;
-import org.openstreetmap.josm.data.projection.Projecting;
-import org.openstreetmap.josm.data.projection.ShiftedProjecting;
 import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.MapView;
@@ -232,7 +230,7 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
     }
 
     protected void initTileSource(T tileSource) {
-        coordinateConverter = new TileCoordinateConverter(Main.map.mapView, getDisplaySettings());
+        coordinateConverter = new TileCoordinateConverter(Main.map.mapView, tileSource, getDisplaySettings());
         attribution.initialize(tileSource);
 
         currentZoomLevel = getBestZoom();
@@ -369,17 +367,11 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
      * @return average number of screen pixels per tile pixel
      */
     private double getScaleFactor(int zoom) {
-        if (!Main.isDisplayingMapView()) return 1;
-        MapView mv = Main.map.mapView;
-        LatLon topLeft = mv.getLatLon(0, 0);
-        LatLon botRight = mv.getLatLon(mv.getWidth(), mv.getHeight());
-        TileXY t1 = tileSource.latLonToTileXY(topLeft.toCoordinate(), zoom);
-        TileXY t2 = tileSource.latLonToTileXY(botRight.toCoordinate(), zoom);
-
-        int screenPixels = mv.getWidth()*mv.getHeight();
-        double tilePixels = Math.abs((t2.getY()-t1.getY())*(t2.getX()-t1.getX())*tileSource.getTileSize()*tileSource.getTileSize());
-        if (screenPixels == 0 || tilePixels == 0) return 1;
-        return screenPixels/tilePixels;
+        if (coordinateConverter != null) {
+            return coordinateConverter.getScaleFactor(zoom);
+        } else {
+            return 1;
+        }
     }
 
     protected int getBestZoom() {
@@ -1246,12 +1238,8 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
         }
     }
 
-    private Projecting getProjecting() {
-        return new ShiftedProjecting(Main.getProjection(), getDisplaySettings().getDisplacement());
-    }
-
     private LatLon getShiftedLatLon(EastNorth en) {
-        return getProjecting().eastNorth2latlonClamped(en);
+        return coordinateConverter.getProjecting().eastNorth2latlonClamped(en);
     }
 
     private ICoordinate getShiftedCoord(EastNorth en) {
@@ -1522,11 +1510,7 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
 
     @Override
     public void paint(Graphics2D g, MapView mv, Bounds bounds) {
-        ProjectionBounds pb = mv.getState().getViewArea().getProjectionBounds();
-
-        needRedraw = false;
-
-        drawInViewArea(g, mv, pb);
+        // old and unused.
     }
 
     private void drawInViewArea(Graphics2D g, MapView mv, ProjectionBounds pb) {
@@ -1904,8 +1888,16 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
         public void paint(MapViewGraphics graphics) {
             allocateCacheMemory();
             if (memory != null) {
-                super.paint(graphics);
+                doPaint(graphics);
             }
+        }
+
+        private void doPaint(MapViewGraphics graphics) {
+            ProjectionBounds pb = graphics.getClipBounds().getProjectionBounds();
+
+            needRedraw = false; // TEMPORARY
+
+            drawInViewArea(graphics.getDefaultGraphics(), graphics.getMapView(), pb);
         }
 
         private void allocateCacheMemory() {
