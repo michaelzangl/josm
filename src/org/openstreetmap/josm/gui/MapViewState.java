@@ -5,6 +5,8 @@ import java.awt.Container;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Point2D.Double;
 import java.awt.geom.Rectangle2D;
@@ -211,6 +213,10 @@ public final class MapViewState {
     public AffineTransform getAffineTransform() {
         return new AffineTransform(1.0 / scale, 0.0, 0.0, -1.0 / scale, -topLeft.east() / scale,
                 topLeft.north() / scale);
+    }
+
+    public LatLonRectangle getArea(Bounds bounds) {
+        return new LatLonRectangle(bounds);
     }
 
     /**
@@ -487,6 +493,38 @@ public final class MapViewState {
             double x2 = p2.getInViewX();
             double y2 = p2.getInViewY();
             return new Rectangle2D.Double(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x1 - x2), Math.abs(y1 - y2));
+        }
+    }
+
+    /**
+     * This is a rectangle in lat/lon space.
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public class LatLonRectangle {
+
+        private Bounds bounds;
+
+        LatLonRectangle(Bounds bounds) {
+            this.bounds = new Bounds(bounds);
+        }
+
+        /**
+         * Gets the approximate area this shape covers in view space.
+         * @return The area in view space
+         */
+        public Area getViewArea() {
+            Path2D area = new Path2D.Double();
+            bounds.visitEdge(getProjection(), latlon -> {
+                MapViewPoint point = getPointFor(latlon);
+                if (area.getCurrentPoint() == null) {
+                    area.moveTo(point.getInViewX(), point.getInViewY());
+                } else {
+                    area.lineTo(point.getInViewX(), point.getInViewY());
+                }
+            });
+            area.closePath();
+            return new Area(area);
         }
     }
 
