@@ -752,8 +752,7 @@ public final class DataSet implements Data, Cloneable, ProjectionChangeListener 
             return;
 
         highlightedVirtualNodes = waySegments;
-        // can't use fireHighlightingChanged because it requires an OsmPrimitive
-        highlightUpdateCount++;
+        fireHighlightingChanged();
     }
 
     /**
@@ -765,8 +764,7 @@ public final class DataSet implements Data, Cloneable, ProjectionChangeListener 
             return;
 
         highlightedWaySegments = waySegments;
-        // can't use fireHighlightingChanged because it requires an OsmPrimitive
-        highlightUpdateCount++;
+        fireHighlightingChanged();
     }
 
     /**
