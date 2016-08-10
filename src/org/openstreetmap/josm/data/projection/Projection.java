@@ -110,4 +110,12 @@ public interface Projection {
      * @return true if natural order of coordinates is North East, false if East North
      */
     boolean switchXY();
+
+    /**
+     * Gets the object used as cache identifier when caching results of this projection.
+     * @return The object to use as cache key
+     */
+    default Object getCacheKey() {
+        return this;
+    }
 }
