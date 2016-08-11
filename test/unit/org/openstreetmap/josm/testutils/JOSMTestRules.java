@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.TimeZone;
+import java.util.logging.Level;
 
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
@@ -19,6 +20,7 @@ import org.openstreetmap.josm.io.OsmApi;
 import org.openstreetmap.josm.io.OsmApiInitializationException;
 import org.openstreetmap.josm.io.OsmTransferCanceledException;
 import org.openstreetmap.josm.tools.I18n;
+import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.MemoryManagerTest;
 import org.openstreetmap.josm.tools.date.DateUtils;
 
@@ -182,6 +184,7 @@ public class JOSMTestRules implements TestRule {
         TimeZone.setDefault(DateUtils.UTC);
         // Set log level to info
         Main.logLevel = 3;
+        Logging.setLogLevel(Level.INFO);
 
         // Set up i18n
         if (i18n != null) {
