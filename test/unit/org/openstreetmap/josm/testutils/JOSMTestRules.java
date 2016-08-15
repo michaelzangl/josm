@@ -159,7 +159,7 @@ public class JOSMTestRules implements TestRule {
         Statement statement = base;
         if (timeout > 0) {
             // TODO: new DisableOnDebug(timeout)
-            statement = new FailOnTimeoutStatement(statement, timeout);
+           //  statement = new FailOnTimeoutStatement(statement, timeout);
         }
         statement = new CreateJosmEnvironment(statement);
         if (josmHome != null) {
