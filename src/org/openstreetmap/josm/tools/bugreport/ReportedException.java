@@ -65,7 +65,16 @@ public class ReportedException extends RuntimeException {
      */
     public void warn() {
         methodWarningFrom = BugReport.getCallingMethod(2);
-        // TODO: Open the dialog.
+        try {
+            BugReportQueue.getInstance().submit(this);
+        } catch (RuntimeException e) {
+            try {
+                e.printStackTrace();
+            } catch (RuntimeException e2) {
+                // we cannot do anything more...
+                // re-throwing this causes an infinite loop.
+            }
+        }
     }
 
     /**
@@ -242,13 +251,9 @@ public class ReportedException extends RuntimeException {
 
     @Override
     public String toString() {
-        return new StringBuilder(48)
-            .append("CrashReportedException [on thread ")
-            .append(caughtOnThread)
-            .append(']')
-            .toString();
+        return "ReportedException [thread=" + caughtOnThread + ", exception=" + exception
+                + ", methodWarningFrom=" + methodWarningFrom + "]";
     }
-
 
     /**
      * Check if this exception may be caused by a threading issue.
@@ -258,6 +263,14 @@ public class ReportedException extends RuntimeException {
     public boolean mayHaveConcurrentSource() {
         return StreamUtils.toStream(CauseTraceIterator::new)
                 .anyMatch(t -> t instanceof ConcurrentModificationException || t instanceof InvocationTargetException);
+    }
+
+    /**
+     * Check if this is caused by an out of memory situaition
+     * @return <code>true</code> if it is.
+     */
+    public boolean isOutOfMemory() {
+        return StreamUtils.toStream(CauseTraceIterator::new).anyMatch(t -> t instanceof OutOfMemoryError);
     }
 
     /**
