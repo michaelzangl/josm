@@ -89,6 +89,7 @@ public class AddPrimitivesCommand extends Command {
                     getAffectedDataSet().addPrimitive(primitive);
                 }
                 newPrimitives.add(primitive);
+                primitive.setModified(true);
                 if (toSelect.contains(pd)) {
                     primitivesToSelect.add(primitive);
                 }
