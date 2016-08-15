@@ -50,6 +50,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.Timer;
 
 import org.openstreetmap.gui.jmapviewer.AttributionSupport;
 import org.openstreetmap.gui.jmapviewer.MemoryTileCache;
@@ -157,6 +158,11 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
     protected T tileSource;
     protected TileLoader tileLoader;
 
+    /**
+     * A timer that is used to delay invalidation events if required.
+     */
+    private final Timer invalidateLaterTimer = new Timer(100, e -> this.invalidate());
+
     private final MouseAdapter adapter = new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -262,8 +268,7 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
             tile.setImage(null);
         }
         tile.setLoaded(success);
-        // TODO: Delay 100 ms
-        invalidate();
+        invalidateLater();
         if (Main.isDebugEnabled()) {
             Main.debug("tileLoadingFinished() tile: " + tile + " success: " + success);
         }
@@ -1022,9 +1027,25 @@ implements ImageObserver, TileLoaderListener, ZoomChangeListener, FilterChangeLi
         if (Main.isDebugEnabled()) {
             Main.debug("imageUpdate() done: " + done + " calling repaint");
         }
-        // TODO: Trigger delayed invalidation if !done.
-        invalidate();
+
+        if (done) {
+            invalidate();
+        } else {
+            invalidateLater();
+        }
         return !done;
+    }
+
+    /**
+     * Invalidate the layer at a time in the future so taht the user still sees the interface responsive.
+     */
+    private void invalidateLater() {
+        GuiHelper.runInEDT(() -> {
+            if (!invalidateLaterTimer.isRunning()) {
+                invalidateLaterTimer.setRepeats(false);
+                invalidateLaterTimer.start();
+            }
+        });
     }
 
     private boolean imageLoaded(Image i) {
