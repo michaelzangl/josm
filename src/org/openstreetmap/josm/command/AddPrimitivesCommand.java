@@ -89,7 +89,6 @@ public class AddPrimitivesCommand extends Command {
                     getAffectedDataSet().addPrimitive(primitive);
                 }
                 newPrimitives.add(primitive);
-                primitive.setModified(true);
                 if (toSelect.contains(pd)) {
                     primitivesToSelect.add(primitive);
                 }
@@ -101,6 +100,7 @@ public class AddPrimitivesCommand extends Command {
                     newPrimitives.get(i).load(data.get(i));
                 }
             }
+            newPrimitives.stream().forEach(p -> p.setModified(true));
         } else { // redo
             // When redoing this command, we have to add the same objects, otherwise
             // a subsequent command (e.g. MoveCommand) cannot be redone.
