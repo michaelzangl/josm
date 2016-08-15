@@ -77,7 +77,6 @@ import org.openstreetmap.josm.tools.AudioPlayer;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.openstreetmap.josm.tools.Utils;
 import org.openstreetmap.josm.tools.bugreport.BugReport;
-import org.openstreetmap.josm.tools.bugreport.BugReportExceptionHandler;
 
 /**
  * This is a component used in the {@link MapFrame} for browsing the map. It use is to
@@ -826,8 +825,7 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
             painter.paint(paintGraphics);
             g.setPaintMode();
         } catch (RuntimeException t) {
-            //TODO: only display.
-            throw BugReport.intercept(t).put("layer", layer).put("bounds", box);
+            BugReport.intercept(t).put("layer", layer).put("bounds", box).warn();
         }
     }
 
@@ -836,7 +834,12 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
      */
     @Override
     public void paint(Graphics g) {
-        if (!prepareToDraw()) {
+        try {
+            if (!prepareToDraw()) {
+                return;
+            }
+        } catch (RuntimeException e) {
+            BugReport.intercept(e).put("center", () -> getCenter()).warn();
             return;
         }
 
@@ -914,21 +917,18 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
             paintLayer(visibleLayers.get(i), tempG, box);
         }
 
-        synchronized (temporaryLayers) {
-            for (MapViewPaintable mvp : temporaryLayers) {
-                try {
-                    mvp.paint(tempG, this, box);
-                } catch (RuntimeException e) {
-                    throw BugReport.intercept(e).put("mvp", mvp);
-                }
-            }
+        try {
+            drawTemporaryLayers(tempG, box);
+        } catch (RuntimeException e) {
+            BugReport.intercept(e).put("temporaryLayers", temporaryLayers).warn();
         }
 
         // draw world borders
         try {
             drawWorldBorders(tempG);
         } catch (RuntimeException e) {
-            throw BugReport.intercept(e).put("bounds", getProjection()::getWorldBoundsLatLon);
+            // getProjection() needs to be inside lambda to catch errors.
+            BugReport.intercept(e).put("bounds", () -> getProjection().getWorldBoundsLatLon()).warn();
         }
 
         if (Main.isDisplayingMapView() && Main.map.filterDialog != null) {
@@ -968,6 +968,18 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
             Main.error(e);
         }
         super.paint(g);
+    }
+
+    private void drawTemporaryLayers(Graphics2D tempG, Bounds box) {
+        synchronized (temporaryLayers) {
+            for (MapViewPaintable mvp : temporaryLayers) {
+                try {
+                    mvp.paint(tempG, this, box);
+                } catch (RuntimeException e) {
+                    throw BugReport.intercept(e).put("mvp", mvp);
+                }
+            }
+        }
     }
 
     private void drawWorldBorders(Graphics2D tempG) {
@@ -1025,8 +1037,6 @@ LayerManager.LayerChangeListener, MainLayerManager.ActiveLayerChangeListener {
             zoomTo(initialViewport);
             initialViewport = null;
         }
-        if (BugReportExceptionHandler.exceptionHandlingInProgress())
-            return false;
 
         if (getCenter() == null)
             return false; // no data loaded yet.

@@ -24,6 +24,8 @@ public class BugReportQueue {
     private final BiFunction<ReportedException, Integer, SuppressionMode> bugReportHandler = getBestHandler();
     private int displayedErrors;
 
+    private boolean inReportDialog;
+
 
     /**
      * The suppression mode that should be used after the dialog was closed.
@@ -83,12 +85,14 @@ public class BugReportQueue {
             reportsToDisplay.removeIf(e::isSame);
         }
         displayedErrors++;
+        inReportDialog = false;
     }
 
     private synchronized ReportedException getNext() throws InterruptedException {
         while (reportsToDisplay.isEmpty()) {
             wait();
         }
+        inReportDialog = true;
         return reportsToDisplay.removeFirst();
     }
 
@@ -98,6 +102,14 @@ public class BugReportQueue {
 
     private synchronized int getDisplayedErrors() {
         return displayedErrors;
+    }
+
+    /**
+     * Check if the dialog is shown. Should only be used for e.g. debugging.
+     * @return <code>true</code> if the exception handler is still showing the exception to the user.
+     */
+    public synchronized boolean exceptionHandlingInProgress() {
+        return !reportsToDisplay.isEmpty() || inReportDialog;
     }
 
     private static BiFunction<ReportedException, Integer, SuppressionMode> getBestHandler() {

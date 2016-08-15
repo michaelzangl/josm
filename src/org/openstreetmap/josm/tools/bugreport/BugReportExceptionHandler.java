@@ -27,6 +27,6 @@ public final class BugReportExceptionHandler implements Thread.UncaughtException
      * @return {@code true} if an exception is currently being handled, {@code false} otherwise
      */
     public static boolean exceptionHandlingInProgress() {
-        return false;
+        return BugReportQueue.getInstance().exceptionHandlingInProgress();
     }
 }
