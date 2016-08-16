@@ -21,6 +21,7 @@ import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.CertificateAmendment;
 import org.openstreetmap.josm.io.OsmApi;
 import org.openstreetmap.josm.tools.I18n;
+import org.openstreetmap.josm.tools.Logging;
 
 /**
  * Fixture to define a proper and safe environment before running tests.
@@ -99,6 +100,7 @@ public class JOSMFixture {
         Main.platform.preStartupHook();
 
         Main.logLevel = 3;
+        Logging.setLogLevel(Logging.LEVEL_INFO);
         Main.pref.init(false);
         Main.pref.put("osm-server.url", "http://api06.dev.openstreetmap.org/api");
         I18n.set(Main.pref.get("language", "en"));
