@@ -278,6 +278,7 @@ public final class Logging {
         }
         Throwable cause = t.getCause();
         if (cause != null && !cause.equals(t)) {
+            // this may cause infinite loops in the unlikely case that there is a loop in the causes.
             sb.append(". ").append(tr("Cause: ")).append(getErrorMessage(cause));
         }
         return sb.toString();

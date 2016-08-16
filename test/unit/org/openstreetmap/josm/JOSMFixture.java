@@ -99,7 +99,6 @@ public class JOSMFixture {
         // call the really early hook before we anything else
         Main.platform.preStartupHook();
 
-        Main.logLevel = 3;
         Logging.setLogLevel(Logging.LEVEL_INFO);
         Main.pref.init(false);
         Main.pref.put("osm-server.url", "http://api06.dev.openstreetmap.org/api");

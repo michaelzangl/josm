@@ -452,7 +452,11 @@ public abstract class Main {
      * @since 6642
      */
     public static String getErrorMessage(Throwable t) {
-        return Logging.getErrorMessage(t);
+        if (t == null) {
+            return null;
+        } else {
+            return Logging.getErrorMessage(t);
+        }
     }
 
     /**
