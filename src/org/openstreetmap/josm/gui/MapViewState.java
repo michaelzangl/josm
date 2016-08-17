@@ -20,6 +20,7 @@ import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.projection.Projecting;
 import org.openstreetmap.josm.data.projection.Projection;
+import org.openstreetmap.josm.data.projection.ShiftedProjecting;
 import org.openstreetmap.josm.gui.download.DownloadDialog;
 import org.openstreetmap.josm.tools.bugreport.BugReport;
 
@@ -290,6 +291,15 @@ public final class MapViewState {
         } else {
             return new MapViewState(projection, this);
         }
+    }
+
+    /**
+     * Creates a shifted mapviewstate.
+     * @param offset The delta to apply in east/north space
+     * @return The shifted MapViewState
+     */
+    public MapViewState shifted(EastNorth offset) {
+        return new MapViewState(new ShiftedProjecting(projecting, offset), this);
     }
 
     /**

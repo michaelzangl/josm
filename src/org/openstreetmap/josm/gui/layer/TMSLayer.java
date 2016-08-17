@@ -22,6 +22,7 @@ import org.openstreetmap.josm.data.imagery.TMSCachedTileLoader;
 import org.openstreetmap.josm.data.preferences.BooleanProperty;
 import org.openstreetmap.josm.data.preferences.IntegerProperty;
 import org.openstreetmap.josm.data.projection.Projection;
+import org.openstreetmap.josm.gui.layer.NativeScaleLayer.ScaleList;
 
 /**
  * Class that displays a slippy map layer.
@@ -32,7 +33,7 @@ import org.openstreetmap.josm.data.projection.Projection;
  * @author Upliner &lt;upliner@gmail.com&gt;
  * @since 3715
  */
-public class TMSLayer extends AbstractCachedTileSourceLayer<TMSTileSource> implements NativeScaleLayer {
+public class TMSLayer extends AbstractCachedTileSourceLayer<TMSTileSource> {
     private static final String CACHE_REGION_NAME = "TMS";
 
     private static final String PREFERENCE_PREFIX = "imagery.tms";
@@ -74,7 +75,7 @@ public class TMSLayer extends AbstractCachedTileSourceLayer<TMSTileSource> imple
     protected TMSTileSource getTileSource(ImageryInfo info) {
         return getTileSourceStatic(info, () -> {
             Main.debug("Attribution loaded, running loadAllErrorTiles");
-            this.loadAllErrorTiles(false);
+//       TODO     this.loadAllErrorTiles(false);
         });
     }
 
@@ -148,10 +149,10 @@ public class TMSLayer extends AbstractCachedTileSourceLayer<TMSTileSource> imple
         return AbstractCachedTileSourceLayer.getCache(CACHE_REGION_NAME);
     }
 
-    @Override
-    public ScaleList getNativeScales() {
-        return nativeScaleList;
-    }
+//  TODO  @Override
+//    public ScaleList getNativeScales() {
+//        return nativeScaleList;
+//    }
 
     private static ScaleList initNativeScaleList() {
         Collection<Double> scales = new ArrayList<>(AbstractTileSourceLayer.MAX_ZOOM);

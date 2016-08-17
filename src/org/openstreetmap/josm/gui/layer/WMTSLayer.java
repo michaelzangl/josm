@@ -2,7 +2,6 @@
 package org.openstreetmap.josm.gui.layer;
 
 import java.io.IOException;
-import java.util.Set;
 
 import org.apache.commons.jcs.access.CacheAccess;
 import org.openstreetmap.gui.jmapviewer.interfaces.TileLoader;
@@ -12,8 +11,10 @@ import org.openstreetmap.josm.data.imagery.ImageryInfo;
 import org.openstreetmap.josm.data.imagery.ImageryInfo.ImageryType;
 import org.openstreetmap.josm.data.imagery.WMSCachedTileLoader;
 import org.openstreetmap.josm.data.imagery.WMTSTileSource;
-import org.openstreetmap.josm.data.projection.Projection;
+import org.openstreetmap.josm.data.projection.ProjectionChangeListener;
+import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.layer.imagery.TileSourceDisplaySettings;
+import org.openstreetmap.josm.gui.layer.imagery.TileSourcePainter;
 
 /**
  * WMTS layer based on AbstractTileSourceLayer. Overrides few methods to align WMTS to Tile based computations
@@ -25,7 +26,7 @@ import org.openstreetmap.josm.gui.layer.imagery.TileSourceDisplaySettings;
  * @author Wiktor NiesiobÄ™dzki
  *
  */
-public class WMTSLayer extends AbstractCachedTileSourceLayer<WMTSTileSource> implements NativeScaleLayer {
+public class WMTSLayer extends AbstractCachedTileSourceLayer<WMTSTileSource> {
     private static final String PREFERENCE_PREFIX = "imagery.wmts";
 
     /**
@@ -66,49 +67,38 @@ public class WMTSLayer extends AbstractCachedTileSourceLayer<WMTSTileSource> imp
         }
     }
 
-    @Override
-    protected int getBestZoom() {
-        if (!Main.isDisplayingMapView())
-            return 0;
-        ScaleList scaleList = getNativeScales();
-        if (scaleList == null) {
-            return getMaxZoomLvl();
-        }
-        Scale snap = scaleList.getSnapScale(Main.map.mapView.getScale(), false);
-        return Math.max(
-                getMinZoomLvl(),
-                Math.min(
-                        snap != null ? snap.getIndex() : getMaxZoomLvl(),
-                        getMaxZoomLvl()
-                        )
-                );
-    }
+//  TODO  @Override
+//    protected int getBestZoom() {
+//        if (!Main.isDisplayingMapView())
+//            return 0;
+//        ScaleList scaleList = getNativeScales();
+//        if (scaleList == null) {
+//            return getMaxZoomLvl();
+//        }
+//        Scale snap = scaleList.getSnapScale(Main.map.mapView.getScale(), false);
+//        return Math.max(
+//                getMinZoomLvl(),
+//                Math.min(
+//                        snap != null ? snap.getIndex() : getMaxZoomLvl(),
+//                        getMaxZoomLvl()
+//                        )
+//                );
+//    }
 
-    @Override
-    protected int getMinZoomLvl() {
-        return 0;
-    }
-
-    @Override
-    public boolean isProjectionSupported(Projection proj) {
-        Set<String> supportedProjections = tileSource.getSupportedProjections();
-        return supportedProjections.contains(proj.toCode());
-    }
-
-    @Override
-    public String nameSupportedProjections() {
-        StringBuilder ret = new StringBuilder();
-        for (String e: tileSource.getSupportedProjections()) {
-            ret.append(e).append(", ");
-        }
-        return ret.length() > 2 ? ret.substring(0, ret.length()-2) : ret.toString();
-    }
-
-    @Override
-    public void projectionChanged(Projection oldValue, Projection newValue) {
-        super.projectionChanged(oldValue, newValue);
-        tileSource.initProjection(newValue);
-    }
+// TODO   @Override
+//    public boolean isProjectionSupported(Projection proj) {
+//        Set<String> supportedProjections = tileSource.getSupportedProjections();
+//        return supportedProjections.contains(proj.toCode());
+//    }
+//
+//    @Override
+//    public String nameSupportedProjections() {
+//        StringBuilder ret = new StringBuilder();
+//        for (String e: tileSource.getSupportedProjections()) {
+//            ret.append(e).append(", ");
+//        }
+//        return ret.length() > 2 ? ret.substring(0, ret.length()-2) : ret.toString();
+//    }
 
     @Override
     protected Class<? extends TileLoader> getTileLoaderClass() {
@@ -127,8 +117,31 @@ public class WMTSLayer extends AbstractCachedTileSourceLayer<WMTSTileSource> imp
         return AbstractCachedTileSourceLayer.getCache(CACHE_REGION_NAME);
     }
 
+//  TODO  @Override
+//    public ScaleList getNativeScales() {
+//        return tileSource.getNativeScales();
+//    }
+
     @Override
-    public ScaleList getNativeScales() {
-        return tileSource.getNativeScales();
+    protected TileSourcePainter<WMTSTileSource> createMapViewPainter(MapViewEvent event) {
+        return new WMTSPainter(this, event.getMapView());
+    }
+
+    private static class WMTSPainter extends TileSourcePainter<WMTSTileSource> {
+        private final ProjectionChangeListener initOnProjectionChange = (oldValue, newValue) -> tileSource.initProjection(newValue);
+
+        public WMTSPainter(AbstractTileSourceLayer<WMTSTileSource> abstractTileSourceLayer, MapView mapView) {
+            super(abstractTileSourceLayer, mapView);
+            Main.addProjectionChangeListener(initOnProjectionChange);
+
+            zoom.setZoomBounds(0, zoom.getMaxZoom());
+        }
+
+        @Override
+        public void detachFromMapView(MapViewEvent event) {
+            Main.removeProjectionChangeListener(initOnProjectionChange);
+            super.detachFromMapView(event);
+        }
+
     }
 }

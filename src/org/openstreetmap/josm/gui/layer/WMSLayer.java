@@ -27,8 +27,11 @@ import org.openstreetmap.josm.data.imagery.WMSCachedTileLoader;
 import org.openstreetmap.josm.data.preferences.BooleanProperty;
 import org.openstreetmap.josm.data.preferences.IntegerProperty;
 import org.openstreetmap.josm.data.projection.Projection;
+import org.openstreetmap.josm.data.projection.ProjectionChangeListener;
 import org.openstreetmap.josm.gui.ExtendedDialog;
+import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.layer.imagery.TileSourceDisplaySettings;
+import org.openstreetmap.josm.gui.layer.imagery.TileSourcePainter;
 
 /**
  * This is a layer that grabs the current screen from an WMS server. The data
@@ -152,13 +155,9 @@ public class WMSLayer extends AbstractCachedTileSourceLayer<TemplatedWMSTileSour
                     setIcon(JOptionPane.WARNING_MESSAGE);
 
             if (isReprojectionPossible()) {
-                warningDialog.toggleEnable("imagery.wms.projectionSupportWarnings." + tileSource.getBaseUrl());
+// TODO:               warningDialog.toggleEnable("imagery.wms.projectionSupportWarnings." + tileSource.getBaseUrl());
             }
             warningDialog.showDialog();
-        }
-
-        if (!newValue.equals(oldValue)) {
-            tileSource.initProjection(newValue);
         }
     }
 
@@ -181,5 +180,28 @@ public class WMSLayer extends AbstractCachedTileSourceLayer<TemplatedWMSTileSour
 
     private boolean isReprojectionPossible() {
         return supportedProjections.contains("EPSG:4326") && "EPSG:3857".equals(Main.getProjection().toCode());
+    }
+
+    @Override
+    protected TileSourcePainter<TemplatedWMSTileSource> createMapViewPainter(MapViewEvent event) {
+        return new WMSPainter(this, event.getMapView());
+    }
+
+    private static class WMSPainter extends TileSourcePainter<TemplatedWMSTileSource> {
+        private final ProjectionChangeListener initOnProjectionChange = (oldValue, newValue) -> tileSource.initProjection(newValue);
+
+        public WMSPainter(AbstractTileSourceLayer<TemplatedWMSTileSource> abstractTileSourceLayer, MapView mapView) {
+            super(abstractTileSourceLayer, mapView);
+            Main.addProjectionChangeListener(initOnProjectionChange);
+
+            zoom.setZoomBounds(0, zoom.getMaxZoom());
+        }
+
+        @Override
+        public void detachFromMapView(MapViewEvent event) {
+            Main.removeProjectionChangeListener(initOnProjectionChange);
+            super.detachFromMapView(event);
+        }
+
     }
 }

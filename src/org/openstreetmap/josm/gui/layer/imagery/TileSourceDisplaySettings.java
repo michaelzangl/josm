@@ -212,7 +212,7 @@ public class TileSourceDisplaySettings {
      * @param changedSetting The setting name
      */
     private void fireSettingsChange(String changedSetting) {
-        DisplaySettingsChangeEvent e = new DisplaySettingsChangeEvent(changedSetting);
+        DisplaySettingsChangeEvent e = new DisplaySettingsChangeEvent(this, changedSetting);
         for (DisplaySettingsChangeListener l : listeners) {
             l.displaySettingsChanged(e);
         }
@@ -332,10 +332,21 @@ public class TileSourceDisplaySettings {
      * @author Michael Zangl
      */
     public static final class DisplaySettingsChangeEvent {
+        private final TileSourceDisplaySettings source;
         private final String changedSetting;
 
-        DisplaySettingsChangeEvent(String changedSetting) {
+        DisplaySettingsChangeEvent(TileSourceDisplaySettings source, String changedSetting) {
+            this.source = source;
             this.changedSetting = changedSetting;
+        }
+
+        /**
+         * Gets the display settings that caused this event.
+         * @return The settings.
+         * @since xxx
+         */
+        public TileSourceDisplaySettings getSource() {
+            return source;
         }
 
         /**
