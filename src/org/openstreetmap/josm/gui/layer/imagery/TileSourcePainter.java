@@ -10,6 +10,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
 import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
@@ -20,6 +22,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -110,6 +113,7 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
                     @Override
                     public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
                         highlightPosition = null;
+                        mapView.repaint();
                     }
 
                     @Override
@@ -117,9 +121,11 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
                         // ignore
                     }
                 });
-                Tile tile = getOrCreateTile(tilePos);
-                if (tile != null) {
-                    addTileActions(tile, popup);
+                if (tilePos != null) {
+                    Tile tile = getOrCreateTile(tilePos);
+                    if (tile != null) {
+                        addTileActions(tile, popup);
+                    }
                 }
                 popup.show(e.getComponent(), e.getX(), e.getY());
             } else if (e.getButton() == MouseEvent.BUTTON1) {
@@ -200,7 +206,11 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         zoom.updateZoomLevel(converter);
         TileRange baseRange = converter.getViewAtZoom(zoom.getCurrentZoomLevel());
 
+        Shape clip = g.getClip();
+        g.setClip(converter.getProjectionClip());
         paintTileImages(g, new TileForAreaFinder(baseRange));
+        g.setClip(clip);
+
         g.setFont(INFO_FONT);
         paintTileTexts(g);
         if (highlightPosition != null) {
@@ -214,15 +224,18 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
     }
 
     private static void paintHighlight(Graphics2D g, TileCoordinateConverter converter, TilePosition tile) {
-        Rectangle2D area = converter.getRectangleForTile(tile);
+        Rectangle2D area = converter.getRectangleForTile(tile).getInView();
         g.setColor(Color.RED);
         g.draw(area);
     }
 
     private void paintTileImages(Graphics2D g, TileForAreaFinder area) {
         TileCoordinateConverter converter = generateCoordinateConverter();
+        Rectangle b = g.getClipBounds();
+        int maxTiles = (int) (b.getWidth() * b.getHeight() / tileSource.getTileSize() / tileSource.getTileSize() * 5);
         area.getAllTiles()
             .parallel()
+            .limit(maxTiles)
             .peek(t -> System.out.println("Suggest to paint: " + t))
             .map(this::getTile)
             .filter(Objects::nonNull)
@@ -243,10 +256,10 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         AffineTransform transform = converter.getTransformForTile(new TilePosition(tile), 0, 0, 0, 1, 1, 1);
         Point2D anchor = transform.transform(new Point2D.Double(), null);
         System.out.println("Image top left corner: " + anchor);
-        transform.translate(-anchor.getX(), -anchor.getY());
+        System.out.println("Image bottom right corner: " + transform.transform(new Point2D.Double(1, 1), null));
         transform.scale(1.0 / image.getWidth(), 1.0 / image.getHeight());
-        transform.translate(anchor.getX() / image.getWidth(), anchor.getY() / image.getHeight());
         System.out.println("Image transform: " + transform);
+
         g.drawImage(image, transform, layer);
     }
 
@@ -373,11 +386,25 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
      * @return tile at given position
      */
     private Tile getTile(TilePosition tilePosition) {
-        if (!tileSource.contains(tilePosition)) {
+        if (!contains(tilePosition)) {
             return null;
         } else {
             return tileCache.getTile(tileSource, tilePosition.getX(), tilePosition.getY(), tilePosition.getZoom());
         }
+    }
+
+
+    /**
+     * Check if this tile source contains the given position.
+     * @param position The position
+     * @return <code>true</code> if that positon is contained.
+     */
+    private boolean contains(TilePosition position) {
+        return position.getZoom() >= tileSource.getMinZoom() && position.getZoom() <= tileSource.getMaxZoom()
+                && position.getX() >= tileSource.getTileXMin(position.getZoom())
+                && position.getX() <= tileSource.getTileXMax(position.getZoom())
+                && position.getY() >= tileSource.getTileYMin(position.getZoom())
+                && position.getY() <= tileSource.getTileYMax(position.getZoom());
     }
 
     protected void loadAllTiles(boolean force) {
@@ -460,13 +487,14 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
     private TilePosition getTileForPixelpos(Point2D clicked) {
         Main.trace("getTileForPixelpos({0}, {1})", clicked.getX(), clicked.getY());
         TileCoordinateConverter converter = generateCoordinateConverter();
+
         TileRange ts = converter.getViewAtZoom(zoom.getCurrentZoomLevel());
 
         if (!isTooLarge(ts)) {
             loadTiles(ts, false); // make sure there are tile objects for all tiles
         }
         Stream<TilePosition> clickedTiles = ts.tilePositions()
-                .filter(t -> converter.getRectangleForTile(t).contains(clicked));
+                .filter(t -> converter.getRectangleForTile(t).getInView().contains(clicked));
         if (Main.isTraceEnabled()) {
             clickedTiles = clickedTiles.peek(t -> Main.trace("Clicked on tile: {0}, {1};  currentZoomLevel: {2}",
                     t.getX(), t.getY(), zoom.getCurrentZoomLevel()));
@@ -608,11 +636,19 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         public void actionPerformed(ActionEvent ae) {
             ExtendedDialog ed = new ExtendedDialog(Main.parent, tr("Tile Info"), new String[] { tr("OK") });
             JPanel panel = new JPanel(new GridBagLayout());
-            Rectangle2D displaySize = generateCoordinateConverter().getRectangleForTile(new TilePosition(clickedTile));
+            MapViewRectangle displaySize = generateCoordinateConverter().getRectangleForTile(new TilePosition(clickedTile));
             String[][] content = { { "Tile name", clickedTile.getKey() }, { "Tile url", getUrl() },
                     { "Tile size", getSizeString(clickedTile.getTileSource().getTileSize()) },
-                    { "Tile display size", new StringBuilder().append(displaySize.getWidth()).append('x')
-                            .append(displaySize.getHeight()).toString() }, };
+                    { "Position in view", MessageFormat.format("x={0}..{1}, y={2}..{3}",
+                            displaySize.getInView().getMinX(), displaySize.getInView().getMaxX(),
+                            displaySize.getInView().getMinY(), displaySize.getInView().getMaxY())},
+                    { "Position on projection",MessageFormat.format("east={0}..{1}, north={2}..{3}",
+                            displaySize.getProjectionBounds().minEast, displaySize.getProjectionBounds().maxEast,
+                            displaySize.getProjectionBounds().minNorth, displaySize.getProjectionBounds().maxNorth)},
+                    { "Position on world",MessageFormat.format("lat={0}..{1}, lon={2}..{3}",
+                            displaySize.getLatLonBoundsBox().getMinLat(), displaySize.getLatLonBoundsBox().getMaxLat(),
+                            displaySize.getLatLonBoundsBox().getMinLon(), displaySize.getLatLonBoundsBox().getMaxLon())},
+            };
 
             for (String[] entry : content) {
                 panel.add(new JLabel(tr(entry[0]) + ':'), GBC.std());

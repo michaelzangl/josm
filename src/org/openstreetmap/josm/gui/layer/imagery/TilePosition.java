@@ -14,6 +14,12 @@ public class TilePosition {
     private final int y;
     private final int zoom;
 
+    /**
+     * Create a new tile position object
+     * @param x The x coordinate
+     * @param y The y coordinate
+     * @param zoom The zoom at which the tile is.
+     */
     TilePosition(int x, int y, int zoom) {
         super();
         this.x = x;
@@ -21,6 +27,10 @@ public class TilePosition {
         this.zoom = zoom;
     }
 
+    /**
+     * Create a new tile position object
+     * @param tile The tile from wich the position should be copied.
+     */
     public TilePosition(Tile tile) {
         this(tile.getXtile(), tile.getYtile(), tile.getZoom());
     }

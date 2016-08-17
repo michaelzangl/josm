@@ -10,8 +10,6 @@ import java.util.stream.Stream;
  * @since xxx
  */
 public class TileForAreaFinder {
-
-    private static final long MAX_TILES = 40;
     private final TileRange area;
     private Stream<TilePosition> tiles;
 
@@ -25,7 +23,7 @@ public class TileForAreaFinder {
         // prepared to be lazy
         ArrayList<TilePosition> list = new ArrayList<>();
         area.tilePositions().filter(this::isAvailable).forEach(list::add);
-        return list.stream().limit(MAX_TILES);
+        return list.stream();
     }
 
     private boolean isAvailable(TilePosition position) {

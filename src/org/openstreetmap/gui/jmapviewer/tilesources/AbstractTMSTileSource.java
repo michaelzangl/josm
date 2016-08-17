@@ -15,7 +15,6 @@ import org.openstreetmap.gui.jmapviewer.OsmMercator;
 import org.openstreetmap.gui.jmapviewer.Tile;
 import org.openstreetmap.gui.jmapviewer.TileXY;
 import org.openstreetmap.gui.jmapviewer.interfaces.ICoordinate;
-import org.openstreetmap.josm.gui.layer.imagery.TilePosition;
 
 /**
  * Class generalizing all tile based tile sources
@@ -238,16 +237,5 @@ public abstract class AbstractTMSTileSource extends AbstractTileSource {
 
     private static int getTileMax(int zoom) {
         return (int) Math.pow(2.0, zoom) - 1;
-    }
-
-    /**
-     * Check if this tile source contains the given position.
-     * @param position The position
-     * @return <code>true</code> if that positon is contained.
-     */
-    public boolean contains(TilePosition position) {
-        return position.getZoom() >= getMinZoom() && position.getZoom() <= getMaxZoom()
-                && position.getX() >= getTileXMin(position.getZoom()) && position.getX() <= getTileXMax(position.getZoom())
-                && position.getY() >= getTileYMin(position.getZoom()) && position.getY() <= getTileYMax(position.getZoom());
     }
 }

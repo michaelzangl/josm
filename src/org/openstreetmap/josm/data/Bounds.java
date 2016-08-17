@@ -396,6 +396,28 @@ public class Bounds {
     }
 
     /**
+     * Compute the intersection of this with an other bounds object.
+     * @param other The other bounds
+     * @return The intersection area or <code>null</code> if they do not intersect.
+     */
+    public Bounds intersect(Bounds other) {
+        if (crosses180thMeridian()) {
+            throw new UnsupportedOperationException();
+        } else {
+            Bounds bounds = new Bounds(
+                    Math.max(minLat, other.minLat),
+                    Math.max(minLon, other.minLon),
+                    Math.min(maxLat, other.maxLat),
+                    Math.min(maxLon, other.maxLon), false);
+            if  (bounds.minLat >= bounds.maxLat || bounds.minLon >= bounds.maxLon) {
+                return null;
+            } else {
+                return bounds;
+            }
+        }
+    }
+
+    /**
      * Converts the lat/lon bounding box to an object of type Rectangle2D.Double
      * @return the bounding box to Rectangle2D.Double
      */

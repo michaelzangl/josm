@@ -1,9 +1,9 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.gui.layer.imagery;
 
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 
 import org.openstreetmap.gui.jmapviewer.Tile;
 import org.openstreetmap.gui.jmapviewer.TileXY;
@@ -13,6 +13,7 @@ import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.MapViewState;
 import org.openstreetmap.josm.gui.MapViewState.MapViewPoint;
+import org.openstreetmap.josm.gui.MapViewState.MapViewRectangle;
 import org.openstreetmap.josm.gui.layer.AbstractTileSourceLayer;
 import org.openstreetmap.josm.tools.Utils;
 
@@ -65,11 +66,11 @@ public class TileCoordinateConverter {
      * @param tile The tile
      * @return The positon.
      */
-    public Rectangle2D getRectangleForTile(TilePosition tile) {
+    public MapViewRectangle getRectangleForTile(TilePosition tile) {
         MapViewPoint p1 = tileUV(tile, 0, 0);
         MapViewPoint p2 = tileUV(tile, 1, 1);
 
-        return p1.rectTo(p2).getInView();
+        return p1.rectTo(p2);
     }
 
     /**
@@ -112,28 +113,70 @@ public class TileCoordinateConverter {
         // (u2 - u1) * m00 + (v2 - v1) * m01       = p2.viewX - p1.viewX
         // (u3 - u1) * m00 + (v3 - v1) * m01       = p3.viewX - p1.viewX
 
+        // if v2 != v1 and v3 != v1
         // (u2 - u1) / (v2 - v1) * m00 + m01       = (p2.viewX - p1.viewX) / (v2 - v1)
         // (u3 - u1) / (v3 - v1) * m00 + m01       = (p3.viewX - p1.viewX) / (v3 - v1)
 
-        // m00 = (p2.viewX - p1.viewX) / (v2 - v1) - (p3.viewX - p1.viewX) / (v3 - v1) / ((u2 - u1) / (v2 - v1) - (u3 - u1) / (v3 - v1))
+        // m00 = ((p2.viewX - p1.viewX) / (v2 - v1) - (p3.viewX - p1.viewX) / (v3 - v1)) / ((u2 - u1) / (v2 - v1) - (u3 - u1) / (v3 - v1))
         // m01 = (p3.viewX - p1.viewX) / (v3 - v1) - (u3 - u1) / (v3 - v1) * m00
         // m02 = p1.viewX - u1 * m00 + v1 * m01
 
-        double dv2 = v2 - v1;
-        double dv3 = v3 - v1;
+        // if v2 == v1:
+        // u1        * m00 + v1        * m01 + m02 = p1.viewX
+        // (u2 - u1) * m00 +                       = p2.viewX - p1.viewX
+        // (u3 - u1) * m00 + (v3 - v1) * m01       = p3.viewX - p1.viewX
+
+        // if v3 == v1
+        // u1        * m00 + v1        * m01 + m02 = p1.viewX
+        // (u2 - u1) * m00 + (v2 - v1) * m01       = p2.viewX - p1.viewX
+        // (u3 - u1) * m00 +                       = p3.viewX - p1.viewX
+
+
         double du2 = u2 - u1;
         double du3 = u3 - u1;
+        double dv2 = v2 - v1;
+        double dv3 = v3 - v1;
         double p1x = p1.getInView().getX();
         double p2x = p2.getInView().getX();
         double p3x = p3.getInView().getX();
         double p1y = p1.getInView().getY();
         double p2y = p2.getInView().getY();
         double p3y = p3.getInView().getY();
-        double m00 = (p2x - p1x) / dv2 - (p3x - p1x) / dv3 / (du2 / dv2 - du3 / dv3);
-        double m10 = (p2y - p1y) / dv2 - (p3y - p1y) / dv3 / (du2 / dv2 - du3 / dv3);
-        double m01 = (p3x - p1x) / dv3 - du3 / dv3 * m00;
-        double m11 = (p3y - p1y) / dv3 - du3 / dv3 * m10;
+
+        double m00;
+        double m01;
+        if (Utils.equalsEpsilon(0, dv2)) {
+            if (Utils.equalsEpsilon(0, du2) || Utils.equalsEpsilon(0, dv3)) {
+                // unsolveable
+                return new AffineTransform();
+            }
+            m00 = (p2x - p1x) / du2;
+            m01 = (p3x - p1x) / dv3 - du3 / dv3 * m00;
+       } else if (Utils.equalsEpsilon(0, dv3)) {
+            if (Utils.equalsEpsilon(0, du3)) {
+                // unsolveable
+                return new AffineTransform();
+            }
+            m00 = (p3x - p1x) / du3;
+            m01 = (p2x - p1x) / dv2 - du2 / dv2 * m00;
+        } else {
+            m00 = ((p2x - p1x) / dv2 - (p3x - p1x) / dv3) / (du2 / dv2 - du3 / dv3);
+            m01 = (p3x - p1x) / dv3 - du3 / dv3 * m00;
+        }
         double m02 = p1x - u1 * m00 + v1 * m01;
+
+        double m10;
+        double m11;
+        if (Utils.equalsEpsilon(0, dv2)) {
+            m10 = (p2y - p1y) / du2;
+            m11 = (p3y - p1y) / dv3 - du3 / dv3 * m10;
+       } else if (Utils.equalsEpsilon(0, dv3)) {
+            m10 = (p3y - p1y) / du3;
+            m11 = (p2y - p1y) / dv2 - du2 / dv2 * m10;
+        } else {
+            m10 = ((p2y - p1y) / dv2 - (p3y - p1y) / dv3) / (du2 / dv2 - du3 / dv3);
+            m11 = (p3y - p1y) / dv3 - du3 / dv3 * m10;
+        }
         double m12 = p1y - u1 * m10 + v1 * m11;
 
         return new AffineTransform(new double[] {
@@ -147,9 +190,9 @@ public class TileCoordinateConverter {
             return pos(tileLatLon);
         } else {
             ICoordinate nextTile = tileSource.tileXYToLatLon(tile.getX() + 1, tile.getY() + 1, tile.getZoom());
-            return displacedState.getPointFor(new LatLon((1-u) * tileLatLon.getLat() + u * nextTile.getLat(),
-                    (1-v) * tileLatLon.getLon() + v * nextTile.getLon()
-                    ));
+            return displacedState.getPointFor(new LatLon(
+                    (1 - v) * tileLatLon.getLat() + v * nextTile.getLat(),
+                    (1 - u) * tileLatLon.getLon() + u * nextTile.getLon()));
         }
     }
 
@@ -180,10 +223,14 @@ public class TileCoordinateConverter {
      */
     public TileRange getViewAtZoom(int zoom) {
         Bounds view = displacedState.getViewArea().getLatLonBoundsBox();
-
-        TileXY t1 = tileSource.latLonToTileXY(view.getMin().toCoordinate(), zoom);
-        TileXY t2 = tileSource.latLonToTileXY(view.getMax().toCoordinate(), zoom);
-        return new TileRange(t1, t2, zoom);
+        view = view.intersect(displacedState.getProjection().getWorldBoundsLatLon());
+        if (view == null) {
+            return new TileRange();
+        } else {
+            TileXY t1 = tileSource.latLonToTileXY(view.getMin().toCoordinate(), zoom);
+            TileXY t2 = tileSource.latLonToTileXY(view.getMax().toCoordinate(), zoom);
+            return new TileRange(t1, t2, zoom);
+        }
     }
 
     /**
@@ -204,5 +251,13 @@ public class TileCoordinateConverter {
          */
 
         return (int) Math.round(result + 1 + AbstractTileSourceLayer.ZOOM_OFFSET.get() / 1.9);
+    }
+
+    /**
+     * Gets the clip to use to only paint inside the projection
+     * @return The clip.
+     */
+    public Shape getProjectionClip() {
+        return displacedState.getArea(displacedState.getProjection().getWorldBoundsLatLon());
     }
 }

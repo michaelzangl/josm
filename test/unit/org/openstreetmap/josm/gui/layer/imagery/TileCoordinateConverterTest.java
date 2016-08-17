@@ -6,10 +6,12 @@ import static org.junit.Assert.assertEquals;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openstreetmap.gui.jmapviewer.Coordinate;
@@ -20,7 +22,9 @@ import org.openstreetmap.gui.jmapviewer.interfaces.TileSource;
 import org.openstreetmap.josm.JOSMFixture;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.MapFrame;
+import org.openstreetmap.josm.gui.MapViewState.MapViewRectangle;
 import org.openstreetmap.josm.gui.layer.LayerManagerTest;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 
@@ -30,6 +34,8 @@ import org.openstreetmap.josm.gui.util.GuiHelper;
  * @since xxx
  */
 public class TileCoordinateConverterTest {
+    private TileCoordinateConverter converter;
+
     /**
      * Setup test.
      */
@@ -40,19 +46,11 @@ public class TileCoordinateConverterTest {
         GuiHelper.runInEDTAndWait(() -> {});
     }
 
-    @Test
-    public void testGetTransformForTile() {
-        AffineTransform transform = new AffineTransform();
-        transform.setToTranslation(1, 10);
-        assertEquals(1, transform.getTranslateX(), 1e-10);
-        testGetTransform(transform);
-    }
-
-    private void testGetTransform(AffineTransform transform) {
-        TilePosition tile = new TilePosition(4, 5, 1);
+    @Before
+    public void setUp() {
         MapFrame map = Main.map;
         map.mapView.zoomTo(new EastNorth(0, 0), 1);
-        TileCoordinateConverter converter = new TileCoordinateConverter(map.mapView.getState(), new TileSource() {
+        converter = new TileCoordinateConverter(map.mapView.getState(), new TileSource() {
 
             @Override
             public boolean requiresAttribution() {
@@ -209,12 +207,40 @@ public class TileCoordinateConverterTest {
                 return new Coordinate(x * 13, y + 4);
             }
         }, new TileSourceDisplaySettings());
+    }
+
+    @Test
+    public void testGetRectangleForTile() {
+        EastNorth p1 = Main.getProjection().latlon2eastNorth(new LatLon(26, 7));
+        MapViewRectangle rect = converter.getRectangleForTile(new TilePosition(2, 3, 1));
+        assertEquals(p1.getX(), rect.getProjectionBounds().minEast, 1e-10);
+        assertEquals(p1.getY(), rect.getProjectionBounds().minNorth, 1e-10);
+    }
+
+    @Test
+    public void testGetTransformForTile() {
+        AffineTransform transform = new AffineTransform();
+        transform.setToTranslation(1, 10);
+        assertEquals(1, transform.getTranslateX(), 1e-10);
+        testGetTransform(transform);
+    }
+
+    private void testGetTransform(AffineTransform transform) {
+        TilePosition tile = new TilePosition(2, 3, 1);
+        Point2D p1 = Main.map.mapView.getState().getPointFor(new LatLon(26, 7)).getInView();
+        Point2D p2 = Main.map.mapView.getState().getPointFor(new LatLon(39, 8)).getInView();
 
         transform = converter.getTransformForTile(tile, 0, 0, 0, 1, 1, 1);
 
-        assertEquals(0, transform.getTranslateX(), 1e-10);
-        assertEquals(4, transform.getTranslateY(), 1e-10);
-        assertEquals(13, transform.getScaleX(), 1e-10);
-        assertEquals(0, transform.getScaleY(), 1e-10);
+        assertEquals(p1.getX(), transform.getTranslateX(), 1e-10);
+        assertEquals(p1.getY(), transform.getTranslateY(), 1e-10);
+
+        Point2D p1converted = transform.transform(new Point2D.Double(0, 0), null);
+        Point2D p2converted = transform.transform(new Point2D.Double(1, 1), null);
+
+        assertEquals(p1.getX(), p1converted.getX(), 1e-10);
+        assertEquals(p1.getY(), p1converted.getY(), 1e-10);
+        assertEquals(p2.getX(), p2converted.getX(), 1e-10);
+        assertEquals(p2.getY(), p2converted.getY(), 1e-10);
     }
 }
