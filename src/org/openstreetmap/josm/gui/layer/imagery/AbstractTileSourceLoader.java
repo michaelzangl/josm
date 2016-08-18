@@ -23,7 +23,6 @@ import org.openstreetmap.josm.gui.NavigatableComponent.ZoomChangeListener;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.layer.AbstractTileSourceLayer;
 import org.openstreetmap.josm.gui.layer.imagery.TileForAreaFinder.TileForAreaGetter;
-import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.MemoryManager;
 import org.openstreetmap.josm.tools.MemoryManager.MemoryHandle;
@@ -55,7 +54,7 @@ public abstract class AbstractTileSourceLoader<T extends AbstractTMSTileSource> 
     private MemoryHandle<?> memory;
 
     protected AbstractTileSourceLoader(AbstractTileSourceLayer<T> layer) {
-        tileSource = generateTileSource(layer);;
+        tileSource = generateTileSource(layer);
         if (tileSource == null) {
             throw new IllegalArgumentException(tr("Failed to create tile source"));
         }
@@ -259,7 +258,7 @@ public abstract class AbstractTileSourceLoader<T extends AbstractTMSTileSource> 
             new PleaseWaitRunnable(tr("Flush tile cache")) {
                 @Override
                 protected void realRun() {
-                    clearTileCache(getProgressMonitor());
+                    clearTileCache();
                 }
 
                 @Override
@@ -274,14 +273,8 @@ public abstract class AbstractTileSourceLoader<T extends AbstractTMSTileSource> 
 
                 /**
                  * Clears the tile cache.
-                 *
-                 * If the current tileLoader is an instance of OsmTileLoader, a new
-                 * TmsTileClearController is created and passed to the according clearCache
-                 * method.
-                 *
-                 * @param monitor not used in this implementation - as cache clear is instaneus
                  */
-                private void clearTileCache(ProgressMonitor monitor) {
+                private void clearTileCache() {
                     if (tileLoader instanceof CachedTileLoader) {
                         ((CachedTileLoader) tileLoader).clearCache(tileSource);
                     }

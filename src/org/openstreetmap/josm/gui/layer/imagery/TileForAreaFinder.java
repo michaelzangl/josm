@@ -4,7 +4,6 @@ package org.openstreetmap.josm.gui.layer.imagery;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -16,7 +15,7 @@ import org.openstreetmap.josm.data.Bounds;
  * @author Michael Zangl
  * @since xxx
  */
-public class TileForAreaFinder {
+public final class TileForAreaFinder {
 
     private TileForAreaFinder() {
         // hidden
@@ -71,13 +70,6 @@ public class TileForAreaFinder {
 
         Collections.reverse(list);
         return list.stream().distinct();
-    }
-
-    private static Stream<Bounds> addRange(Bounds b, TileForAreaGetter rangeProducer, ArrayList<TilePosition> list,
-            int zoomLevel) {
-        return rangeProducer.toRangeAtZoom(b, zoomLevel).tilePositions()
-            .flatMap(pos -> addPosition(pos, rangeProducer, list))
-            .map(b::intersect).filter(Objects::nonNull);
     }
 
     private static Stream<Bounds> addPosition(TilePosition pos, TileForAreaGetter rangeProducer, ArrayList<TilePosition> addTo) {
