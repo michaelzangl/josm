@@ -3,6 +3,7 @@ package org.openstreetmap.josm.gui.layer.imagery;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 
 /**
  * This class handles text painting on the tile source layer.
@@ -10,29 +11,41 @@ import java.awt.Graphics2D;
  * @since xxx
  */
 public class TextPainter {
-    private final int tileWidth;
     private int debugY;
     private Graphics2D g;
-
-    public TextPainter(int tileWidth) {
-        this.tileWidth = tileWidth;
-
-    }
+    private int overlayY;
 
     /**
      * Reset internal state and start.
+     * @param g The graphics to paint on
      */
     public void start(Graphics2D g) {
         this.g = g;
-        debugY = 140;
+        debugY = 160;
+        debugY = 100;
     }
 
+    /**
+     * Add a debug string
+     * @param debugLine The debug line
+     */
     public void addDebug(String debugLine) {
         debugY += drawString(debugLine, 50, debugY, 500);
     }
 
-    private void drawTileString(String text, int x, int y) {
-        // ??
+    /**
+     * Draw a string onto a given tile.
+     * @param text The text to draw
+     * @param tile The tile to paint on
+     * @param converter A converter to convert the tile to screen coordinates.
+     */
+    public void drawTileString(String text, TilePosition tile, TileCoordinateConverter converter) {
+        AffineTransform transform = converter.getTransformForTile(tile, 0, 0, 0, .5, 1, .5);
+        transform.scale(1.0 / 200, 1.0 / 200);
+        AffineTransform oldTransform = g.getTransform();
+        g.transform(transform);
+        drawString(text, 10, 10, 180);
+        g.setTransform(oldTransform);
     }
 
     /**
@@ -40,7 +53,7 @@ public class TextPainter {
      * @param text The text to add.
      */
     public void addTextOverlay(String text) {
-        drawString(text, 120, 120, 500);
+        overlayY += drawString(text, 120, overlayY, 500);
     }
 
     private int drawString(String text, int x, int y, int width) {

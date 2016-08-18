@@ -23,7 +23,9 @@ import java.awt.image.ImageObserver;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
@@ -196,7 +198,7 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         tileLoader = layer.generateTileLoader(tileSource);
 
         tileCache = new MemoryTileCache(estimateTileCacheSize());
-        textPainter = new TextPainter(tileSource.getTileSize());
+        textPainter = new TextPainter();
         zoom = new ZoomLevelManager(getSettings(), tileSource, generateCoordinateConverter());
         zoom.setZoomBounds(layer.getInfo());
     }
@@ -303,14 +305,24 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         TileCoordinateConverter converter = generateCoordinateConverter();
         Rectangle b = g.getClipBounds();
         int maxTiles = (int) (b.getWidth() * b.getHeight() / tileSource.getTileSize() / tileSource.getTileSize() * 5);
-        area.parallel()
+        List<Tile> errorTiles = Collections.synchronizedList(new ArrayList<>());
+        Stream<Tile> tiles = area.parallel()
             .limit(Math.min(maxTiles, MAX_TILES))
             .map(this::getTile)
-            .filter(Objects::nonNull)
-            .map(tile -> new Pair<>(tile, tile.getImage()))
+            .filter(Objects::nonNull);
+
+        if (getSettings().isShowErrors()) {
+            tiles = tiles.peek(t -> { if (t.hasError()) errorTiles.add(t); });
+        }
+        tiles.map(tile -> new Pair<>(tile, tile.getImage()))
             .filter(p -> imageLoaded(p.b))
             .map(p -> new Pair<>(p.a, layer.applyImageProcessors(p.b)))
             .forEachOrdered(p -> paintTileImage(g, p.a, p.b, converter));
+
+        for (Tile error : errorTiles) {
+            textPainter.drawTileString(tr("Error") + ": " + tr(error.getErrorMessage()),
+                    new TilePosition(error), converter);
+        }
     }
 
     /**
@@ -327,6 +339,10 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         transform.scale(1.0 / image.getWidth(), 1.0 / image.getHeight());
 
         g.drawImage(image, transform, layer);
+
+        if (Main.isTraceEnabled()) {
+            textPainter.drawTileString(tile.getKey(), new TilePosition(tile), converter);
+        }
     }
 
     private void paintAttribution(Graphics2D defaultGraphics, MapViewRectangle rect) {
@@ -359,7 +375,7 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         }
 
         if (!isProjectionSupported(projection)) {
-            textPainter.addTextOverlay(tr("No tiles at this zoom level"));
+            textPainter.addTextOverlay(tr("The tile source does not support the current projection natively"));
         }
     }
 
