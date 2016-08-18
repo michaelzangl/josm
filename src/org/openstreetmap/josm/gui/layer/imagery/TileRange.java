@@ -62,7 +62,11 @@ class TileRange {
         }
     }
 
-
+    /**
+     * Gets all tile positions with the ones in the center of the view first.
+     * @return The tile positions
+     * @see #tilePositions()
+     */
     public Stream<TilePosition> tilePositionsSorted() {
         return tilePositions().sorted(getTileDistanceComparator());
     }

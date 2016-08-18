@@ -155,9 +155,8 @@ public class ZoomLevelManager {
      * @param viewStatus An accessor for finding out if the given tiles are available.
      */
     public void updateZoomLevel(TileCoordinateConverter currentZoomState, TileSourcePainter<?> viewStatus) {
-        int zoom = currentZoomLevel;
         if (settings.isAutoZoom()) {
-            zoom = clampZoom(currentZoomState.getBestZoom());
+            int zoom = clampZoom(currentZoomState.getBestZoom());
             setZoomLevel(zoom);
             if (settings.isAutoLoad()) {
                 // Find highest zoom level with at least one visible tile
@@ -170,6 +169,8 @@ public class ZoomLevelManager {
                     }
                 }
             }
+        } else {
+            displayZoomLevel = currentZoomLevel;
         }
     }
 
@@ -197,6 +198,11 @@ public class ZoomLevelManager {
         return displayZoomLevel;
     }
 
+    /**
+     * Gets the debug information that should be added about the zoom level.
+     * @param currentZoomState A coordinate converter
+     * @return The current zoom status.
+     */
     public List<String> getDebugInfo(TileCoordinateConverter currentZoomState) {
         int bestZoom = currentZoomState.getBestZoom();
         return Arrays.asList(
@@ -207,9 +213,16 @@ public class ZoomLevelManager {
                 );
     }
 
+    /**
+     * Zooms to the native level of the current view
+     */
     public class ZoomToNativeLevelAction extends AbstractAction {
         private final MapView forView;
 
+        /**
+         * Create a new {@link ZoomToNativeLevelAction}
+         * @param forView The map view to zoom
+         */
         public ZoomToNativeLevelAction(MapView forView) {
             super(tr("Zoom to native resolution"));
             this.forView = forView;
@@ -223,9 +236,16 @@ public class ZoomLevelManager {
         }
     }
 
+    /**
+     * Zooms the layer to the best display zoom for the current map view state
+     */
     public class ZoomToBestAction extends AbstractAction {
         private final int bestZoom;
 
+        /**
+         * Create a new {@link ZoomToBestAction}
+         * @param forView The view to use as reference.
+         */
         public ZoomToBestAction(MapView forView) {
             super(tr("Change resolution"));
             bestZoom = clampZoom(new TileCoordinateConverter(forView.getState(), source, settings).getBestZoom());
@@ -238,7 +258,13 @@ public class ZoomLevelManager {
         }
     }
 
+    /**
+     * Increase the zoom by 1.
+     */
     public class IncreaseZoomAction extends AbstractAction {
+        /**
+         * Create a new {@link IncreaseZoomAction}
+         */
         public IncreaseZoomAction() {
             super(tr("Increase zoom"));
             setEnabled(!settings.isAutoZoom() && zoomIncreaseAllowed());
@@ -250,7 +276,13 @@ public class ZoomLevelManager {
         }
     }
 
+    /**
+     * Decrease the zoom by 1.
+     */
     public class DecreaseZoomAction extends AbstractAction {
+        /**
+         * Create a new {@link DecreaseZoomAction}
+         */
         public DecreaseZoomAction() {
             super(tr("Decrease zoom"));
             setEnabled(!settings.isAutoZoom() && zoomDecreaseAllowed());

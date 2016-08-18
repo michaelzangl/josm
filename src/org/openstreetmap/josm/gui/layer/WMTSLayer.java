@@ -119,7 +119,7 @@ public class WMTSLayer extends AbstractCachedTileSourceLayer<WMTSTileSource> {
         }
 
         @Override
-        protected WMTSTileSource generateTileSource() {
+        protected WMTSTileSource generateTileSource(AbstractTileSourceLayer<WMTSTileSource> layer) {
             try {
                 ImageryInfo layerInfo = layer.getInfo();
                 if (layerInfo.getImageryType() == ImageryType.WMTS && layerInfo.getUrl() != null) {

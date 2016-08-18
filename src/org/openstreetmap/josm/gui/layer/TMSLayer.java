@@ -147,7 +147,7 @@ public class TMSLayer extends AbstractCachedTileSourceLayer<TMSTileSource> {
 //          }
 
             @Override
-            protected TMSTileSource generateTileSource() {
+            protected TMSTileSource generateTileSource(AbstractTileSourceLayer<TMSTileSource> layer) {
                 return getTileSourceStatic(info, () -> {
                     Main.debug("Attribution loaded, running loadAllErrorTiles");
                     loadAllErrorTiles(false);
