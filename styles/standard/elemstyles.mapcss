@@ -13,7 +13,7 @@ meta {
 }
 
 canvas {
-    default-points: false;
+    default-points: true;
 }
 node {
     text: auto;

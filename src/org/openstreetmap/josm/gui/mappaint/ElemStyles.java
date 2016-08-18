@@ -40,7 +40,11 @@ public class ElemStyles implements PreferenceChangedListener {
 
     private int cacheIdx = 1;
 
-    private boolean defaultNodes, defaultLines;
+    /**
+     * A flag indicating if the nodes should be displayed on the default layer.
+     */
+    private boolean defaultNodes;
+    private boolean defaultLines;
     private int defaultNodesIdx, defaultLinesIdx;
 
     private final Map<String, String> preferenceCache = new HashMap<>();
