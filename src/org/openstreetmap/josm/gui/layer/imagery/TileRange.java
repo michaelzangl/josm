@@ -62,7 +62,16 @@ class TileRange {
         }
     }
 
+
     public Stream<TilePosition> tilePositionsSorted() {
         return tilePositions().sorted(getTileDistanceComparator());
+    }
+
+    /**
+     * Get the zoom level this range is for
+     * @return The zoom.
+     */
+    public int getZoom() {
+        return zoom;
     }
 }

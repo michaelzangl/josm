@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 
+import org.openstreetmap.gui.jmapviewer.Tile;
 import org.openstreetmap.gui.jmapviewer.interfaces.TileSource;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.imagery.ImageryInfo;
@@ -23,10 +24,12 @@ import org.openstreetmap.josm.gui.layer.AbstractTileSourceLayer;
  */
 public class ZoomLevelManager {
     /**
-     * Zoomlevel at which tiles is currently downloaded.
-     * Initial zoom lvl is set to bestZoom
+     * Zoomlevel selected by the user.
      */
     private int currentZoomLevel;
+    /**
+     * The zoom level at which tiles are currently displayed
+     */
     private int displayZoomLevel;
     private TileSourceDisplaySettings settings;
     private TileSource source;
@@ -65,8 +68,8 @@ public class ZoomLevelManager {
         if (minZoom > maxZoom || minZoom < 0) {
             throw new IllegalArgumentException(MessageFormat.format("Zoom range not valid: {0}..{1}", minZoom, maxZoom));
         }
-        this.minZoom = minZoom;
-        this.maxZoom = maxZoom;
+        this.minZoom = AbstractTileSourceLayer.checkMinZoomLvl(minZoom, source);
+        this.maxZoom = AbstractTileSourceLayer.checkMaxZoomLvl(maxZoom, source);
     }
 
     /**
@@ -83,28 +86,14 @@ public class ZoomLevelManager {
         return maxZoom;
     }
 
-    protected int getMaxZoomLvl() {
-        if (getMaxZoom() != 0)
-            return AbstractTileSourceLayer.checkMaxZoomLvl(getMaxZoom(), source);
-        else
-            return AbstractTileSourceLayer.getMaxZoomLvl(source);
-    }
-
-    protected int getMinZoomLvl() {
-        if (getMinZoom() != 0)
-            return AbstractTileSourceLayer.checkMinZoomLvl(getMinZoom(), source);
-        else
-            return AbstractTileSourceLayer.getMinZoomLvl(source);
-    }
-
     /**
      *
      * @return if its allowed to zoom in
      */
     public boolean zoomIncreaseAllowed() {
-        boolean zia = currentZoomLevel < this.getMaxZoomLvl();
+        boolean zia = currentZoomLevel < this.getMaxZoom();
         if (Main.isDebugEnabled()) {
-            Main.debug("zoomIncreaseAllowed(): " + zia + ' ' + currentZoomLevel + " vs. " + this.getMaxZoomLvl());
+            Main.debug("zoomIncreaseAllowed(): " + zia + ' ' + currentZoomLevel + " vs. " + this.getMaxZoom());
         }
         return zia;
     }
@@ -124,11 +113,11 @@ public class ZoomLevelManager {
      * @return true, when zoom has changed to desired value, false if it was outside supported zoom levels
      */
     public boolean setZoomLevel(int zoom) {
-        if (zoom == currentZoomLevel) {
+        if (zoom == currentZoomLevel && zoom == displayZoomLevel) {
             return true;
-        } else if (zoom < getMinZoomLvl() || zoom > getMaxZoomLvl()) {
+        } else if (zoom < getMinZoom() || zoom > getMaxZoom()) {
             Main.warn("Current zoom level ({0}) could not be changed to {1}: out of range {2} .. {3}", currentZoomLevel,
-                    zoom, getMinZoomLvl(), getMaxZoomLvl());
+                    zoom, getMinZoom(), getMaxZoom());
             return false;
         } else {
             Main.debug("changing zoom level to: {0}", currentZoomLevel);
@@ -145,9 +134,9 @@ public class ZoomLevelManager {
      * @return    true, if zooming out is allowed (currentZoomLevel &gt; minZoomLevel)
      */
     public boolean zoomDecreaseAllowed() {
-        boolean zda = currentZoomLevel > this.getMinZoomLvl();
+        boolean zda = currentZoomLevel > this.getMinZoom();
         if (Main.isDebugEnabled()) {
-            Main.debug("zoomDecreaseAllowed(): " + zda + ' ' + currentZoomLevel + " vs. " + this.getMinZoomLvl());
+            Main.debug("zoomDecreaseAllowed(): " + zda + ' ' + currentZoomLevel + " vs. " + this.getMinZoom());
         }
         return zda;
     }
@@ -161,56 +150,33 @@ public class ZoomLevelManager {
         return setZoomLevel(currentZoomLevel - 1);
     }
 
-    public void updateZoomLevel(TileCoordinateConverter currentZoomState) {
+
+    public void updateZoomLevel(TileCoordinateConverter currentZoomState, TileSourcePainter<?> viewStatus) {
         int zoom = currentZoomLevel;
         if (settings.isAutoZoom()) {
             zoom = clampZoom(currentZoomState.getBestZoom());
-
+            setZoomLevel(zoom);
             if (settings.isAutoLoad()) {
-//                // Auto-detection of tilesource maxzoom (currently fully works only for Bing)
-//                TileSetInfo tsi = dts.getTileSetInfo(zoom);
-//                if (!tsi.hasVisibleTiles && (!tsi.hasLoadingTiles || tsi.hasOverzoomedTiles)) {
-//                    noTilesAtZoom = true;
-//                }
-//                // Find highest zoom level with at least one visible tile
-//                for (int tmpZoom = zoom; tmpZoom > dts.minZoom; tmpZoom--) {
-//                    if (dts.getTileSetInfo(tmpZoom).hasVisibleTiles) {
-//                        displayZoomLevel = tmpZoom;
-//                        break;
-//                    }
-//                }
-//                // Do binary search between currentZoomLevel and displayZoomLevel
-//                while (zoom > displayZoomLevel && !tsi.hasVisibleTiles && tsi.hasOverzoomedTiles) {
-//                    zoom = (zoom + displayZoomLevel) / 2;
-//                    tsi = dts.getTileSetInfo(zoom);
-//                }
-//
-//                setZoomLevel(zoom);
-//
-//                // If all tiles at displayZoomLevel is loaded, load all tiles at next zoom level
-//                // to make sure there're really no more zoom levels
-//                // loading is done in the next if section
-//                if (zoom == displayZoomLevel && !tsi.hasLoadingTiles && zoom < dts.maxZoom) {
-//                    zoom++;
-//                    tsi = dts.getTileSetInfo(zoom);
-//                }
-//                // When we have overzoomed tiles and all tiles at current zoomlevel is loaded,
-//                // load tiles at previovus zoomlevels until we have all tiles on screen is loaded.
-//                // loading is done in the next if section
-//                while (zoom > dts.minZoom && tsi.hasOverzoomedTiles && !tsi.hasLoadingTiles) {
-//                    zoom--;
-//                    tsi = dts.getTileSetInfo(zoom);
-//                }
-//                ts = dts.getTileSet(zoom);
-            } else {
-                setZoomLevel(zoom);
+                // Find highest zoom level with at least one visible tile
+
+                for (int tmpZoom = zoom; tmpZoom >= getMinZoom(); tmpZoom--) {
+                    TileRange area = currentZoomState.getViewAtZoom(zoom);
+                    if (viewStatus.hasTiles(area, ZoomLevelManager::visibleOrOverzoomed)) {
+                        displayZoomLevel = tmpZoom;
+                        break;
+                    }
+                }
             }
         }
     }
 
+    private static boolean visibleOrOverzoomed(Tile t) {
+        return TileSourcePainter.isVisible(t) || TileSourcePainter.isOverzoomed(t);
+    }
+
     private int clampZoom(int intResult) {
-        intResult = Math.min(intResult, getMaxZoomLvl());
-        intResult = Math.max(intResult, getMinZoomLvl());
+        intResult = Math.min(intResult, getMaxZoom());
+        intResult = Math.max(intResult, getMinZoom());
         return intResult;
     }
 

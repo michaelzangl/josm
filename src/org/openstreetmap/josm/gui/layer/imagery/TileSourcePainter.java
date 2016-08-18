@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.swing.AbstractAction;
@@ -47,7 +48,9 @@ import javax.swing.event.PopupMenuListener;
 import org.openstreetmap.gui.jmapviewer.AttributionSupport;
 import org.openstreetmap.gui.jmapviewer.MemoryTileCache;
 import org.openstreetmap.gui.jmapviewer.Tile;
+import org.openstreetmap.gui.jmapviewer.TileXY;
 import org.openstreetmap.gui.jmapviewer.interfaces.CachedTileLoader;
+import org.openstreetmap.gui.jmapviewer.interfaces.ICoordinate;
 import org.openstreetmap.gui.jmapviewer.interfaces.TileCache;
 import org.openstreetmap.gui.jmapviewer.interfaces.TileLoader;
 import org.openstreetmap.gui.jmapviewer.tilesources.AbstractTMSTileSource;
@@ -64,6 +67,8 @@ import org.openstreetmap.josm.gui.layer.ImageryLayer;
 import org.openstreetmap.josm.gui.layer.MapViewGraphics;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable.LayerPainter;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable.MapViewEvent;
+import org.openstreetmap.josm.gui.layer.imagery.TileForAreaFinder.TileAreaProducer;
+import org.openstreetmap.josm.gui.layer.imagery.TileForAreaFinder.TileForAreaWithFallback;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.GBC;
@@ -72,12 +77,16 @@ import org.openstreetmap.josm.tools.MemoryManager.MemoryHandle;
 import org.openstreetmap.josm.tools.MemoryManager.NotEnoughMemoryException;
 import org.openstreetmap.josm.tools.Pair;
 
-public class TileSourcePainter<T extends AbstractTMSTileSource> implements LayerPainter, ZoomChangeListener {
+public class TileSourcePainter<T extends AbstractTMSTileSource> implements LayerPainter, ZoomChangeListener, TileAreaProducer {
     /**
      *
      */
     private final AbstractTileSourceLayer<T> layer;
     private static final Font INFO_FONT = new Font("sansserif", Font.BOLD, 13);
+    /**
+     * Absolute maximum of tiles to paint
+     */
+    private static final int MAX_TILES = 500;
 
     /*
      *  use MemoryTileCache instead of tileLoader JCS cache, as tileLoader caches only content (byte[] of image)
@@ -107,13 +116,14 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
                     @Override
                     public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                         highlightPosition = tilePos;
-                        mapView.repaint();
+                        // triggers repaint
+                        layer.invalidate();
                     }
 
                     @Override
                     public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
                         highlightPosition = null;
-                        mapView.repaint();
+                        layer.invalidate();
                     }
 
                     @Override
@@ -203,12 +213,20 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
 
     private void drawInViewArea(Graphics2D g, MapView mapView, MapViewRectangle rect) {
         TileCoordinateConverter converter = generateCoordinateConverter();
-        zoom.updateZoomLevel(converter);
+        zoom.updateZoomLevel(converter, this);
+        loadTilesInView(converter);
+
         TileRange baseRange = converter.getViewAtZoom(zoom.getCurrentZoomLevel());
 
         Shape clip = g.getClip();
         g.setClip(converter.getProjectionClip());
-        paintTileImages(g, new TileForAreaFinder(baseRange));
+        TileForAreaFinder area;
+        if (getSettings().isAutoZoom()) {
+            area = new TileForAreaWithFallback(baseRange, this, zoom);
+        } else {
+            area = new TileForAreaFinder(baseRange, this);
+        }
+        paintTileImages(g, area);
         g.setClip(clip);
 
         g.setFont(INFO_FONT);
@@ -223,6 +241,30 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         }
     }
 
+    private void loadTilesInView(TileCoordinateConverter converter) {
+        int zoomToLoad = zoom.getDisplayZoomLevel();
+        TileRange range = converter.getViewAtZoom(zoomToLoad);
+
+        if (getSettings().isAutoZoom()) {
+        // If all tiles at displayZoomLevel is loaded, load all tiles at next zoom level
+        // to make sure there're really no more zoom levels
+        if (zoomToLoad < zoom.getCurrentZoomLevel() && !hasTiles(range, TileSourcePainter::isLoading)) {
+            zoomToLoad++;
+            range = converter.getViewAtZoom(zoomToLoad);
+        } else  {
+            // When we have overzoomed tiles and all tiles at current zoomlevel is loaded,
+            // load tiles at previovus zoomlevels until we have all tiles on screen is loaded.
+            // loading is done in the next if section
+            while (zoomToLoad > zoom.getMinZoom() && hasTiles(range, TileSourcePainter::isOverzoomed)
+                    && !hasTiles(range, TileSourcePainter::isLoading)) {
+                zoomToLoad--;
+                range = converter.getViewAtZoom(zoomToLoad);
+            }
+        }
+        }
+        loadTiles(range, false);
+    }
+
     private static void paintHighlight(Graphics2D g, TileCoordinateConverter converter, TilePosition tile) {
         Rectangle2D area = converter.getRectangleForTile(tile).getInView();
         g.setColor(Color.RED);
@@ -233,17 +275,14 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         TileCoordinateConverter converter = generateCoordinateConverter();
         Rectangle b = g.getClipBounds();
         int maxTiles = (int) (b.getWidth() * b.getHeight() / tileSource.getTileSize() / tileSource.getTileSize() * 5);
-        area.getAllTiles()
+        area.get()
             .parallel()
-            .limit(maxTiles)
-            .peek(t -> System.out.println("Suggest to paint: " + t))
+            .limit(Math.min(maxTiles, MAX_TILES))
             .map(this::getTile)
             .filter(Objects::nonNull)
             .map(tile -> new Pair<>(tile, tile.getImage()))
-            .peek(t -> System.out.println("Has tile to paint: " + t.a))
             .filter(p -> imageLoaded(p.b))
             .map(p -> new Pair<>(p.a, layer.applyImageProcessors(p.b)))
-            .peek(t -> System.out.println("Painting: " + t.a))
             .forEachOrdered(p -> paintTileImage(g, p.a, p.b, converter));
     }
 
@@ -251,14 +290,14 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
      * We only paint full tile images.
      * <p>
      * We handle that the correct tile images are in front by sorting the list of tiles accordingly.
+     * @param g The graphics to paint on
+     * @param tile The tile to paint
+     * @param image The image to paint for the tile
+     * @param converter The coordinate converter.
      */
     private void paintTileImage(Graphics2D g, Tile tile, BufferedImage image, TileCoordinateConverter converter) {
         AffineTransform transform = converter.getTransformForTile(new TilePosition(tile), 0, 0, 0, 1, 1, 1);
-        Point2D anchor = transform.transform(new Point2D.Double(), null);
-        System.out.println("Image top left corner: " + anchor);
-        System.out.println("Image bottom right corner: " + transform.transform(new Point2D.Double(1, 1), null));
         transform.scale(1.0 / image.getWidth(), 1.0 / image.getHeight());
-        System.out.println("Image transform: " + transform);
 
         g.drawImage(image, transform, layer);
     }
@@ -289,9 +328,26 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
             textPainter.addTextOverlay(tr("increase tiles zoom level (change resolution) to see more detail"));
         }
 
-//    TODO    if (noTilesAtZoom) {
-//            textPainter.addTextOverlay(tr("No tiles at this zoom level"));
-//        }
+        if (getSettings().isAutoZoom() && getSettings().isAutoLoad() && !hasTiles(baseRange, TileSourcePainter::isVisible)
+                && (!hasTiles(baseRange, TileSourcePainter::isLoading) || hasTiles(baseRange, TileSourcePainter::isOverzoomed))) {
+            textPainter.addTextOverlay(tr("No tiles at this zoom level"));
+        }
+    }
+
+    public boolean hasTiles(TileRange range, Predicate<Tile> pred) {
+        return range.tilePositions().map(this::getTile).anyMatch(pred);
+    }
+
+    public static boolean isVisible(Tile t) {
+        return t != null && t.isLoaded() && !t.hasError();
+    }
+
+    public static boolean isLoading(Tile t) {
+        return t == null || t.isLoading();
+    }
+
+    public static boolean isOverzoomed(Tile t) {
+        return t != null && "no-tile".equals(t.getValue("tile-info"));
     }
 
     private void paintDebug() {
@@ -308,10 +364,12 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
     }
 
     private boolean imageLoaded(Image i) {
-        if (i == null)
+        if (i == null) {
             return false;
-        int status = Toolkit.getDefaultToolkit().checkImage(i, -1, -1, layer);
-        return (status & ImageObserver.ALLBITS) != 0;
+        } else {
+            int status = Toolkit.getDefaultToolkit().checkImage(i, -1, -1, layer);
+            return (status & ImageObserver.ALLBITS) != 0;
+        }
     }
 
 
@@ -490,9 +548,6 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
 
         TileRange ts = converter.getViewAtZoom(zoom.getCurrentZoomLevel());
 
-        if (!isTooLarge(ts)) {
-            loadTiles(ts, false); // make sure there are tile objects for all tiles
-        }
         Stream<TilePosition> clickedTiles = ts.tilePositions()
                 .filter(t -> converter.getRectangleForTile(t).getInView().contains(clicked));
         if (Main.isTraceEnabled()) {
@@ -699,4 +754,32 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         }
     }
 
+    @Override
+    public Bounds getBounds(TilePosition tilePos) {
+        ICoordinate min = tileSource.tileXYToLatLon(tilePos.getX(), tilePos.getY(), tilePos.getZoom());
+        ICoordinate max = tileSource.tileXYToLatLon(tilePos.getX() + 1, tilePos.getY() + 1, tilePos.getZoom());
+        Bounds bounds = new Bounds(min.getLat(), min.getLon(), false);
+        bounds.extend(max.getLat(), max.getLon());
+        return bounds;
+    }
+
+    @Override
+    public TileRange toRangeAtZoom(Bounds bounds, int zoom) {
+        TileXY t1 = tileSource.latLonToTileXY(bounds.getMinLat(), bounds.getMinLon(), zoom);
+        TileXY t2 = tileSource.latLonToTileXY(bounds.getMaxLat(), bounds.getMaxLon(), zoom);
+        return new TileRange(t1, t2, zoom);
+    }
+
+    @Override
+    public boolean isAvailable(TilePosition tilePos) {
+        Tile tile = getTile(tilePos);
+        return tile != null && !tile.hasError()
+                && !(isOverzoomed(tile) && tilePos.getZoom() > zoom.getDisplayZoomLevel())
+                && isImageAvailable(tile);
+    }
+
+    private boolean isImageAvailable(Tile tile) {
+        BufferedImage image = tile.getImage();
+        return imageLoaded(image);
+    }
 }

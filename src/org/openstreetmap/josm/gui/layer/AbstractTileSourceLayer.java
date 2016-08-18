@@ -624,18 +624,6 @@ public abstract class AbstractTileSourceLayer<T extends AbstractTMSTileSource> e
 //        }
 //    }
 
-//    private LatLon getShiftedLatLon(EastNorth en) {
-//        return coordinateConverter.getProjecting().eastNorth2latlonClamped(en);
-//    }
-//
-//    private ICoordinate getShiftedCoord(EastNorth en) {
-//        return getShiftedLatLon(en).toCoordinate();
-//    }
-//
-//    private LatLon getShiftedLatLon(ICoordinate latLon) {
-//        return getShiftedLatLon(Main.getProjection().latlon2eastNorth(new LatLon(latLon)));
-//    }
-
 //    private final TileSet nullTileSet = new TileSet();
 //
 //    private class TileSet extends TileRange {
@@ -714,32 +702,6 @@ public abstract class AbstractTileSourceLayer<T extends AbstractTMSTileSource> e
 //
 //    }
 
-//    private static class TileSetInfo {
-//        public boolean hasVisibleTiles;
-//        public boolean hasOverzoomedTiles;
-//        public boolean hasLoadingTiles;
-//    }
-//
-//    private static <S extends AbstractTMSTileSource> TileSetInfo getTileSetInfo(AbstractTileSourceLayer<S>.TileSet ts) {
-//        List<Tile> allTiles = ts.allExistingTiles();
-//        TileSetInfo result = new TileSetInfo();
-//        result.hasLoadingTiles = allTiles.size() < ts.size();
-//        for (Tile t : allTiles) {
-//            if ("no-tile".equals(t.getValue("tile-info"))) {
-//                result.hasOverzoomedTiles = true;
-//            }
-//
-//            if (t.isLoaded()) {
-//                if (!t.hasError()) {
-//                    result.hasVisibleTiles = true;
-//                }
-//            } else if (t.isLoading()) {
-//                result.hasLoadingTiles = true;
-//            }
-//        }
-//        return result;
-//    }
-//
 //    private class DeepTileSet {
 //        private final ProjectionBounds bounds;
 //        private final int minZoom, maxZoom;
@@ -808,7 +770,7 @@ public abstract class AbstractTileSourceLayer<T extends AbstractTMSTileSource> e
 //        g.setColor(Color.DARK_GRAY);
 //
 //        List<Tile> missedTiles = this.paintTileImages(g, ts);
-//        int[] otherZooms = { -1, 1, -2, 2, -3, -4, -5 };
+//        int[] otherZooms = ;
 //        for (int zoomOffset : otherZooms) {
 //            if (!getDisplaySettings().isAutoZoom()) {
 //                break;
@@ -823,7 +785,6 @@ public abstract class AbstractTileSourceLayer<T extends AbstractTMSTileSource> e
 //            List<Tile> newlyMissedTiles = new LinkedList<>();
 //            for (Tile missed : missedTiles) {
 //                if ("no-tile".equals(missed.getValue("tile-info")) && zoomOffset > 0) {
-//                    // Don't try to paint from higher zoom levels when tile is overzoomed
 //                    newlyMissedTiles.add(missed);
 //                    continue;
 //                }
