@@ -11,8 +11,8 @@ import java.awt.geom.AffineTransform;
  * @since xxx
  */
 public class TextPainter {
-    private int debugY;
     private Graphics2D g;
+    private int debugY;
     private int overlayY;
 
     /**
@@ -22,7 +22,7 @@ public class TextPainter {
     public void start(Graphics2D g) {
         this.g = g;
         debugY = 160;
-        debugY = 100;
+        overlayY = 100;
     }
 
     /**
@@ -59,7 +59,8 @@ public class TextPainter {
     private int drawString(String text, int x, int y, int width) {
         String textToDraw = text;
         int maxLineWidth = 0;
-        if (g.getFontMetrics().stringWidth(text) > width) {
+        int wholeLineWidth = g.getFontMetrics().stringWidth(text);
+        if (wholeLineWidth > width) {
             // text longer than tile size, split it
             StringBuilder line = new StringBuilder();
             StringBuilder ret = new StringBuilder();
@@ -68,12 +69,15 @@ public class TextPainter {
                 if (lineWidth > width) {
                     ret.append(line).append('\n');
                     line.setLength(0);
+                    lineWidth = g.getFontMetrics().stringWidth(s);
                 }
                 line.append(s).append(' ');
                 maxLineWidth = Math.max(lineWidth, maxLineWidth);
             }
             ret.append(line);
             textToDraw = ret.toString();
+        } else {
+            maxLineWidth = wholeLineWidth;
         }
 
         return drawLines(x, y, textToDraw.split("\n"), maxLineWidth);
@@ -84,7 +88,7 @@ public class TextPainter {
 
         // background
         g.setColor(new Color(0, 0, 0, 50));
-        g.fillRect(x - 3, y - height - 3, maxLineWidth + 6, (3 + height) * (lines.length - 1) + 6);
+        g.fillRect(x - 3, y - height - 1, maxLineWidth + 6, (3 + height) * lines.length + 2);
 
         int offset = 0;
         for (String s: lines) {

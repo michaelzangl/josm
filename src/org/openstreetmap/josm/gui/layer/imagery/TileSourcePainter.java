@@ -231,6 +231,7 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
     }
 
     private void drawInViewArea(Graphics2D g, MapView mapView, MapViewRectangle rect) {
+        g.setFont(INFO_FONT);
         TileCoordinateConverter converter = generateCoordinateConverter();
         zoom.updateZoomLevel(converter, this);
         loadTilesInView(converter);
@@ -248,8 +249,6 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         paintTileImages(g, area);
         g.setClip(clip);
 
-        g.setFont(INFO_FONT);
-        paintTileTexts(g);
         if (highlightPosition != null) {
             paintHighlight(g, converter, highlightPosition);
         }
@@ -353,15 +352,6 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         attribution.paintAttribution(g, (int) inView.getWidth(), (int) inView.getHeight(),
                 boundsBox.getMin().toCoordinate(), boundsBox.getMax().toCoordinate(), zoom.getDisplayZoomLevel(),
                 layer);
-    }
-
-    private void paintTileTexts(Graphics2D g) {
-        g.setColor(Color.RED);
-
-        // The current zoom tileset should have all of its tiles due to the loadAllTiles(), unless it to tooLarge()
-// TODO       for (Tile t : ts.allExistingTiles()) {
-//            this.paintTileText(ts, t, g, mv, displayZoomLevel, t);
-//        }
     }
 
     private void paintStatus(TileRange baseRange, Projection projection) {
