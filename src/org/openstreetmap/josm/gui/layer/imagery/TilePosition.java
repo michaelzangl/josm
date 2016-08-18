@@ -1,6 +1,8 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.gui.layer.imagery;
 
+import java.io.Serializable;
+
 import org.openstreetmap.gui.jmapviewer.Tile;
 import org.openstreetmap.gui.jmapviewer.TileXY;
 
@@ -9,7 +11,9 @@ import org.openstreetmap.gui.jmapviewer.TileXY;
  * @author Michael Zangl
  * @since xxx
  */
-public class TilePosition {
+public class TilePosition implements Serializable {
+    private static final long serialVersionUID = 1;
+
     private final int x;
     private final int y;
     private final int zoom;

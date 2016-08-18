@@ -23,6 +23,7 @@ import org.openstreetmap.josm.data.preferences.BooleanProperty;
 import org.openstreetmap.josm.data.preferences.IntegerProperty;
 import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.gui.layer.NativeScaleLayer.ScaleList;
+import org.openstreetmap.josm.gui.layer.imagery.TileSourcePainter;
 
 /**
  * Class that displays a slippy map layer.
@@ -56,32 +57,6 @@ public class TMSLayer extends AbstractCachedTileSourceLayer<TMSTileSource> {
      */
     public TMSLayer(ImageryInfo info) {
         super(info);
-    }
-
-    /**
-     * Creates and returns a new TileSource instance depending on the {@link ImageryType}
-     * of the passed ImageryInfo object.
-     *
-     * If no appropriate TileSource is found, null is returned.
-     * Currently supported ImageryType are {@link ImageryType#TMS},
-     * {@link ImageryType#BING}, {@link ImageryType#SCANEX}.
-     *
-     *
-     * @param info imagery info
-     * @return a new TileSource instance or null if no TileSource for the ImageryInfo/ImageryType could be found.
-     * @throws IllegalArgumentException if url from imagery info is null or invalid
-     */
-    @Override
-    protected TMSTileSource getTileSource(ImageryInfo info) {
-        return getTileSourceStatic(info, () -> {
-            Main.debug("Attribution loaded, running loadAllErrorTiles");
-//       TODO     this.loadAllErrorTiles(false);
-        });
-    }
-
-    @Override
-    public final boolean isProjectionSupported(Projection proj) {
-        return "EPSG:3857".equals(proj.toCode()) || "EPSG:4326".equals(proj.toCode());
     }
 
     @Override
@@ -149,10 +124,6 @@ public class TMSLayer extends AbstractCachedTileSourceLayer<TMSTileSource> {
         return AbstractCachedTileSourceLayer.getCache(CACHE_REGION_NAME);
     }
 
-//  TODO  @Override
-//    public ScaleList getNativeScales() {
-//        return nativeScaleList;
-//    }
 
     private static ScaleList initNativeScaleList() {
         Collection<Double> scales = new ArrayList<>(AbstractTileSourceLayer.MAX_ZOOM);
@@ -161,5 +132,27 @@ public class TMSLayer extends AbstractCachedTileSourceLayer<TMSTileSource> {
             scales.add(scale);
         }
         return new ScaleList(scales);
+    }
+
+    @Override
+    protected TileSourcePainter<TMSTileSource> createMapViewPainter(MapViewEvent event) {
+        return new TileSourcePainter<TMSTileSource>(this, event.getMapView()) {
+            @Override
+            public final boolean isProjectionSupported(Projection proj) {
+                return "EPSG:3857".equals(proj.toCode()) || "EPSG:4326".equals(proj.toCode());
+            }
+        //  TODO  @Override
+//          public ScaleList getNativeScales() {
+//              return nativeScaleList;
+//          }
+
+            @Override
+            protected TMSTileSource generateTileSource() {
+                return getTileSourceStatic(info, () -> {
+                    Main.debug("Attribution loaded, running loadAllErrorTiles");
+                    loadAllErrorTiles(false);
+                });
+            }
+        };
     }
  }

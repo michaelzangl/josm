@@ -189,12 +189,14 @@ public abstract class AbstractTileSourceLayer<T extends AbstractTMSTileSource> e
     protected abstract TileLoaderFactory getTileLoaderFactory();
 
     /**
-     *
+     * Used by the default {@link TileSourcePainter} to create the tile source.
      * @param info imagery info
      * @return TileSource for specified ImageryInfo
      * @throws IllegalArgumentException when Imagery is not supported by layer
      */
-    protected abstract T getTileSource(ImageryInfo info);
+    protected T getTileSource(ImageryInfo info) {
+        throw new UnsupportedOperationException();
+    }
 
     protected Map<String, String> getHeaders(T tileSource) {
         if (tileSource instanceof TemplatedTileSource) {

@@ -4,6 +4,7 @@ package org.openstreetmap.josm.gui;
 import java.awt.Container;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Path2D;
@@ -139,6 +140,15 @@ public final class MapViewState {
     }
 
     /**
+     * Gets the MapViewPoint representation for a position in view coordinates.
+     * @param point The point in view space.
+     * @return The MapViewPoint.
+     */
+    public MapViewPoint getForView(Point2D point) {
+        return new MapViewViewPoint(point.getX(), point.getY());
+    }
+
+    /**
      * Gets the {@link MapViewPoint} for the given {@link EastNorth} coordinate.
      * @param eastNorth the position.
      * @return The point for that position.
@@ -218,6 +228,11 @@ public final class MapViewState {
     }
 
     public Area getArea(Bounds bounds) {
+        Path2D area = getPath(bounds);
+        return new Area(area);
+    }
+
+    private Path2D getPath(Bounds bounds) {
         Path2D area = new Path2D.Double();
         bounds.visitEdge(getProjection(), latlon -> {
             MapViewPoint point = getPointFor(latlon);
@@ -228,7 +243,7 @@ public final class MapViewState {
             }
         });
         area.closePath();
-        return new Area(area);
+        return area;
     }
 
     /**
@@ -400,6 +415,15 @@ public final class MapViewState {
         }
 
         /**
+         * Gets a rectangle from this point to an other point in lat/lon space, clamped to the world bounds.
+         * @param p2 The other point
+         * @return The rectangle
+         */
+        public MapViewLatLonRectangle latLonRectTo(MapViewPoint p2) {
+            return new MapViewLatLonRectangle(getLatLonClamped(), p2.getLatLonClamped());
+        }
+
+        /**
          * Add the given offset to this point
          * @param en The offset in east/north space.
          * @return The new point
@@ -465,10 +489,45 @@ public final class MapViewState {
     }
 
     /**
+     * This is a shape on the map view area.
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public interface MapViewArea {
+
+        /**
+         * Gets the shape in view space.
+         * @return The area in view coordinates
+         */
+        public Shape getInView();
+
+        /**
+         * Gets the real bounds that enclose this rectangle.
+         * This is computed respecting that the borders of this rectangle may not be a straignt line in latlon coordinates.
+         * @return The bounds.
+         * @since 10458
+         */
+        public Bounds getLatLonBoundsBox();
+
+        /**
+         * Gets the projection bounds for this rectangle.
+         * @return The projection bounds.
+         */
+        public ProjectionBounds getProjectionBounds();
+
+        /**
+         * Check if the given point is contained in this rectangle.
+         * @param point The position
+         * @return true if the point is contained in this shape.
+         */
+        public boolean contains(MapViewPoint point);
+    }
+
+    /**
      * A rectangle on the MapView. It is rectangular in screen / EastNorth space.
      * @author Michael Zangl
      */
-    public class MapViewRectangle {
+    public class MapViewRectangle implements MapViewArea {
         private final MapViewPoint p1;
         private final MapViewPoint p2;
 
@@ -482,10 +541,7 @@ public final class MapViewState {
             this.p2 = p2;
         }
 
-        /**
-         * Gets the projection bounds for this rectangle.
-         * @return The projection bounds.
-         */
+        @Override
         public ProjectionBounds getProjectionBounds() {
             ProjectionBounds b = new ProjectionBounds(p1.getEastNorth());
             b.extend(p2.getEastNorth());
@@ -503,12 +559,7 @@ public final class MapViewState {
             return b;
         }
 
-        /**
-         * Gets the real bounds that enclose this rectangle.
-         * This is computed respecting that the borders of this rectangle may not be a straignt line in latlon coordinates.
-         * @return The bounds.
-         * @since 10458
-         */
+        @Override
         public Bounds getLatLonBoundsBox() {
             // TODO @michael2402: Use hillclimb.
             return projecting.getBaseProjection().getLatLonBoundsBox(getProjectionBounds());
@@ -519,6 +570,7 @@ public final class MapViewState {
          * @return The rectangle.
          * @since 10651
          */
+        @Override
         public Rectangle2D getInView() {
             double x1 = p1.getInViewX();
             double y1 = p1.getInViewY();
@@ -526,6 +578,46 @@ public final class MapViewState {
             double y2 = p2.getInViewY();
             return new Rectangle2D.Double(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x1 - x2), Math.abs(y1 - y2));
         }
+
+        @Override
+        public boolean contains(MapViewPoint point) {
+            return getInView().contains(point.getInView());
+        }
     }
 
+    /**
+     * A rectangle in lat/lon space
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public class MapViewLatLonRectangle implements MapViewArea {
+
+        private final Bounds bounds;
+
+        MapViewLatLonRectangle(LatLon l1, LatLon l2) {
+            bounds = new Bounds(l1);
+            bounds.extend(l2);
+        }
+
+        @Override
+        public Shape getInView() {
+            return getPath(bounds);
+        }
+
+        @Override
+        public boolean contains(MapViewPoint point) {
+            return bounds.contains(point.getLatLon());
+        }
+
+        @Override
+        public Bounds getLatLonBoundsBox() {
+            return new Bounds(bounds);
+        }
+
+        @Override
+        public ProjectionBounds getProjectionBounds() {
+            return new ProjectionBounds(getProjection().latlon2eastNorth(bounds.getMin()),
+                    getProjection().latlon2eastNorth(bounds.getMax()));
+        }
+    }
 }

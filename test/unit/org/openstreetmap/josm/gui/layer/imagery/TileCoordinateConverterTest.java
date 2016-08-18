@@ -24,7 +24,9 @@ import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.MapFrame;
-import org.openstreetmap.josm.gui.MapViewState.MapViewRectangle;
+import org.openstreetmap.josm.gui.MapViewState;
+import org.openstreetmap.josm.gui.MapViewState.MapViewLatLonRectangle;
+import org.openstreetmap.josm.gui.MapViewState.MapViewPoint;
 import org.openstreetmap.josm.gui.layer.LayerManagerTest;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 
@@ -34,7 +36,178 @@ import org.openstreetmap.josm.gui.util.GuiHelper;
  * @since xxx
  */
 public class TileCoordinateConverterTest {
-    private TileCoordinateConverter converter;
+    private static final class TransformingConverter extends TileCoordinateConverter {
+        AffineTransform transform = new AffineTransform();
+
+        private TransformingConverter(MapViewState mapView, TileSource tileSource, TileSourceDisplaySettings settings) {
+            super(mapView, tileSource, settings);
+        }
+
+        @Override
+        protected MapViewPoint pos(ICoordinate ll) {
+            Point2D transformed = transform.transform(new Point2D.Double(ll.getLat(), ll.getLon()), null);
+            return super.pos(new Coordinate(transformed.getX(), transformed.getY()));
+        }
+    }
+
+    private static final class TestTileSource implements TileSource {
+        @Override
+        public boolean requiresAttribution() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getTermsOfUseURL() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getTermsOfUseText() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getAttributionText(int zoom, ICoordinate topLeft, ICoordinate botRight) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getAttributionLinkURL() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getAttributionImageURL() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Image getAttributionImage() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Point latLonToXY(ICoordinate point, int zoom) {
+            return latLonToXY(point.getLat(), point.getLon(), zoom);
+        }
+
+        @Override
+        public ICoordinate xyToLatLon(Point point, int zoom) {
+            return xyToLatLon(point.x, point.y, zoom);
+        }
+
+        @Override
+        public TileXY latLonToTileXY(ICoordinate point, int zoom) {
+            return latLonToTileXY(point.getLat(), point.getLon(), zoom);
+        }
+
+        @Override
+        public ICoordinate tileXYToLatLon(TileXY xy, int zoom) {
+            return tileXYToLatLon(xy.getXIndex(), xy.getYIndex(), zoom);
+        }
+
+        @Override
+        public ICoordinate tileXYToLatLon(Tile tile) {
+            return tileXYToLatLon(tile.getXtile(), tile.getYtile(), tile.getZoom());
+        }
+
+        @Override
+        public boolean isNoTileAtZoom(Map<String, List<String>> headers, int statusCode, byte[] content) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getTileYMin(int zoom) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getTileYMax(int zoom) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getTileXMin(int zoom) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getTileXMax(int zoom) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getTileUrl(int zoom, int tilex, int tiley) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getTileSize() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getTileId(int zoom, int tilex, int tiley) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getName() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getMinZoom() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Map<String, String> getMetadata(Map<String, List<String>> headers) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getMaxZoom() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getId() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double getDistance(double la1, double lo1, double la2, double lo2) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getDefaultTileSize() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Point latLonToXY(double lat, double lon, int zoom) {
+            return new Point((int) lat / 13, (int) lon - 4);
+        }
+
+        @Override
+        public ICoordinate xyToLatLon(int x, int y, int zoom) {
+            return new Coordinate(x * 13, y + 4);
+        }
+
+        @Override
+        public TileXY latLonToTileXY(double lat, double lon, int zoom) {
+            return new TileXY(lat / 13, lon - 4);
+        }
+
+        @Override
+        public ICoordinate tileXYToLatLon(int x, int y, int zoom) {
+            return new Coordinate(x * 13, y + 4);
+        }
+    }
+
+    private TransformingConverter converter;
 
     /**
      * Setup test.
@@ -46,201 +219,71 @@ public class TileCoordinateConverterTest {
         GuiHelper.runInEDTAndWait(() -> {});
     }
 
+    /**
+     * Sets up a fake tile source.
+     */
     @Before
     public void setUp() {
         MapFrame map = Main.map;
         map.mapView.zoomTo(new EastNorth(0, 0), 1);
-        converter = new TileCoordinateConverter(map.mapView.getState(), new TileSource() {
-
-            @Override
-            public boolean requiresAttribution() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getTermsOfUseURL() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getTermsOfUseText() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getAttributionText(int zoom, ICoordinate topLeft, ICoordinate botRight) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getAttributionLinkURL() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getAttributionImageURL() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Image getAttributionImage() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Point latLonToXY(ICoordinate point, int zoom) {
-                return latLonToXY(point.getLat(), point.getLon(), zoom);
-            }
-
-            @Override
-            public ICoordinate xyToLatLon(Point point, int zoom) {
-                return xyToLatLon(point.x, point.y, zoom);
-            }
-
-            @Override
-            public TileXY latLonToTileXY(ICoordinate point, int zoom) {
-                return latLonToTileXY(point.getLat(), point.getLon(), zoom);
-            }
-
-            @Override
-            public ICoordinate tileXYToLatLon(TileXY xy, int zoom) {
-                return tileXYToLatLon(xy.getXIndex(), xy.getYIndex(), zoom);
-            }
-
-            @Override
-            public ICoordinate tileXYToLatLon(Tile tile) {
-                return tileXYToLatLon(tile.getXtile(), tile.getYtile(), tile.getZoom());
-            }
-
-            @Override
-            public boolean isNoTileAtZoom(Map<String, List<String>> headers, int statusCode, byte[] content) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public int getTileYMin(int zoom) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public int getTileYMax(int zoom) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public int getTileXMin(int zoom) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public int getTileXMax(int zoom) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getTileUrl(int zoom, int tilex, int tiley) throws IOException {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public int getTileSize() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getTileId(int zoom, int tilex, int tiley) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getName() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public int getMinZoom() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Map<String, String> getMetadata(Map<String, List<String>> headers) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public int getMaxZoom() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getId() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public double getDistance(double la1, double lo1, double la2, double lo2) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public int getDefaultTileSize() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Point latLonToXY(double lat, double lon, int zoom) {
-                return new Point((int) lat / 13, (int) lon - 4);
-            }
-
-            @Override
-            public ICoordinate xyToLatLon(int x, int y, int zoom) {
-                return new Coordinate(x * 13, y + 4);
-            }
-
-            @Override
-            public TileXY latLonToTileXY(double lat, double lon, int zoom) {
-                return new TileXY(lat / 13, lon - 4);
-            }
-
-            @Override
-            public ICoordinate tileXYToLatLon(int x, int y, int zoom) {
-                return new Coordinate(x * 13, y + 4);
-            }
-        }, new TileSourceDisplaySettings());
+        converter = new TransformingConverter(map.mapView.getState(), new TestTileSource(), new TileSourceDisplaySettings());
     }
 
+    /**
+     * Test {@link TileCoordinateConverter#getAreaForTile(TilePosition)}
+     */
     @Test
-    public void testGetRectangleForTile() {
+    public void testGetAreaForTile() {
         EastNorth p1 = Main.getProjection().latlon2eastNorth(new LatLon(26, 7));
-        MapViewRectangle rect = converter.getRectangleForTile(new TilePosition(2, 3, 1));
+        MapViewLatLonRectangle rect = converter.getAreaForTile(new TilePosition(2, 3, 1));
         assertEquals(p1.getX(), rect.getProjectionBounds().minEast, 1e-10);
         assertEquals(p1.getY(), rect.getProjectionBounds().minNorth, 1e-10);
     }
 
+    /**
+     * Test {@link TileCoordinateConverter#getTransformForTile(TilePosition, double, double, double, double, double, double)}
+     */
     @Test
     public void testGetTransformForTile() {
-        AffineTransform transform = new AffineTransform();
-        transform.setToTranslation(1, 10);
-        assertEquals(1, transform.getTranslateX(), 1e-10);
-        testGetTransform(transform);
-    }
-
-    private void testGetTransform(AffineTransform transform) {
         TilePosition tile = new TilePosition(2, 3, 1);
         Point2D p1 = Main.map.mapView.getState().getPointFor(new LatLon(26, 7)).getInView();
         Point2D p2 = Main.map.mapView.getState().getPointFor(new LatLon(39, 8)).getInView();
 
-        transform = converter.getTransformForTile(tile, 0, 0, 0, 1, 1, 1);
+        for (AffineTransform transform : new AffineTransform[] {
+                converter.getTransformForTile(tile, 0, 0, 0, 1, 1, 1),
+                converter.getTransformForTile(tile, 0, 0, 1, 0, 1, 1),
+                converter.getTransformForTile(tile, 0, 0, 1, 1, 1, 0),
+                converter.getTransformForTile(tile, 0, 0, 0, 1, 1, 0),
+        }) {
+            assertEquals(p1.getX(), transform.getTranslateX(), 1e-10);
+            assertEquals(p1.getY(), transform.getTranslateY(), 1e-10);
 
-        assertEquals(p1.getX(), transform.getTranslateX(), 1e-10);
-        assertEquals(p1.getY(), transform.getTranslateY(), 1e-10);
+            Point2D p1converted = transform.transform(new Point2D.Double(0, 0), null);
+            Point2D p2converted = transform.transform(new Point2D.Double(1, 1), null);
 
-        Point2D p1converted = transform.transform(new Point2D.Double(0, 0), null);
-        Point2D p2converted = transform.transform(new Point2D.Double(1, 1), null);
-
-        assertEquals(p1.getX(), p1converted.getX(), 1e-10);
-        assertEquals(p1.getY(), p1converted.getY(), 1e-10);
-        assertEquals(p2.getX(), p2converted.getX(), 1e-10);
-        assertEquals(p2.getY(), p2converted.getY(), 1e-10);
+            assertEquals(p1.getX(), p1converted.getX(), 1e-10);
+            assertEquals(p1.getY(), p1converted.getY(), 1e-10);
+            assertEquals(p2.getX(), p2converted.getX(), 1e-10);
+            assertEquals(p2.getY(), p2converted.getY(), 1e-10);
+        }
+    }
+        /**
+         * Test {@link TileCoordinateConverter#getTransformForTile(TilePosition, double, double, double, double, double, double)}
+         * ignores unsolveable
+         */
+        @Test
+        public void testGetTransformForTileIgnoresUnsolveable() {
+            TilePosition tile = new TilePosition(2, 3, 1);
+        for (AffineTransform transform : new AffineTransform[] {
+                converter.getTransformForTile(tile, 0, 0, 0, 0, 1, 1),
+                converter.getTransformForTile(tile, 0, 0, 1, 0, 0.5, 0),
+                converter.getTransformForTile(tile, 0, 0, 1, 1, 0, 0),
+                converter.getTransformForTile(tile, 0, 0, 0, 0e-30, 1, 0),
+        }) {
+            assertEquals(1, transform.getScaleX(), 1e-10);
+            assertEquals(1, transform.getScaleY(), 1e-10);
+            assertEquals(0, transform.getTranslateX(), 1e-10);
+            assertEquals(0, transform.getTranslateY(), 1e-10);
+        }
     }
 }

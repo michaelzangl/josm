@@ -12,8 +12,8 @@ import org.openstreetmap.gui.jmapviewer.interfaces.TileSource;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.MapViewState;
+import org.openstreetmap.josm.gui.MapViewState.MapViewLatLonRectangle;
 import org.openstreetmap.josm.gui.MapViewState.MapViewPoint;
-import org.openstreetmap.josm.gui.MapViewState.MapViewRectangle;
 import org.openstreetmap.josm.gui.layer.AbstractTileSourceLayer;
 import org.openstreetmap.josm.tools.Utils;
 
@@ -24,7 +24,6 @@ import org.openstreetmap.josm.tools.Utils;
  */
 public class TileCoordinateConverter {
     private MapViewState displacedState;
-    private TileSourceDisplaySettings settings;
     private TileSource tileSource;
 
     /**
@@ -36,20 +35,11 @@ public class TileCoordinateConverter {
     public TileCoordinateConverter(MapViewState mapView, TileSource tileSource, TileSourceDisplaySettings settings) {
         this.displacedState = mapView.shifted(settings.getDisplacement());
         this.tileSource = tileSource;
-        this.settings = settings;
     }
 
-    private MapViewPoint pos(ICoordinate ll) {
+    protected MapViewPoint pos(ICoordinate ll) {
         return displacedState.getPointFor(new LatLon(ll));
     }
-
-//    /**
-//     * Gets the projecting instance to use to convert between latlon and eastnorth coordinates.
-//     * @return The {@link Projecting} instance.
-//     */
-//    public Projecting getProjecting() {
-//        return mapView.getProjection(), settings.getDisplacement());
-//    }
 
     /**
      * Gets the top left position of the tile inside the map view.
@@ -66,11 +56,11 @@ public class TileCoordinateConverter {
      * @param tile The tile
      * @return The positon.
      */
-    public MapViewRectangle getRectangleForTile(TilePosition tile) {
+    public MapViewLatLonRectangle getAreaForTile(TilePosition tile) {
         MapViewPoint p1 = tileUV(tile, 0, 0);
         MapViewPoint p2 = tileUV(tile, 1, 1);
 
-        return p1.rectTo(p2);
+        return p1.latLonRectTo(p2);
     }
 
     /**
@@ -136,12 +126,11 @@ public class TileCoordinateConverter {
         double du3 = u3 - u1;
         double dv2 = v2 - v1;
         double dv3 = v3 - v1;
+
+        // x space
         double p1x = p1.getInView().getX();
         double p2x = p2.getInView().getX();
         double p3x = p3.getInView().getX();
-        double p1y = p1.getInView().getY();
-        double p2y = p2.getInView().getY();
-        double p3y = p3.getInView().getY();
 
         double m00;
         double m01;
@@ -165,6 +154,10 @@ public class TileCoordinateConverter {
         }
         double m02 = p1x - u1 * m00 + v1 * m01;
 
+        // y space
+        double p1y = p1.getInView().getY();
+        double p2y = p2.getInView().getY();
+        double p3y = p3.getInView().getY();
         double m10;
         double m11;
         if (Utils.equalsEpsilon(0, dv2)) {

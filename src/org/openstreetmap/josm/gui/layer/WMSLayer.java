@@ -6,6 +6,7 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,7 +14,6 @@ import java.util.TreeSet;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JOptionPane;
 
 import org.apache.commons.jcs.access.CacheAccess;
 import org.openstreetmap.gui.jmapviewer.interfaces.TileLoader;
@@ -28,7 +28,6 @@ import org.openstreetmap.josm.data.preferences.BooleanProperty;
 import org.openstreetmap.josm.data.preferences.IntegerProperty;
 import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.data.projection.ProjectionChangeListener;
-import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.layer.imagery.TileSourceDisplaySettings;
 import org.openstreetmap.josm.gui.layer.imagery.TileSourcePainter;
@@ -118,13 +117,6 @@ public class WMSLayer extends AbstractCachedTileSourceLayer<TemplatedWMSTileSour
     }
 
     @Override
-    public boolean isProjectionSupported(Projection proj) {
-        return supportedProjections == null || supportedProjections.isEmpty() || supportedProjections.contains(proj.toCode()) ||
-                (info.isEpsg4326To3857Supported() && supportedProjections.contains("EPSG:4326")
-                        && "EPSG:3857".equals(Main.getProjection().toCode()));
-    }
-
-    @Override
     public String nameSupportedProjections() {
         StringBuilder ret = new StringBuilder();
         for (String e: supportedProjections) {
@@ -139,27 +131,27 @@ public class WMSLayer extends AbstractCachedTileSourceLayer<TemplatedWMSTileSour
         return ret.substring(0, ret.length()-2) + appendix;
     }
 
-    @Override
-    public void projectionChanged(Projection oldValue, Projection newValue) {
-        // do not call super - we need custom warning dialog
-
-        if (!isProjectionSupported(newValue)) {
-            String message =
-                    "<html><body><p>" + tr("The layer {0} does not support the new projection {1}.", getName(), newValue.toCode()) +
-                    "<p style='width: 450px; position: absolute; margin: 0px;'>" +
-                            tr("Supported projections are: {0}", nameSupportedProjections()) + "</p>" +
-                    "<p>" + tr("Change the projection again or remove the layer.");
-
-            ExtendedDialog warningDialog = new ExtendedDialog(Main.parent, tr("Warning"), new String[]{tr("OK")}).
-                    setContent(message).
-                    setIcon(JOptionPane.WARNING_MESSAGE);
-
-            if (isReprojectionPossible()) {
-// TODO:               warningDialog.toggleEnable("imagery.wms.projectionSupportWarnings." + tileSource.getBaseUrl());
-            }
-            warningDialog.showDialog();
-        }
-    }
+//    @Override
+//    public void projectionChanged(Projection oldValue, Projection newValue) {
+//        // do not call super - we need custom warning dialog
+//
+//        if (!isProjectionSupported(newValue)) {
+//            String message =
+//                    "<html><body><p>" + tr("The layer {0} does not support the new projection {1}.", getName(), newValue.toCode()) +
+//                    "<p style='width: 450px; position: absolute; margin: 0px;'>" +
+//                            tr("Supported projections are: {0}", nameSupportedProjections()) + "</p>" +
+//                    "<p>" + tr("Change the projection again or remove the layer.");
+//
+//            ExtendedDialog warningDialog = new ExtendedDialog(Main.parent, tr("Warning"), new String[]{tr("OK")}).
+//                    setContent(message).
+//                    setIcon(JOptionPane.WARNING_MESSAGE);
+//
+//            if (isReprojectionPossible()) {
+//// TODO:               warningDialog.toggleEnable("imagery.wms.projectionSupportWarnings." + tileSource.getBaseUrl());
+//            }
+//            warningDialog.showDialog();
+//        }
+//    }
 
     @Override
     protected Class<? extends TileLoader> getTileLoaderClass() {
@@ -189,10 +181,17 @@ public class WMSLayer extends AbstractCachedTileSourceLayer<TemplatedWMSTileSour
 
     private static class WMSPainter extends TileSourcePainter<TemplatedWMSTileSource> {
         private final ProjectionChangeListener initOnProjectionChange = (oldValue, newValue) -> tileSource.initProjection(newValue);
+        private HashSet<String> supportedProjections;
 
         public WMSPainter(AbstractTileSourceLayer<TemplatedWMSTileSource> abstractTileSourceLayer, MapView mapView) {
             super(abstractTileSourceLayer, mapView);
             Main.addProjectionChangeListener(initOnProjectionChange);
+
+            ImageryInfo info2 = abstractTileSourceLayer.getInfo();
+            supportedProjections = new HashSet<>(info2.getServerProjections());
+            if (info2.isEpsg4326To3857Supported() && supportedProjections.contains("EPSG:4326")) {
+                supportedProjections.add("EPSG:3857");
+            }
 
             zoom.setZoomBounds(0, zoom.getMaxZoom());
         }
@@ -201,6 +200,12 @@ public class WMSLayer extends AbstractCachedTileSourceLayer<TemplatedWMSTileSour
         public void detachFromMapView(MapViewEvent event) {
             Main.removeProjectionChangeListener(initOnProjectionChange);
             super.detachFromMapView(event);
+        }
+
+        @Override
+        public boolean isProjectionSupported(Projection proj) {
+            return supportedProjections == null || supportedProjections.isEmpty() || supportedProjections.contains(proj.toCode());
+
         }
 
     }

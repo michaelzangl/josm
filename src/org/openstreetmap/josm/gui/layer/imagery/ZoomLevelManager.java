@@ -123,7 +123,6 @@ public class ZoomLevelManager {
             Main.debug("changing zoom level to: {0}", currentZoomLevel);
             currentZoomLevel = zoom;
             displayZoomLevel = zoom;
-//            zoomChanged();
             return true;
         }
     }
@@ -150,7 +149,11 @@ public class ZoomLevelManager {
         return setZoomLevel(currentZoomLevel - 1);
     }
 
-
+    /**
+     * Update the zoom level that should be displayed
+     * @param currentZoomState The coordinate converter that holds the current view
+     * @param viewStatus An accessor for finding out if the given tiles are available.
+     */
     public void updateZoomLevel(TileCoordinateConverter currentZoomState, TileSourcePainter<?> viewStatus) {
         int zoom = currentZoomLevel;
         if (settings.isAutoZoom()) {
@@ -175,15 +178,21 @@ public class ZoomLevelManager {
     }
 
     private int clampZoom(int intResult) {
-        intResult = Math.min(intResult, getMaxZoom());
-        intResult = Math.max(intResult, getMinZoom());
-        return intResult;
+        return Math.max(Math.min(intResult, getMaxZoom()), getMinZoom());
     }
 
+    /**
+     * Gets the current zoom level that is requested by the user for displaying the tiles.
+     * @return The current zoom level of the view
+     */
     public int getCurrentZoomLevel() {
         return currentZoomLevel;
     }
 
+    /**
+     * Gets the zoom level that is suggested to be displayed. This may be different depending on the tile loading settings.
+     * @return The suggested zoom.
+     */
     public int getDisplayZoomLevel() {
         return displayZoomLevel;
     }
