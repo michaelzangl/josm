@@ -3,9 +3,12 @@ package org.openstreetmap.josm.gui.layer.imagery;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.function.Supplier;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.Bounds;
 
 /**
@@ -13,70 +16,105 @@ import org.openstreetmap.josm.data.Bounds;
  * @author Michael Zangl
  * @since xxx
  */
-public class TileForAreaFinder implements Supplier<Stream<TilePosition>>{
-    protected final TileRange initialRange;
-    protected final TileAreaProducer rangeProducer;
+public class TileForAreaFinder {
 
-    public TileForAreaFinder(TileRange initialRange, TileAreaProducer rangeProducer) {
-        this.initialRange = initialRange;
-        this.rangeProducer = rangeProducer;
+    private TileForAreaFinder() {
+        // hidden
     }
 
-    @Override
-    public Stream<TilePosition> get() {
+    /**
+     * Get a stream of all tile positions to paint for the given zoom level.
+     * @param initialRange The range
+     * @param rangeProducer An object that converts between {@link Bounds} and {@link TilePosition}
+     * @return A stream of tiles to paint.
+     */
+    public static Stream<TilePosition> getAtDefaultZoom(TileRange initialRange, TileForAreaGetter rangeProducer) {
         return initialRange.tilePositions().filter(rangeProducer::isAvailable);
     }
 
-    public static class TileForAreaWithFallback extends TileForAreaFinder {
-        protected final ZoomLevelManager zoom;
+    /**
+     * Gets a stream of all positions to be painted taking the fallback zoom levels into account.
+     * <p>
+     * Limiting the resulting stream won't change the performance of this method. It returns a stream so that this may be changed in the future.
+     *
+     * @param initialRange The range
+     * @param rangeProducer An object that converts between {@link Bounds} and {@link TilePosition}
+     * @param zoom The zoom levels to try at.
+     * @return A stream of tiles to paint.
+     */
+    public static Stream<TilePosition> getWithFallbackZoom(TileRange initialRange, TileForAreaGetter rangeProducer, ZoomLevelManager zoom) {
+        ArrayList<TilePosition> list = new ArrayList<>();
+        List<List<Bounds>> missedInPreviousRuns = new ArrayList<>();
+        List<Bounds> missed = initialRange.tilePositions().flatMap(pos -> addPosition(pos, rangeProducer, list)).collect(Collectors.toList());
+        List<Bounds> missedInLastRun = missed;
 
-        public TileForAreaWithFallback(TileRange initialRange, TileAreaProducer rangeProducer, ZoomLevelManager zoom) {
-            super(initialRange, rangeProducer);
-            this.zoom = zoom;
-        }
-
-        @Override
-        public Stream<TilePosition> get() {
-            ArrayList<TilePosition> list = new ArrayList<>();
-            ArrayList<Bounds> missedOnFirstRun = new ArrayList<>();
-            initialRange.tilePositions().forEach(pos -> addPosition(pos, list, missedOnFirstRun));
-            ArrayList<Bounds> lastMissed = missedOnFirstRun;
-
-            for (int delta : new int[] { -1, 1, -2, 2, -3, -4, -5 }) {
-                int zoomLevel = delta + initialRange.getZoom();
-                if (zoomLevel < zoom.getMinZoom() || zoomLevel > zoom.getMaxZoom()) {
-                    ArrayList<Bounds> newlyMissed = new ArrayList<>();
-                    lastMissed.stream().flatMap(b -> rangeProducer.toRangeAtZoom(b, zoomLevel).tilePositions())
-                            .forEach(pos -> addPosition(pos, list, newlyMissed));
-                    lastMissed = newlyMissed;
+        for (int delta : new int[] { -1, 1, -2, 2, -3, -4, -5 }) {
+            int zoomLevel = delta + initialRange.getZoom();
+            if (zoomLevel >= zoom.getMinZoom() && zoomLevel <= zoom.getMaxZoom()) {
+                missed = missedInLastRun
+                    .stream()
+                    .flatMap(b -> rangeProducer.toRangeAtZoom(b, zoomLevel).tilePositions())
+                    .distinct()
+                    .filter(tile -> missedInPreviousRuns.stream().allMatch(l -> l.stream().anyMatch(rangeProducer.getBounds(tile)::intersects)))
+                    .flatMap(pos -> addPosition(pos, rangeProducer, list))
+                    .collect(Collectors.toList());
+                Main.trace("Still missed {0} tile areas at zoom {1}.", missed.size(), zoomLevel);
+                if (missed.isEmpty()) {
+                    break;
                 }
-            }
 
-            Collections.reverse(list);
-            return list.stream();
+                missedInPreviousRuns.add(missedInLastRun);
+                missedInLastRun = missed;
+            }
+            // no break condition. But missed will be empty, so flatMap should not be costy.
         }
 
-        private void addPosition(TilePosition pos, ArrayList<TilePosition> addTo, ArrayList<Bounds> missed) {
-            if (rangeProducer.isAvailable(pos)) {
-                addTo.add(pos);
-            } else {
-                missed.add(rangeProducer.getBounds(pos));
-            }
-        }
-
+        Collections.reverse(list);
+        return list.stream().distinct();
     }
 
-    public interface TileAreaProducer {
+    private static Stream<Bounds> addRange(Bounds b, TileForAreaGetter rangeProducer, ArrayList<TilePosition> list,
+            int zoomLevel) {
+        return rangeProducer.toRangeAtZoom(b, zoomLevel).tilePositions()
+            .flatMap(pos -> addPosition(pos, rangeProducer, list))
+            .map(b::intersect).filter(Objects::nonNull);
+    }
+
+    private static Stream<Bounds> addPosition(TilePosition pos, TileForAreaGetter rangeProducer, ArrayList<TilePosition> addTo) {
+        if (rangeProducer.isAvailable(pos)) {
+            addTo.add(pos);
+            return Stream.empty();
+        } else {
+            return Stream.of(rangeProducer.getBounds(pos));
+        }
+    }
+
+    /**
+     * Classes implementing this interface allow us to convert between a tile range and {@link Bounds}.
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public interface TileForAreaGetter {
         /**
          * Gets a tile range that is enclosing this tile at the given zoom level.
-         * @param tile
-         * @param zoom
-         * @return
+         * @param bounds The bounds to get the range for
+         * @param zoom The zoom the range should be at
+         * @return The range for the given bounds.
          */
         public TileRange toRangeAtZoom(Bounds bounds, int zoom);
 
+        /**
+         * Gets the bounds for a tile
+         * @param tile The tile
+         * @return The bounds for that tile
+         */
         public Bounds getBounds(TilePosition tile);
 
+        /**
+         * Checks if an image is available for the given tile
+         * @param tile The tile to check
+         * @return True if it is available.
+         */
         public boolean isAvailable(TilePosition tile);
 
     }

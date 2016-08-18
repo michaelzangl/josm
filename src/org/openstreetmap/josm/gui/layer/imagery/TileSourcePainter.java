@@ -67,8 +67,7 @@ import org.openstreetmap.josm.gui.layer.ImageryLayer;
 import org.openstreetmap.josm.gui.layer.MapViewGraphics;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable.LayerPainter;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable.MapViewEvent;
-import org.openstreetmap.josm.gui.layer.imagery.TileForAreaFinder.TileAreaProducer;
-import org.openstreetmap.josm.gui.layer.imagery.TileForAreaFinder.TileForAreaWithFallback;
+import org.openstreetmap.josm.gui.layer.imagery.TileForAreaFinder.TileForAreaGetter;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.GBC;
@@ -77,7 +76,7 @@ import org.openstreetmap.josm.tools.MemoryManager.MemoryHandle;
 import org.openstreetmap.josm.tools.MemoryManager.NotEnoughMemoryException;
 import org.openstreetmap.josm.tools.Pair;
 
-public class TileSourcePainter<T extends AbstractTMSTileSource> implements LayerPainter, ZoomChangeListener, TileAreaProducer {
+public class TileSourcePainter<T extends AbstractTMSTileSource> implements LayerPainter, ZoomChangeListener, TileForAreaGetter {
     /**
      *
      */
@@ -220,11 +219,11 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
 
         Shape clip = g.getClip();
         g.setClip(converter.getProjectionClip());
-        TileForAreaFinder area;
+        Stream<TilePosition> area;
         if (getSettings().isAutoZoom()) {
-            area = new TileForAreaWithFallback(baseRange, this, zoom);
+            area = TileForAreaFinder.getWithFallbackZoom(baseRange, this, zoom);
         } else {
-            area = new TileForAreaFinder(baseRange, this);
+            area = TileForAreaFinder.getAtDefaultZoom(baseRange, this);
         }
         paintTileImages(g, area);
         g.setClip(clip);
@@ -271,13 +270,13 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         g.draw(area);
     }
 
-    private void paintTileImages(Graphics2D g, TileForAreaFinder area) {
+    private void paintTileImages(Graphics2D g, Stream<TilePosition> area) {
         TileCoordinateConverter converter = generateCoordinateConverter();
         Rectangle b = g.getClipBounds();
         int maxTiles = (int) (b.getWidth() * b.getHeight() / tileSource.getTileSize() / tileSource.getTileSize() * 5);
-        area.get()
-            .parallel()
+        area.parallel()
             .limit(Math.min(maxTiles, MAX_TILES))
+            .peek(t -> Main.trace("Paint: " + t))
             .map(this::getTile)
             .filter(Objects::nonNull)
             .map(tile -> new Pair<>(tile, tile.getImage()))
@@ -451,7 +450,6 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
         }
     }
 
-
     /**
      * Check if this tile source contains the given position.
      * @param position The position
@@ -474,7 +472,7 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
             if (isTooLarge(range)) {
                 Main.warn("Not downloading all tiles because there are too many tiles on an axis!");
             } else {
-                range.tilePositionsSorted().forEach(t -> loadTile(t, force));
+                range.tilePositionsSorted().filter(this::contains).forEach(t -> loadTile(t, force));
             }
         }
     }
@@ -505,7 +503,7 @@ public class TileSourcePainter<T extends AbstractTMSTileSource> implements Layer
     private boolean loadTile(Tile tile, boolean force) {
         if (tile == null)
             return false;
-        if (!force && (tile.isLoaded() || tile.hasError()))
+        if (!force && (tile.isLoaded() || tile.hasError() || isOverzoomed(tile)))
             return false;
         if (tile.isLoading())
             return false;
