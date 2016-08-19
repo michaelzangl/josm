@@ -401,7 +401,7 @@ public class Bounds {
      * @return The intersection area or <code>null</code> if they do not intersect.
      */
     public Bounds intersect(Bounds other) {
-        if (crosses180thMeridian()) {
+        if (crosses180thMeridian() || other.crosses180thMeridian()) {
             throw new UnsupportedOperationException();
         } else {
             Bounds bounds = new Bounds(
