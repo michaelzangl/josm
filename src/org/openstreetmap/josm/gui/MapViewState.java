@@ -46,13 +46,13 @@ public final class MapViewState {
      * A flag indicating that the point is outside to the left of the map view.
      * @since 10827
      */
-    public static final int OUTSIDE_LEFT = 3;
+    public static final int OUTSIDE_LEFT = 4;
 
     /**
      * A flag indicating that the point is outside to the right of the map view.
      * @since 10827
      */
-    public static final int OUTSIDE_RIGHT = 4;
+    public static final int OUTSIDE_RIGHT = 8;
 
     private final Projecting projecting;
 
