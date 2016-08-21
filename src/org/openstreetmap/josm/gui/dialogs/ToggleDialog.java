@@ -620,9 +620,7 @@ public class ToggleDialog extends JPanel implements ShowHideButtonListener, Help
                     buttonHidingMenu.add(rb);
                 }
                 add(buttonHidingMenu);
-                for (javax.swing.Action action: buttonActions) {
-                    add(action);
-                }
+                addPopupDialogActions(this);
             }
         }
 
@@ -656,6 +654,12 @@ public class ToggleDialog extends JPanel implements ShowHideButtonListener, Help
                     }
                 }
             }
+        }
+    }
+
+    protected void addPopupDialogActions(JPopupMenu dialog) {
+        for (javax.swing.Action action: buttonActions) {
+            dialog.add(action);
         }
     }
 
