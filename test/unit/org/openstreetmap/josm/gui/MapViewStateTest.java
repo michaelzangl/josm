@@ -196,6 +196,20 @@ public class MapViewStateTest {
     }
 
     /**
+     * Test {@link MapViewPoint#oneNormInView(MapViewPoint)}
+     * @since xxx
+     */
+    @Test
+    public void testPointOneNormInView() {
+        MapViewPoint p = state.getForView(5, 15);
+        assertEquals(0, p.oneNormInView(p), 1e-10);
+        assertEquals(6, p.oneNormInView(state.getForView(-1, 15)), 1e-10);
+        assertEquals(5, p.oneNormInView(state.getForView(5, 20)), 1e-10);
+        assertEquals(22, p.oneNormInView(state.getForView(-1, -1)), 1e-10);
+        assertEquals(40, p.oneNormInView(state.getForView(30, 30)), 1e-10);
+    }
+
+    /**
      * Test {@link MapViewState.MapViewViewPoint#toString()} and {@link MapViewState.MapViewEastNorthPoint#toString()}
      */
     @Test
