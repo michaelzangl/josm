@@ -498,7 +498,7 @@ public final class MapViewState {
          * @since 10827
          */
         public double oneNormInView(MapViewPoint p2) {
-            return Math.abs(getInViewX() - p2.getInViewX()) + Math.abs(getInViewY()) - p2.getInViewY();
+            return Math.abs(getInViewX() - p2.getInViewX()) + Math.abs(getInViewY() - p2.getInViewY());
         }
 
         /**
