@@ -1,6 +1,7 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.data.projection.datum;
 
+import org.openstreetmap.josm.data.coor.ILatLon;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.projection.Ellipsoid;
 
@@ -17,14 +18,14 @@ public class NTV2Datum extends AbstractDatum {
     }
 
     @Override
-    public LatLon toWGS84(LatLon ll) {
+    public LatLon toWGS84(ILatLon ll) {
         NTV2GridShift gs = new NTV2GridShift(ll);
         nadgrids.getShiftFile().gridShiftForward(gs);
         return new LatLon(ll.lat() + gs.getLatShiftDegrees(), ll.lon() + gs.getLonShiftPositiveEastDegrees());
     }
 
     @Override
-    public LatLon fromWGS84(LatLon ll) {
+    public ILatLon fromWGS84(ILatLon ll) {
         NTV2GridShift gs = new NTV2GridShift(ll);
         nadgrids.getShiftFile().gridShiftReverse(gs);
         return new LatLon(ll.lat() + gs.getLatShiftDegrees(), ll.lon() + gs.getLonShiftPositiveEastDegrees());

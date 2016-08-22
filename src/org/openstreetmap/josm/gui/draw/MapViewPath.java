@@ -2,7 +2,7 @@
 package org.openstreetmap.josm.gui.draw;
 
 import org.openstreetmap.josm.data.coor.EastNorth;
-import org.openstreetmap.josm.data.osm.Node;
+import org.openstreetmap.josm.data.coor.ILatLon;
 import org.openstreetmap.josm.gui.MapViewState;
 import org.openstreetmap.josm.gui.MapViewState.MapViewPoint;
 import org.openstreetmap.josm.gui.mappaint.styleelement.Symbol.SymbolShape;
@@ -29,8 +29,8 @@ public class MapViewPath extends MapPath2D {
      * @param n The node
      * @return this for easy chaining.
      */
-    public MapViewPath moveTo(Node n) {
-        moveTo(n.getEastNorth());
+    public MapViewPath moveTo(ILatLon n) {
+        moveTo(n.getEastNorth(state.getProjecting()));
         return this;
     }
 
@@ -55,8 +55,8 @@ public class MapViewPath extends MapPath2D {
      * @param n The node
      * @return this for easy chaining.
      */
-    public MapViewPath lineTo(Node n) {
-        lineTo(n.getEastNorth());
+    public MapViewPath lineTo(ILatLon n) {
+        lineTo(n.getEastNorth(state.getProjecting()));
         return this;
     }
 
@@ -83,8 +83,8 @@ public class MapViewPath extends MapPath2D {
      * @param size The size of the symbol in pixel
      * @return this for easy chaining.
      */
-    public MapViewPath shapeAround(Node p1, SymbolShape symbol, double size) {
-        shapeAround(p1.getEastNorth(), symbol, size);
+    public MapViewPath shapeAround(ILatLon p1, SymbolShape symbol, double size) {
+        shapeAround(p1.getEastNorth(state.getProjecting()), symbol, size);
         return this;
     }
 
@@ -112,7 +112,7 @@ public class MapViewPath extends MapPath2D {
      * @param connect <code>true</code> if we should use a lineTo as first command.
      * @return this for easy chaining.
      */
-    public MapViewPath append(Iterable<Node> nodes, boolean connect) {
+    public MapViewPath append(Iterable<? extends ILatLon> nodes, boolean connect) {
         appendWay(nodes, connect, false);
         return this;
     }
@@ -123,15 +123,15 @@ public class MapViewPath extends MapPath2D {
      * @param connect <code>true</code> if we should use a lineTo as first command.
      * @return this for easy chaining.
      */
-    public MapViewPath appendClosed(Iterable<Node> nodes, boolean connect) {
+    public MapViewPath appendClosed(Iterable<? extends ILatLon> nodes, boolean connect) {
         appendWay(nodes, connect, true);
         return this;
     }
 
-    private void appendWay(Iterable<Node> nodes, boolean connect, boolean close) {
+    private void appendWay(Iterable<? extends ILatLon> nodes, boolean connect, boolean close) {
         boolean useMoveTo = !connect;
-        Node first = null;
-        for (Node n : nodes) {
+        ILatLon first = null;
+        for (ILatLon n : nodes) {
             if (useMoveTo) {
                 moveTo(n);
             } else {

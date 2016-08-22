@@ -5,6 +5,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 import java.util.Objects;
 
+import org.openstreetmap.josm.data.coor.ILatLon;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.coor.QuadTiling;
 import org.openstreetmap.josm.tools.Utils;
@@ -75,22 +76,21 @@ public class BBox {
 
     public BBox(Way w) {
         for (Node n : w.getNodes()) {
-            LatLon coor = n.getCoor();
-            if (coor == null) {
-                continue;
-            }
-            add(coor);
+            add(n);
+        }
+    }
+
+    public BBox(ILatLon n) {
+        if (!n.isLatLonKnown()) {
+            xmin = xmax = ymin = ymax = 0;
+        } else {
+            xmin = xmax = n.lon();
+            ymin = ymax = n.lat();
         }
     }
 
     public BBox(Node n) {
-        LatLon coor = n.getCoor();
-        if (coor == null) {
-            xmin = xmax = ymin = ymax = 0;
-        } else {
-            xmin = xmax = coor.lon();
-            ymin = ymax = coor.lat();
-        }
+        this((ILatLon) n);
     }
 
     private void sanity() {
@@ -110,6 +110,12 @@ public class BBox {
 
     public final void add(LatLon c) {
         add(c.lon(), c.lat());
+    }
+
+    public final void add(ILatLon c) {
+        if (c.isLatLonKnown()) {
+            add(c.lon(), c.lat());
+        }
     }
 
     /**

@@ -6,6 +6,7 @@
  */
 package org.openstreetmap.josm.data.projection;
 
+import org.openstreetmap.josm.data.coor.ILatLon;
 import org.openstreetmap.josm.data.coor.LatLon;
 
 /**
@@ -347,7 +348,7 @@ public final class Ellipsoid {
      * @param coord The Latitude and longitude in degrees
      * @return the corresponding (X, Y Z) cartesian coordinates in meters.
      */
-    public double[] latLon2Cart(LatLon coord) {
+    public double[] latLon2Cart(ILatLon coord) {
         double phi = Math.toRadians(coord.lat());
         double lambda = Math.toRadians(coord.lon());
 

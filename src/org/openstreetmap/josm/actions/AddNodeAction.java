@@ -66,7 +66,7 @@ public final class AddNodeAction extends JosmAction {
         Main.main.undoRedo.add(new AddCommand(nnew));
         getLayerManager().getEditDataSet().setSelected(nnew);
         if (Main.map.mapView != null) {
-            if (Main.map.mapView.getRealBounds().contains(nnew.getCoor())) {
+            if (Main.map.mapView.getRealBounds().contains(nnew)) {
                 Main.map.mapView.repaint();
             } else {
                 AutoScaleAction.zoomTo(Collections.<OsmPrimitive>singleton(nnew));

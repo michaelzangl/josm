@@ -1,6 +1,7 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.data.projection.datum;
 
+import org.openstreetmap.josm.data.coor.ILatLon;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.projection.Ellipsoid;
 
@@ -33,12 +34,12 @@ public interface Datum {
      * @param ll original lat/lon in this datum
      * @return lat/lon converted to WGS84
      */
-    LatLon toWGS84(LatLon ll);
+    LatLon toWGS84(ILatLon ll);
 
     /**
      * Convert lat/lon from {@link Ellipsoid#WGS84} to this datum.
      * @param ll original lat/lon in WGS84
      * @return converted lat/lon in this datum
      */
-    LatLon fromWGS84(LatLon ll);
+    ILatLon fromWGS84(ILatLon ll);
 }

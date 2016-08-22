@@ -21,7 +21,7 @@ package org.openstreetmap.josm.data.projection.datum;
 
 import java.io.Serializable;
 
-import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.coor.ILatLon;
 import org.openstreetmap.josm.data.projection.Ellipsoid;
 
 /**
@@ -62,7 +62,7 @@ public class NTV2GridShift implements Serializable {
      * Constructs a new {@code NTV2GridShift} from a {@code LatLon}.
      * @param p lat/lon
      */
-    public NTV2GridShift(LatLon p) {
+    public NTV2GridShift(ILatLon p) {
         setLatDegrees(p.lat());
         setLonPositiveEastDegrees(p.lon());
     }

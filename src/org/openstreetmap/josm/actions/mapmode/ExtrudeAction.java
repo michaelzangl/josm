@@ -1062,12 +1062,13 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
                     }
                 } else if (mode == Mode.translate || mode == Mode.translate_node) {
                     g2.setColor(mainColor);
-                    if (p1.distance(p2) < 3) {
+                    MapViewPath line = new MapViewPath(mv.getState()).moveTo(p1).lineTo(p2);
+                    if (line.getBounds2D().getWidth() < 3 && line.getBounds2D().getHeight() < 3) {
                         g2.setStroke(mainStroke);
-                        g2.draw(new MapViewPath(mv.getState()).shapeAround(p1, SymbolShape.CIRCLE, symbolSize));
+                        g2.draw(new MapViewPath(mv.getState()).shapeAround(p1.interpolate(p2, .5), SymbolShape.CIRCLE, symbolSize));
                     } else {
                         g2.setStroke(oldLineStroke);
-                        g2.draw(new MapViewPath(mv.getState()).moveTo(p1).lineTo(p2));
+                        g2.draw(line);
                     }
 
                     if (dualAlignActive) {

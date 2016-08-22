@@ -4,7 +4,7 @@ package org.openstreetmap.josm.data.coor;
 import java.util.Objects;
 
 import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.data.projection.Projection;
+import org.openstreetmap.josm.data.projection.Projecting;
 
 /**
  * LatLon class that maintains a cache of projected EastNorth coordinates.
@@ -19,7 +19,7 @@ public class CachedLatLon extends LatLon {
     private static final long serialVersionUID = 1L;
 
     private EastNorth eastNorth;
-    private transient Projection proj;
+    private transient Object proj;
 
     /**
      * Constructs a new {@code CachedLatLon}.
@@ -45,7 +45,7 @@ public class CachedLatLon extends LatLon {
      */
     public CachedLatLon(EastNorth eastNorth) {
         super(Main.getProjection().eastNorth2latlon(eastNorth));
-        proj = Main.getProjection();
+        proj = Main.getProjection().getCacheKey();
         this.eastNorth = eastNorth;
     }
 
@@ -54,10 +54,11 @@ public class CachedLatLon extends LatLon {
      *
      * @return the internally cached east/north coordinates. null, if the globally defined projection is null
      */
-    public final EastNorth getEastNorth() {
-        if (!Objects.equals(proj, Main.getProjection())) {
-            proj = Main.getProjection();
-            eastNorth = proj.latlon2eastNorth(this);
+    @Override
+    public final EastNorth getEastNorth(Projecting projecting) {
+        if (!Objects.equals(proj, projecting.getCacheKey())) {
+            proj = projecting.getCacheKey();
+            eastNorth = projecting.latlon2eastNorth(this);
         }
         return eastNorth;
     }

@@ -1,6 +1,7 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.data.projection.datum;
 
+import org.openstreetmap.josm.data.coor.ILatLon;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.projection.Ellipsoid;
 
@@ -19,7 +20,7 @@ public class ThreeParameterDatum extends AbstractDatum {
     }
 
     @Override
-    public LatLon toWGS84(LatLon ll) {
+    public LatLon toWGS84(ILatLon ll) {
         double[] xyz = ellps.latLon2Cart(ll);
         xyz[0] += dx;
         xyz[1] += dy;
@@ -28,7 +29,7 @@ public class ThreeParameterDatum extends AbstractDatum {
     }
 
     @Override
-    public LatLon fromWGS84(LatLon ll) {
+    public ILatLon fromWGS84(ILatLon ll) {
         double[] xyz = Ellipsoid.WGS84.latLon2Cart(ll);
         xyz[0] -= dx;
         xyz[1] -= dy;

@@ -17,8 +17,8 @@ import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.ProjectionBounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.data.coor.ILatLon;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.projection.Projecting;
 import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.gui.download.DownloadDialog;
@@ -174,24 +174,13 @@ public final class MapViewState implements Serializable {
     }
 
     /**
-     * Gets the {@link MapViewPoint} for the given {@link LatLon} coordinate.
-     * @param latlon the position
-     * @return The point for that position.
-     * @since 10651
+     * Gets the {@link MapViewPoint} for the given lat lon coordinates.
+     * @param latlon The lat lon position, e.g. a node
+     * @return The position of that object.
+     * @since xxx
      */
-    public MapViewPoint getPointFor(LatLon latlon) {
-        return getPointFor(getProjection().latlon2eastNorth(latlon));
-    }
-
-    /**
-     * Gets the {@link MapViewPoint} for the given node. This is faster than {@link #getPointFor(LatLon)} because it uses the node east/north
-     * cache.
-     * @param node The node
-     * @return The position of that node.
-     * @since 10827
-     */
-    public MapViewPoint getPointFor(Node node) {
-        return getPointFor(node.getEastNorth(getProjection()));
+    public MapViewPoint getPointFor(ILatLon latlon) {
+        return getPointFor(latlon.getEastNorth(getProjecting()));
     }
 
     /**
@@ -248,9 +237,19 @@ public final class MapViewState implements Serializable {
     /**
      * Gets the current projection used for the MapView.
      * @return The projection.
+     * @see #getProjecting()
      */
     public Projection getProjection() {
         return projecting.getBaseProjection();
+    }
+
+    /**
+     * Gets the current projecting instance that is used to convert between east/north and lat/lon space.
+     * @return The projection.
+     * @since xxx
+     */
+    public Projecting getProjecting() {
+        return projecting;
     }
 
     /**
