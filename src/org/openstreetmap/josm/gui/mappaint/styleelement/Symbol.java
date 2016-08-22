@@ -85,37 +85,7 @@ public class Symbol {
      * @return The symbol shape.
      */
     public Shape buildShapeAround(double x, double y) {
-        int radius = size / 2;
-        Shape shape;
-        switch (symbolShape) {
-        case SQUARE:
-            // optimize for performance reasons
-            shape = new Rectangle2D.Double(x - radius, y - radius, size, size);
-            break;
-        case CIRCLE:
-            shape = new Ellipse2D.Double(x - radius, y - radius, size, size);
-            break;
-        default:
-            shape = buildPolygon(x, y, radius);
-            break;
-        }
-        return shape;
-    }
-
-    private Shape buildPolygon(double cx, double cy, int radius) {
-        GeneralPath polygon = new GeneralPath();
-        for (int i = 0; i < symbolShape.sides; i++) {
-            double angle = ((2 * Math.PI / symbolShape.sides) * i) - symbolShape.rotation;
-            double x = cx + radius * Math.cos(angle);
-            double y = cy + radius * Math.sin(angle);
-            if (i == 0) {
-                polygon.moveTo(x, y);
-            } else {
-                polygon.lineTo(x, y);
-            }
-        }
-        polygon.closePath();
-        return polygon;
+        return symbolShape.shapeAround(x, y, size);
     }
 
     /**
@@ -168,6 +138,47 @@ public class Symbol {
             this.name = name;
             this.sides = sides;
             this.rotation = rotation;
+        }
+
+        /**
+         * Create the path for this shape around the given position
+         * @param x The x position
+         * @param y The y position
+         * @param size The size (width for rect, diameter for rest)
+         * @return The symbol.
+         */
+        public Shape shapeAround(double x, double y, double size) {
+            double radius = size / 2;
+            Shape shape;
+            switch (this) {
+            case SQUARE:
+                // optimize for performance reasons
+                shape = new Rectangle2D.Double(x - radius, y - radius, size, size);
+                break;
+            case CIRCLE:
+                shape = new Ellipse2D.Double(x - radius, y - radius, size, size);
+                break;
+            default:
+                shape = buildPolygon(x, y, radius);
+                break;
+            }
+            return shape;
+        }
+
+        private Shape buildPolygon(double cx, double cy, double radius) {
+            GeneralPath polygon = new GeneralPath();
+            for (int i = 0; i < sides; i++) {
+                double angle = ((2 * Math.PI / sides) * i) - rotation;
+                double x = cx + radius * Math.cos(angle);
+                double y = cy + radius * Math.sin(angle);
+                if (i == 0) {
+                    polygon.moveTo(x, y);
+                } else {
+                    polygon.lineTo(x, y);
+                }
+            }
+            polygon.closePath();
+            return polygon;
         }
 
         /**
