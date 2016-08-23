@@ -121,7 +121,6 @@ public class OsmDataLayer extends AbstractModifiableLayer implements Listener, S
 
     private boolean requiresSaveToFile;
     private boolean requiresUploadToServer;
-    private boolean isChanged = true;
     private int highlightUpdateCount;
 
     /**
@@ -390,7 +389,6 @@ public class OsmDataLayer extends AbstractModifiableLayer implements Listener, S
      * Draw nodes last to overlap the ways they belong to.
      */
     @Override public void paint(final Graphics2D g, final MapView mv, Bounds box) {
-        isChanged = false;
         highlightUpdateCount = data.getHighlightUpdateCount();
 
         boolean active = mv.getLayerManager().getActiveLayer() == this;
@@ -952,7 +950,6 @@ public class OsmDataLayer extends AbstractModifiableLayer implements Listener, S
 
     @Override
     public void invalidate() {
-        isChanged = true;
         super.invalidate();
     }
 
