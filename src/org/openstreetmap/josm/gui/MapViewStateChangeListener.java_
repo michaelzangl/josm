@@ -1,0 +1,77 @@
+// License: GPL. For details, see LICENSE file.
+package org.openstreetmap.josm.gui;
+
+import org.openstreetmap.josm.tools.Utils;
+
+/**
+ * This interface can be used to listen to map view zoom and size changes.
+ *
+ * @author Michael Zangl
+ * @since xxx
+ */
+@FunctionalInterface
+public interface MapViewStateChangeListener {
+
+    void mapViewStateChanged(MapViewStateChangeEvent event);
+
+    /**
+     * This is the event that holds the old and the new map view state.
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public static class MapViewStateChangeEvent {
+        private final NavigatableComponent source;
+        private final MapViewState oldState;
+        private final MapViewState newState;
+
+        /**
+         * Create a new state change event.
+         * @param source The source
+         * @param oldState The old state
+         * @param newState The new state
+         */
+        public MapViewStateChangeEvent(NavigatableComponent source, MapViewState oldState, MapViewState newState) {
+            super();
+            this.source = source;
+            this.oldState = oldState;
+            this.newState = newState;
+        }
+
+        /**
+         * @return the previous state
+         */
+        public MapViewState getOldState() {
+            return oldState;
+        }
+
+        /**
+         * @return the new (current) state
+         */
+        public MapViewState getNewState() {
+            return newState;
+        }
+
+        /**
+         * @return The map view causing this change.
+         */
+        public NavigatableComponent getSource() {
+            return source;
+        }
+
+        /**
+         * Checks if the zoom was changed in this event
+         * @return <code>true</code> if the zoom was changed.
+         */
+        public boolean zoomChanged() {
+            return Utils.equalsEpsilon(oldState.getScale(), newState.getScale());
+        }
+
+        @Override
+        public String toString() {
+            return "MapViewStateChangeEvent [source=" + source + ", oldState=" + oldState + ", newState=" + newState
+                    + "]";
+        }
+
+    }
+
+}

@@ -7,17 +7,20 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.List;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JMenuItem;
 import javax.swing.ListCellRenderer;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.MainMenu;
+import org.openstreetmap.josm.gui.menu.search.SearchResult;
+import org.openstreetmap.josm.gui.menu.search.SearchTask;
+import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.gui.widgets.SearchTextResultListPanel;
 import org.openstreetmap.josm.tools.Shortcut;
 
@@ -59,9 +62,10 @@ public final class MenuItemSearchDialog extends ExtendedDialog {
         }
     }
 
-    private static class Selector extends SearchTextResultListPanel<JMenuItem> {
+    private static class Selector extends SearchTextResultListPanel<SearchResult> {
 
         private final MainMenu menu;
+        private SearchTask task;
 
         Selector(MainMenu menu) {
             super();
@@ -69,8 +73,15 @@ public final class MenuItemSearchDialog extends ExtendedDialog {
             lsResult.setCellRenderer(new CellRenderer());
         }
 
-        public JMenuItem getSelectedItem() {
-            final JMenuItem selected = lsResult.getSelectedValue();
+        @Override
+        public synchronized void init() {
+            task = new SearchTask(results -> GuiHelper.runInEDT(() -> updateResults(results)));
+            task.start();
+            super.init();
+        }
+
+        public SearchResult getSelectedItem() {
+            final SearchResult selected = lsResult.getSelectedValue();
             if (selected != null) {
                 return selected;
             } else if (!lsResultModel.isEmpty()) {
@@ -82,31 +93,37 @@ public final class MenuItemSearchDialog extends ExtendedDialog {
 
         @Override
         protected void filterItems() {
-            lsResultModel.setItems(menu.findMenuItems(edSearchText.getText(), true));
+            task.search(edSearchText.getText());
+        }
+
+        private void updateResults(List<SearchResult> results) {
+            lsResultModel.setItems(results);
         }
     }
 
-    private static class CellRenderer implements ListCellRenderer<JMenuItem> {
+    private static class CellRenderer implements ListCellRenderer<SearchResult> {
 
         private final DefaultListCellRenderer def = new DefaultListCellRenderer();
 
         @Override
-        public Component getListCellRendererComponent(JList<? extends JMenuItem> list, JMenuItem value, int index,
+        public Component getListCellRendererComponent(JList<? extends SearchResult> list, SearchResult value, int index,
                                                       boolean isSelected, boolean cellHasFocus) {
+
+
             final JLabel label = (JLabel) def.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            label.setText(value.getText());
+            label.setText(value.getCommandName());
             label.setIcon(value.getIcon());
             label.setEnabled(value.isEnabled());
-            final JMenuItem item = new JMenuItem(value.getText());
-            item.setAction(value.getAction());
+//            final JMenuItem item = new JMenuItem(value.getText());
+//            item.setAction(value.getAction());
             if (isSelected) {
-                item.setBackground(list.getSelectionBackground());
-                item.setForeground(list.getSelectionForeground());
+                label.setBackground(list.getSelectionBackground());
+                label.setForeground(list.getSelectionForeground());
             } else {
-                item.setBackground(list.getBackground());
-                item.setForeground(list.getForeground());
+                label.setBackground(list.getBackground());
+                label.setForeground(list.getForeground());
             }
-            return item;
+            return label;
         }
     }
 

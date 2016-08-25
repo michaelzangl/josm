@@ -36,6 +36,7 @@ import org.openstreetmap.josm.gui.layer.LayerManager.LayerAddEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerChangeListener;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerOrderChangeEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerRemoveEvent;
+import org.openstreetmap.josm.gui.menu.JosmMenu;
 import org.openstreetmap.josm.gui.preferences.imagery.ImageryPreference;
 import org.openstreetmap.josm.tools.ImageProvider;
 
@@ -44,7 +45,7 @@ import org.openstreetmap.josm.tools.ImageProvider;
  * depending on current maview coordinates.
  * @since 3737
  */
-public class ImageryMenu extends JMenu implements LayerChangeListener {
+public class ImageryMenu extends JosmMenu implements LayerChangeListener {
 
     /**
      * Compare ImageryInfo objects alphabetically by name.
@@ -105,7 +106,7 @@ public class ImageryMenu extends JMenu implements LayerChangeListener {
      */
     public ImageryMenu(JMenu subMenu) {
         /* I18N: mnemonic: I */
-        super(trc("menu", "Imagery"));
+        super("Imagery", trc("menu", "Imagery"));
         setupMenuScroller();
         Main.getLayerManager().addLayerChangeListener(this);
         // build dynamically

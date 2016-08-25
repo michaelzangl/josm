@@ -16,13 +16,9 @@ import java.util.Map;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.AboutAction;
@@ -116,9 +112,12 @@ import org.openstreetmap.josm.actions.audio.AudioSlowerAction;
 import org.openstreetmap.josm.actions.search.SearchAction;
 import org.openstreetmap.josm.gui.dialogs.MenuItemSearchDialog;
 import org.openstreetmap.josm.gui.io.RecentlyOpenedFilesMenu;
-import org.openstreetmap.josm.gui.layer.MainLayerManager.ActiveLayerChangeEvent;
-import org.openstreetmap.josm.gui.layer.MainLayerManager.ActiveLayerChangeListener;
 import org.openstreetmap.josm.gui.mappaint.MapPaintMenu;
+import org.openstreetmap.josm.gui.menu.JosmMenu;
+import org.openstreetmap.josm.gui.menu.JosmMenuBar;
+import org.openstreetmap.josm.gui.menu.JosmMenuItem;
+import org.openstreetmap.josm.gui.menu.MenuInsertionFinder;
+import org.openstreetmap.josm.gui.menu.search.SearchRegistry;
 import org.openstreetmap.josm.gui.preferences.imagery.ImageryPreference;
 import org.openstreetmap.josm.gui.preferences.map.TaggingPresetPreference;
 import org.openstreetmap.josm.gui.tagging.presets.TaggingPresetSearchAction;
@@ -133,7 +132,7 @@ import org.openstreetmap.josm.tools.Shortcut;
  *
  * @author Immanuel.Scholz
  */
-public class MainMenu extends JMenuBar {
+public class MainMenu extends JosmMenuBar {
 
     public enum WINDOW_MENU_GROUP { ALWAYS, TOGGLE_DIALOG, VOLATILE }
 
@@ -400,41 +399,6 @@ public class MainMenu extends JMenuBar {
     public final DialogsToggleAction dialogsToggleAction = new DialogsToggleAction();
     public FullscreenToggleAction fullscreenToggleAction;
 
-    /** this menu listener hides unnecessary JSeparators in a menu list but does not remove them.
-     * If at a later time the separators are required, they will be made visible again. Intended
-     * usage is make menus not look broken if separators are used to group the menu and some of
-     * these groups are empty.
-     */
-    public static final MenuListener menuSeparatorHandler = new MenuListener() {
-        @Override
-        public void menuCanceled(MenuEvent e) {
-            // Do nothing
-        }
-
-        @Override
-        public void menuDeselected(MenuEvent e) {
-            // Do nothing
-        }
-
-        @Override
-        public void menuSelected(MenuEvent a) {
-            if (!(a.getSource() instanceof JMenu))
-                return;
-            final JPopupMenu m = ((JMenu) a.getSource()).getPopupMenu();
-            for (int i = 0; i < m.getComponentCount()-1; i++) {
-                if (!(m.getComponent(i) instanceof JSeparator)) {
-                    continue;
-                }
-                // hide separator if the next menu item is one as well
-                ((JSeparator) m.getComponent(i)).setVisible(!(m.getComponent(i+1) instanceof JSeparator));
-            }
-            // hide separator at the end of the menu
-            if (m.getComponent(m.getComponentCount()-1) instanceof JSeparator) {
-                ((JSeparator) m.getComponent(m.getComponentCount()-1)).setVisible(false);
-            }
-        }
-    };
-
     /**
      * @return the default position of new top-level menus
      * @since 6088
@@ -484,21 +448,13 @@ public class MainMenu extends JMenuBar {
     public static JMenuItem add(JMenu menu, JosmAction action, boolean isExpert, Integer index) {
         if (action.getShortcut().isAutomatic())
             return null;
-        final JMenuItem menuitem;
+        final JosmMenuItem menuitem = new JosmMenuItem(action);
         if (index == null) {
-            menuitem = menu.add(action);
+            menu.add(menuitem);
         } else {
-            menuitem = menu.insert(action, index);
+            menu.add(menuitem, index);
         }
-        if (isExpert) {
-            ExpertToggleAction.addVisibilitySwitcher(menuitem);
-        }
-        KeyStroke ks = action.getShortcut().getKeyStroke();
-        if (ks != null) {
-            menuitem.setAccelerator(ks);
-        }
-        // some menus are hidden before they are populated with some items by plugins
-        if (!menu.isVisible()) menu.setVisible(true);
+        menuitem.setExpertOnly(isExpert);
         return menuitem;
     }
 
@@ -610,7 +566,7 @@ public class MainMenu extends JMenuBar {
      * @return the newly created menu
      */
     public JMenu addMenu(String name, String translatedName, int mnemonicKey, int position, String relativeHelpTopic) {
-        final JMenu menu = new JMenu(translatedName);
+        JosmMenu menu = new JosmMenu(name, translatedName);
         if (!GraphicsEnvironment.isHeadless()) {
             MenuScroller.setScrollerFor(menu);
         }
@@ -631,7 +587,12 @@ public class MainMenu extends JMenuBar {
     public <T extends JMenu> T addMenu(T menu, String name, int mnemonicKey, int position, String relativeHelpTopic) {
         Shortcut.registerShortcut("menu:" + name, tr("Menu: {0}", name), mnemonicKey,
                 Shortcut.MNEMONIC).setMnemonic(menu);
-        add(menu, position);
+        if (menu instanceof JosmMenu) {
+            add((JosmMenu) menu, new MenuInsertionFinder().at(position));
+        } else {
+            // old compatibility code
+            add(menu, position);
+        }
         menu.putClientProperty("help", relativeHelpTopic);
         return menu;
     }
@@ -808,10 +769,8 @@ public class MainMenu extends JMenuBar {
             showAudioMenu(true);
         }
 
-        Main.pref.addPreferenceChangeListener(e -> {
-            if ("audio.menuinvisible".equals(e.getKey())) {
+        Main.pref.addKeyPreferenceChangeListener("audio.menuinvisible", e -> {
                 showAudioMenu(!Boolean.parseBoolean(e.getNewValue().toString()));
-            }
         });
 
         add(helpMenu, new MenuItemSearchDialog.Action());
@@ -823,9 +782,7 @@ public class MainMenu extends JMenuBar {
         add(helpMenu, help);
         add(helpMenu, about);
 
-        windowMenu.addMenuListener(menuSeparatorHandler);
-
-        new PresetsMenuEnabler(presetsMenu);
+        SearchRegistry.add(this);
     }
 
     /**
@@ -886,20 +843,6 @@ public class MainMenu extends JMenuBar {
             audioMenu.removeAll();
             audioMenu = null;
             validate();
-        }
-    }
-
-    static class PresetsMenuEnabler implements ActiveLayerChangeListener {
-        private final JMenu presetsMenu;
-
-        PresetsMenuEnabler(JMenu presetsMenu) {
-            this.presetsMenu = presetsMenu;
-            Main.getLayerManager().addAndFireActiveLayerChangeListener(this);
-        }
-
-        @Override
-        public void activeOrEditLayerChanged(ActiveLayerChangeEvent e) {
-            presetsMenu.setEnabled(e.getSource().getEditLayer() != null);
         }
     }
 }

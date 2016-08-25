@@ -105,10 +105,10 @@ public class MultipolygonTest extends Test {
 
     private static GeneralPath createPath(List<Node> nodes) {
         GeneralPath result = new GeneralPath();
-        result.moveTo((float) nodes.get(0).getCoor().lat(), (float) nodes.get(0).getCoor().lon());
+        result.moveTo((float) nodes.get(0).lat(), (float) nodes.get(0).lon());
         for (int i = 1; i < nodes.size(); i++) {
             Node n = nodes.get(i);
-            result.lineTo((float) n.getCoor().lat(), (float) n.getCoor().lon());
+            result.lineTo((float) n.lat(), (float) n.lon());
         }
         return result;
     }
