@@ -25,6 +25,11 @@ public class JosmCheckboxMenuItem extends JCheckBoxMenuItem implements JosmMenuR
     }
 
     @Override
+    public ToggleAction getAction() {
+        return (ToggleAction) super.getAction();
+    }
+
+    @Override
     public Component getMenuComponent() {
         return this;
     }

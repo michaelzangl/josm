@@ -201,8 +201,18 @@ public abstract class Main {
 
     /**
      * The main menu bar at top of screen.
+     * @deprecated Use {@link #getMainMenu()}
      */
+    @Deprecated
     public MainMenu menu;
+
+    /**
+     * Gets the main menu bar of JOSM
+     * @return The main menu.
+     */
+    public static MainMenu getMainMenu() {
+        return main.menu;
+    }
 
     /**
      * The file watcher service.

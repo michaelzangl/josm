@@ -23,7 +23,6 @@ import java.util.Locale;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -46,7 +45,8 @@ import javax.swing.text.html.StyleSheet;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.gui.HelpAwareOptionPane;
-import org.openstreetmap.josm.gui.MainMenu;
+import org.openstreetmap.josm.gui.menu.JosmMenuReference;
+import org.openstreetmap.josm.gui.menu.MenuSections;
 import org.openstreetmap.josm.gui.widgets.JosmEditorPane;
 import org.openstreetmap.josm.gui.widgets.JosmHTMLEditorKit;
 import org.openstreetmap.josm.tools.ImageProvider;
@@ -64,7 +64,7 @@ public class HelpBrowser extends JDialog implements IHelpBrowser {
     private static HelpBrowser instance;
 
     /** the menu item in the windows menu. Required to properly hide on dialog close */
-    private JMenuItem windowMenuItem;
+    private JosmMenuReference windowMenuItem;
 
     /** the help browser */
     private JosmEditorPane help;
@@ -216,13 +216,13 @@ public class HelpBrowser extends JDialog implements IHelpBrowser {
         } else if (isShowing()) { // Avoid IllegalComponentStateException like in #8775
             new WindowGeometry(this).remember(getClass().getName() + ".geometry");
         }
-        if (Main.main != null && Main.main.menu != null && Main.main.menu.windowMenu != null) {
+        if (Main.main != null && Main.main.menu != null) {
             if (windowMenuItem != null && !visible) {
-                Main.main.menu.windowMenu.remove(windowMenuItem);
+                windowMenuItem.remove();
                 windowMenuItem = null;
             }
             if (windowMenuItem == null && visible) {
-                windowMenuItem = MainMenu.add(Main.main.menu.windowMenu, focusAction, MainMenu.WINDOW_MENU_GROUP.VOLATILE);
+                windowMenuItem = Main.main.menu.add(focusAction, MenuSections.WINDOWS.VOLATILE.pos());
             }
         }
         super.setVisible(visible);

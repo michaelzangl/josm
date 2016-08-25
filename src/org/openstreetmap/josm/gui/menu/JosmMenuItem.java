@@ -42,9 +42,14 @@ public class JosmMenuItem extends JMenuItem implements Searchable, JosmMenuRefer
     }
 
     @Override
+    public JosmAction getAction() {
+        return (JosmAction) super.getAction();
+    }
+
+    @Override
     public void search(SearchReceiver sr) {
         if (isVisible() && sr.wantsMore(SearchCategory.MENU) && sr.containsSearchText(getText())) {
-            SearchResult result = new SearchResult(SearchCategory.MENU, (JosmAction) getAction());
+            SearchResult result = new SearchResult(SearchCategory.MENU, getAction());
             sr.receive(result);
         }
     }

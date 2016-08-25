@@ -1,8 +1,12 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.gui.menu;
+import static org.openstreetmap.josm.gui.help.HelpUtil.ht;
 import static org.openstreetmap.josm.tools.I18n.marktr;
+import static org.openstreetmap.josm.tools.I18n.marktrc;
 import static org.openstreetmap.josm.tools.I18n.tr;
+import static org.openstreetmap.josm.tools.I18n.trc;
 
+import java.awt.event.KeyEvent;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
@@ -20,12 +24,18 @@ import org.openstreetmap.josm.gui.menu.JosmMenu.IMenuSection;
  * @since xxx
  */
 public final class MenuSections {
-    public static final FileMenu FILE = new FileMenu(marktr("File"));
-    public static final EditMenu EDIT = new EditMenu(marktr("Edit"));
-    public static final ViewMenu VIEW = new ViewMenu(marktr("View"));
-    public static final ToolsMenu TOOLS = new ToolsMenu(marktr("Tools"));
-    public static final MoreToolsMenu MORE_TOOLS = new MoreToolsMenu(marktr("More Tools"));
-    public static final DataMenu DATA = new DataMenu(marktr("Data"));
+    public static final FileMenu FILE = new FileMenu();
+    public static final EditMenu EDIT = new EditMenu();
+    public static final ViewMenu VIEW = new ViewMenu();
+    public static final ToolsMenu TOOLS = new ToolsMenu();
+    public static final MoreToolsMenu MORE_TOOLS = new MoreToolsMenu();
+    public static final DataMenu DATA = new DataMenu();
+    public static final SelectionMenu SELECTION = new SelectionMenu();
+    public static final PresetsMenu PRESETS = new PresetsMenu();
+    public static final ImageryMenu IMAGERY = new ImageryMenu();
+    public static final GpsMenu GPS = new GpsMenu();
+    public static final WindowMenu WINDOWS = new WindowMenu();
+    public static final HelpMenu HELP = new HelpMenu();
 
     private MenuSections() {
         // hide.
@@ -36,7 +46,7 @@ public final class MenuSections {
      * @return The menus
      */
     public static List<IMenu> getMenus() {
-        return Arrays.asList(FILE, EDIT, VIEW, TOOLS, MORE_TOOLS, DATA);
+        return Arrays.asList(FILE, EDIT, VIEW, TOOLS, MORE_TOOLS, DATA, SELECTION, PRESETS, IMAGERY, GPS, WINDOWS, HELP);
     }
 
     /**
@@ -45,8 +55,8 @@ public final class MenuSections {
      * @since xxx
      */
     public static final class FileMenu extends Menu {
-        FileMenu(String id) {
-            super(id);
+        FileMenu() {
+            super(/* I18N: mnemonic: F */marktrc("menu", "File"), KeyEvent.VK_F, 0, ht("/Menu/File"));
         }
 
         public final IMenuSection LAYER = new MenuSection(marktr("Layer"));
@@ -63,8 +73,8 @@ public final class MenuSections {
      * @since xxx
      */
     public static final class EditMenu extends Menu {
-        EditMenu(String id) {
-            super(id);
+        EditMenu() {
+            super(/* I18N: mnemonic: E */marktrc("menu", "Edit"), KeyEvent.VK_E, 1, ht("/Menu/Edit"));
         }
 
         public final IMenuSection UNDO_REDO = new MenuSection(marktr("Commands"));
@@ -79,14 +89,16 @@ public final class MenuSections {
      * @since xxx
      */
     public static final class ViewMenu extends Menu {
-        ViewMenu(String id) {
-            super(id);
+        ViewMenu() {
+            super(/* I18N: mnemonic: V */ marktrc("menu", "View"), KeyEvent.VK_V, 2, ht("/Menu/View"));
         }
 
         public final IMenuSection STYLES = new MenuSection(marktr("Styles"));
         public final IMenuSection ZOOM = new MenuSection(marktr("Zoom"));
         public final IMenuSection ZOOM_TO = new MenuSection(marktr("Zoom to"));
         public final IMenuSection VIEWPORT = new MenuSection(marktr("Viewport"));
+        public final IMenuSection INFO = new MenuSection(marktr("Info"));
+        public final IMenuSection TOOLBARS = new MenuSection(marktr("Toolbars"));
     }
 
     /**
@@ -95,14 +107,16 @@ public final class MenuSections {
      * @since xxx
      */
     public static final class ToolsMenu extends Menu {
-        ToolsMenu(String id) {
-            super(id);
+        ToolsMenu() {
+            super(/* I18N: mnemonic: T */ marktrc("menu", "Tools"), KeyEvent.VK_T, 3, ht("/Menu/Tools"));
         }
 
-        public final IMenuSection UNDO_REDO = new MenuSection(marktr("Commands"));
-        public final IMenuSection CLIPBOARD = new MenuSection(marktr("Clipboard"));
-        public final IMenuSection SEARCH = new MenuSection(marktr("Search"));
-        public final IMenuSection PREFERENCES = new MenuSection(marktr("Preferences"));
+        public final IMenuSection SEC_1 = new MenuSection(marktr("1"));
+        public final IMenuSection SEC_2 = new MenuSection(marktr("2"));
+        public final IMenuSection SEC_3 = new MenuSection(marktr("3"));
+        public final IMenuSection SEC_4 = new MenuSection(marktr("4"));
+        public final IMenuSection SEC_5 = new MenuSection(marktr("5"));
+        public final IMenuSection SEC_6 = new MenuSection(marktr("6"));
     }
 
     /**
@@ -111,8 +125,8 @@ public final class MenuSections {
      * @since xxx
      */
     public static final class MoreToolsMenu extends Menu {
-        MoreToolsMenu(String id) {
-            super(id);
+        MoreToolsMenu() {
+            super(/* I18N: mnemonic: M */ marktrc("menu", "More tools"), KeyEvent.VK_M, 4, ht("/Menu/MoreTools"));
         }
 
         public final IMenuSection UNDO_REDO = new MenuSection(marktr("Commands"));
@@ -127,8 +141,8 @@ public final class MenuSections {
      * @since xxx
      */
     public static final class DataMenu extends Menu {
-        DataMenu(String id) {
-            super(id);
+        DataMenu() {
+            super(/* I18N: mnemonic: D */ marktrc("menu", "Data"), KeyEvent.VK_D, 5, ht("/Menu/Data"));
         }
 
         public final IMenuSection UNDO_REDO = new MenuSection(marktr("Commands"));
@@ -137,12 +151,104 @@ public final class MenuSections {
         public final IMenuSection PREFERENCES = new MenuSection(marktr("Preferences"));
     }
 
+    /**
+     * The selection menu. Use the {@link MenuSections#SELECTION} constant to access
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public static final class SelectionMenu extends Menu {
+        SelectionMenu() {
+            super(/* I18N: mnemonic: N */ marktrc("menu", "Selection"), KeyEvent.VK_N, 6, ht("/Menu/Selection"));
+        }
+
+        public final IMenuSection SELECT = new MenuSection(marktr("Select"));
+        public final IMenuSection FILTER = new MenuSection(marktr("Filter"));
+    }
+
+    /**
+     * The presets menu. Use the {@link MenuSections#PRESETS} constant to access
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public static final class PresetsMenu extends Menu {
+        PresetsMenu() {
+            super(/* I18N: mnemonic: P */ marktrc("menu", "Presets"), KeyEvent.VK_P, 7, ht("/Menu/Presets"));
+        }
+
+        public final IMenuSection OPTIONS = new MenuSection(marktr("Options"));
+        public final IMenuSection PRESETS = new MenuSection(marktr("Presets"));
+    }
+
+    /**
+     * The imagery menu. Use the {@link MenuSections#IMAGERY} constant to access
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public static final class ImageryMenu extends Menu {
+        ImageryMenu() {
+            super(/* I18N: mnemonic: I */ marktrc("menu", "Imagery"), KeyEvent.VK_P, 7, ht("/Menu/Imagery"));
+        }
+
+        public final IMenuSection OPTIONS = new MenuSection(marktr("Options"));
+    }
+
+    /**
+     * The gps menu. Use the {@link MenuSections#GPS} constant to access
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public static final class GpsMenu extends Menu {
+        GpsMenu() {
+            super(/* I18N: mnemonic: G */ marktrc("menu", "GPS"), KeyEvent.VK_G, 9, ht("/Menu/GPS"));
+        }
+
+        public final IMenuSection UNDO_REDO = new MenuSection(marktr("Commands"));
+        public final IMenuSection CLIPBOARD = new MenuSection(marktr("Clipboard"));
+        public final IMenuSection SEARCH = new MenuSection(marktr("Search"));
+        public final IMenuSection PREFERENCES = new MenuSection(marktr("Preferences"));
+    }
+
+    /**
+     * The window menu. Use the {@link MenuSections#WINDOWS} constant to access
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public static final class WindowMenu extends Menu {
+        WindowMenu() {
+            super(/* I18N: mnemonic: W */ marktrc("menu", "Windows"), KeyEvent.VK_W, 10, ht("/Menu/Windows"));
+        }
+
+        public final IMenuSection ALWAYS = new MenuSection(marktr("Window"));
+        public final IMenuSection TOGGLE_DIALOG = new MenuSection(marktr("Dialogs"));
+        public final IMenuSection VOLATILE = new MenuSection(marktr("More"));
+    }
+
+    /**
+     * The help menu. Use the {@link MenuSections#HELP} constant to access
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public static final class HelpMenu extends Menu {
+        HelpMenu() {
+            super(/* I18N: mnemonic: H */ trc("menu", "Help"), KeyEvent.VK_H, 11, ht("/Menu/Help"));
+        }
+
+        public final IMenuSection MENU = new MenuSection(marktr("Menu"));
+        public final IMenuSection BUG = new MenuSection(marktr("Report Bugs"));
+        public final IMenuSection HELP = new MenuSection(marktr("Help"));
+    }
+
     protected static class Menu implements IMenu {
 
         private String id;
 
-        Menu(String id) {
+        Menu(String id, int vkF, int i, String string) {
             this.id = id;
+        }
+
+        @Override
+        public String getSectionName() {
+            return trc("menu", id);
         }
 
         @Override

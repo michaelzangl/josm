@@ -36,7 +36,6 @@ import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
@@ -58,7 +57,6 @@ import org.openstreetmap.josm.data.osm.RelationMember;
 import org.openstreetmap.josm.data.osm.Tag;
 import org.openstreetmap.josm.gui.ConditionalOptionPaneUtil;
 import org.openstreetmap.josm.gui.DefaultNameFormatter;
-import org.openstreetmap.josm.gui.MainMenu;
 import org.openstreetmap.josm.gui.datatransfer.ClipboardUtils;
 import org.openstreetmap.josm.gui.dialogs.relation.actions.AddSelectedAfterSelection;
 import org.openstreetmap.josm.gui.dialogs.relation.actions.AddSelectedAtEndAction;
@@ -88,6 +86,8 @@ import org.openstreetmap.josm.gui.dialogs.relation.actions.SortBelowAction;
 import org.openstreetmap.josm.gui.help.ContextSensitiveHelpAction;
 import org.openstreetmap.josm.gui.help.HelpUtil;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.gui.menu.JosmMenuReference;
+import org.openstreetmap.josm.gui.menu.MenuSections;
 import org.openstreetmap.josm.gui.tagging.TagEditorPanel;
 import org.openstreetmap.josm.gui.tagging.ac.AutoCompletingTextField;
 import org.openstreetmap.josm.gui.tagging.ac.AutoCompletionList;
@@ -122,7 +122,7 @@ public class GenericRelationEditor extends RelationEditor {
     /**
      * the menu item in the windows menu. Required to properly hide on dialog close.
      */
-    private JMenuItem windowMenuItem;
+    private JosmMenuReference windowMenuItem;
     /**
      * The toolbar with the buttons on the left
      */
@@ -757,7 +757,7 @@ public class GenericRelationEditor extends RelationEditor {
             memberTableModel.unregister();
             memberTable.unregisterListeners();
             if (windowMenuItem != null) {
-                Main.main.menu.windowMenu.remove(windowMenuItem);
+                windowMenuItem.remove();
                 windowMenuItem = null;
             }
             for (FlavorListener listener : clipboardListeners) {
@@ -773,7 +773,7 @@ public class GenericRelationEditor extends RelationEditor {
      * @param layerName layer name
      * @return created menu item
      */
-    protected static JMenuItem addToWindowMenu(IRelationEditor re, String layerName) {
+    protected static JosmMenuReference addToWindowMenu(IRelationEditor re, String layerName) {
         Relation r = re.getRelation();
         String name = r == null ? tr("New Relation") : r.getLocalName();
         JosmAction focusAction = new JosmAction(
@@ -787,7 +787,7 @@ public class GenericRelationEditor extends RelationEditor {
             }
         };
         focusAction.putValue("relationEditor", re);
-        return MainMenu.add(Main.main.menu.windowMenu, focusAction, MainMenu.WINDOW_MENU_GROUP.VOLATILE);
+        return Main.main.menu.add(focusAction, MenuSections.WINDOWS.VOLATILE.pos());
     }
 
     /**

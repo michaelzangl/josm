@@ -25,12 +25,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenuItem;
-
 import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.actions.MergeNodesAction;
+import org.openstreetmap.josm.actions.ToggleAction;
 import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.ChangeCommand;
 import org.openstreetmap.josm.command.Command;
@@ -44,7 +41,6 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.osm.WaySegment;
 import org.openstreetmap.josm.data.osm.visitor.paint.PaintColors;
 import org.openstreetmap.josm.data.preferences.ColorProperty;
-import org.openstreetmap.josm.gui.MainMenu;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.draw.MapViewPath;
@@ -52,6 +48,8 @@ import org.openstreetmap.josm.gui.draw.SymbolShape;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.gui.menu.JosmMenuReference;
+import org.openstreetmap.josm.gui.menu.MenuSections;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.gui.util.KeyPressReleaseListener;
 import org.openstreetmap.josm.gui.util.ModifierListener;
@@ -175,7 +173,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
 
     // Dual alignment mode stuff
     /** {@code true}, if dual alignment mode is enabled. User wants following extrude to be dual aligned. */
-    private boolean dualAlignEnabled;
+    private final DualAlignChangeAction dualAlignEnabled = new DualAlignChangeAction();
     /** {@code true}, if dual alignment is active. User is dragging the mouse, required conditions are met.
      * Treat {@link #mode} (extrude/translate/create_new) as dual aligned. */
     private boolean dualAlignActive;
@@ -184,27 +182,31 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
     /** {@code true}, if new segment was collapsed */
     private boolean dualAlignSegmentCollapsed;
     // Dual alignment UI stuff
-    private final DualAlignChangeAction dualAlignChangeAction;
-    private final JCheckBoxMenuItem dualAlignCheckboxMenuItem;
+    private final JosmMenuReference dualAlignCheckboxMenuItem;
+
     private final transient Shortcut dualAlignShortcut;
     private boolean useRepeatedShortcut;
     private boolean ignoreNextKeyRelease;
 
-    private class DualAlignChangeAction extends JosmAction {
+    private class DualAlignChangeAction extends ToggleAction {
         DualAlignChangeAction() {
             super(tr("Dual alignment"), /* ICON() */ "mapmode/extrude/dualalign",
                     tr("Switch dual alignment mode while extruding"), null, false);
             putValue("help", ht("/Action/Extrude#DualAlign"));
         }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            toggleDualAlign();
+        void setDualAlign(boolean align) {
+            setSelected(align);
         }
 
         @Override
         protected void updateEnabledState() {
             setEnabled(Main.map != null && Main.map.mapMode instanceof ExtrudeAction);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            toggleSelectedState(e);
         }
     }
 
@@ -222,11 +224,9 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
         cursorTranslate = ImageProvider.getCursor("normal", "rectangle_move");
         cursorCreateNodes = ImageProvider.getCursor("normal", "rectangle_plussmall");
 
-        dualAlignEnabled = false;
-        dualAlignChangeAction = new DualAlignChangeAction();
+        dualAlignEnabled.setDualAlign(false);
         dualAlignCheckboxMenuItem = addDualAlignMenuItem();
-        dualAlignCheckboxMenuItem.getAction().setEnabled(false);
-        dualAlignCheckboxMenuItem.setState(dualAlignEnabled);
+        dualAlignEnabled.setEnabled(false);
         dualAlignShortcut = Shortcut.registerShortcut("mapmode:extrudedualalign",
                 tr("Mode: {0}", tr("Extrude Dual alignment")), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE);
         readPreferences(); // to show prefernces in table before entering the mode
@@ -235,18 +235,12 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
     @Override
     public void destroy() {
         super.destroy();
-        dualAlignChangeAction.destroy();
+        dualAlignCheckboxMenuItem.remove();
+        dualAlignEnabled.destroy();
     }
 
-    private JCheckBoxMenuItem addDualAlignMenuItem() {
-        int n = Main.main.menu.editMenu.getItemCount();
-        for (int i = n-1; i > 0; i--) {
-            JMenuItem item = Main.main.menu.editMenu.getItem(i);
-            if (item != null && item.getAction() != null && item.getAction() instanceof DualAlignChangeAction) {
-                Main.main.menu.editMenu.remove(i);
-            }
-        }
-        return MainMenu.addWithCheckbox(Main.main.menu.editMenu, dualAlignChangeAction, MainMenu.WINDOW_MENU_GROUP.VOLATILE);
+    private JosmMenuReference addDualAlignMenuItem() {
+        return Main.getMainMenu().add(dualAlignEnabled, MenuSections.EDIT.PREFERENCES.pos());
     }
 
     // -------------------------------------------------------------------------
@@ -259,7 +253,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
         if (mode == Mode.select) {
             rv = new StringBuilder(tr("Drag a way segment to make a rectangle. Ctrl-drag to move a segment along its normal, " +
                 "Alt-drag to create a new rectangle, double click to add a new node."));
-            if (dualAlignEnabled) {
+            if (dualAlignEnabled.isSelected()) {
                 rv.append(' ').append(tr("Dual alignment active."));
                 if (dualAlignSegmentCollapsed)
                     rv.append(' ').append(tr("Segment collapsed due to its direction reversing."));
@@ -370,8 +364,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
      * Toggles dual alignment mode.
      */
     private void toggleDualAlign() {
-        dualAlignEnabled = !dualAlignEnabled;
-        dualAlignCheckboxMenuItem.setState(dualAlignEnabled);
+        dualAlignEnabled.setDualAlign(!dualAlignEnabled.isSelected());
         updateStatusLine();
     }
 
@@ -413,7 +406,7 @@ public class ExtrudeAction extends MapMode implements MapViewPaintable, KeyPress
             }
         } else {
             // Otherwise switch to another mode
-            if (dualAlignEnabled && checkDualAlignConditions()) {
+            if (dualAlignEnabled.isSelected() && checkDualAlignConditions()) {
                 dualAlignActive = true;
                 calculatePossibleDirectionsForDualAlign();
                 dualAlignSegmentCollapsed = false;

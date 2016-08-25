@@ -2,6 +2,7 @@
 package org.openstreetmap.josm.gui.menu;
 
 import java.util.ArrayList;
+import java.util.function.BiFunction;
 
 import javax.swing.JMenuBar;
 
@@ -31,7 +32,7 @@ public class JosmMenuBar extends JMenuBar implements Searchable {
      * @param menu The menu
      * @param p The position to add it at.
      */
-    public void add(JosmMenu menu, MenuInsertionFinder p) {
+    public void addTopLevel(JosmMenu menu, MenuInsertionFinder p) {
         int pos = p.findInsertionPoint(this).getInsertPosition();
         menus.add(menu);
         add(menu, pos);
@@ -44,13 +45,21 @@ public class JosmMenuBar extends JMenuBar implements Searchable {
      * @return The newly added menu item or <code>null</code> if the position was not found.
      */
     public JosmMenuReference add(JosmAction item, MenuInsertionFinder p) {
+        return add(p, (menu, position) -> menu.add(item, position));
+    }
+
+    public void add(JosmMenu submenu, MenuInsertionFinder p) {
+        add(p, (menu, position) -> {menu.add(submenu, position); return null;});
+    }
+
+    private <R> R add(MenuInsertionFinder p, BiFunction<JosmMenu, MenuInsertionFinder, R> adder) {
         Pair<JosmMenu, MenuInsertionPoint> i = p.findInsertionPoint(menus);
         if (i == null) {
             // TODO: Fall back to tools.
-            Main.error("Menu insertion point not found for {0} ", item);
+            Main.error("Menu insertion point not found for {0} ", adder);
             return null;
         } else {
-            return i.a.add(item, MenuInsertionFinder.NONE.at(i.b.getInsertPosition()));
+            return adder.apply(i.a, MenuInsertionFinder.NONE.at(i.b.getInsertPosition()));
         }
     }
 

@@ -320,63 +320,87 @@ public class MainMenu extends JosmMenuBar {
 
     /**
      * fileMenu contains I/O actions
+     * @deprecated See {@link MenuSections#FILE}
      */
-    public final JMenu fileMenu = new JMenu(""); // = addMenu("File", /* I18N: mnemonic: F */ trc("menu", "File"), KeyEvent.VK_F, 0, ht("/Menu/File"));
+    @Deprecated
+    public final JMenu fileMenu = addMenu("File", /* I18N: mnemonic: F */ trc("menu", "File"), KeyEvent.VK_F, 0, ht("/Menu/File"));
     /**
+     * @deprecated See {@link MenuSections#EDIT}
      * editMenu contains editing actions
      */
+    @Deprecated
     public final JMenu editMenu = addMenu("Edit", /* I18N: mnemonic: E */ trc("menu", "Edit"), KeyEvent.VK_E, 1, ht("/Menu/Edit"));
     /**
+     * @deprecated See {@link MenuSections}
      * viewMenu contains display actions (zoom, map styles, etc.)
      */
+    @Deprecated
     public final JMenu viewMenu = addMenu("View", /* I18N: mnemonic: V */ trc("menu", "View"), KeyEvent.VK_V, 2, ht("/Menu/View"));
     /**
      * toolsMenu contains different geometry manipulation actions from JOSM core (most used)
      * The plugins should use other menus
+     * @deprecated See {@link MenuSections}
      */
+    @Deprecated
     public final JMenu toolsMenu = addMenu("Tools", /* I18N: mnemonic: T */ trc("menu", "Tools"), KeyEvent.VK_T, 3, ht("/Menu/Tools"));
     /**
      * moreToolsMenu contains geometry-related actions from all the plugins
      * @since 6082 (moved from Utilsplugin2)
+     * @deprecated See {@link MenuSections}
      */
     // CHECKSTYLE.OFF: LineLength
+    @Deprecated
     public final JMenu moreToolsMenu = addMenu("More tools", /* I18N: mnemonic: M */ trc("menu", "More tools"), KeyEvent.VK_M, 4, ht("/Menu/MoreTools"));
     /**
      * dataMenu contains plugin actions that are related to certain tagging schemes (addressing opening hours),
      * importing external data and using external web APIs
      * @since 6082
+     * @deprecated See {@link MenuSections}
      */
+    @Deprecated
     public final JMenu dataMenu = addMenu("Data", /* I18N: mnemonic: D */ trc("menu", "Data"), KeyEvent.VK_D, 5, ht("/Menu/Data"));
     /**
      * selectionMenu contains all actions related to selecting different objects
      * @since 6082 (moved from Utilsplugin2)
+     * @deprecated See {@link MenuSections}
      */
+    @Deprecated
     public final JMenu selectionMenu = addMenu("Selection", /* I18N: mnemonic: N */ trc("menu", "Selection"), KeyEvent.VK_N, 6, ht("/Menu/Selection"));
     /**
      * presetsMenu contains presets actions (search, presets tree)
+     * @deprecated See {@link MenuSections}
      */
+    @Deprecated
     public final JMenu presetsMenu = addMenu("Presets", /* I18N: mnemonic: P */ trc("menu", "Presets"), KeyEvent.VK_P, 7, ht("/Menu/Presets"));
     /**
      * submenu in Imagery menu that contains plugin-managed additional imagery layers
      * @since 6097
+     * @deprecated See {@link MenuSections}
      */
+    @Deprecated
     public final JMenu imagerySubMenu = new JMenu(tr("More..."));
     /**
      * imageryMenu contains all imagery-related actions
+     * @deprecated See {@link MenuSections}
      */
+    @Deprecated
     public final ImageryMenu imageryMenu = addMenu(new ImageryMenu(imagerySubMenu), /* untranslated name */ "Imagery", KeyEvent.VK_I, 8, ht("/Menu/Imagery"));
     // CHECKSTYLE.ON: LineLength
     /**
      * gpsMenu contains all plugin actions that are related
      * to using GPS data, including opening, uploading and real-time tracking
      * @since 6082
+     * @deprecated See {@link MenuSections}
      */
+    @Deprecated
     public final JMenu gpsMenu = addMenu("GPS", /* I18N: mnemonic: G */ trc("menu", "GPS"), KeyEvent.VK_G, 9, ht("/Menu/GPS"));
     /** the window menu is split into several groups. The first is for windows that can be opened from
      * this menu any time, e.g. the changeset editor. The second group is for toggle dialogs and the third
      * group is for currently open windows that cannot be toggled, e.g. relation editors. It's recommended
      * to use WINDOW_MENU_GROUP to determine the group integer.
+     * @deprecated See {@link MenuSections}
      */
+    @Deprecated
     public final JMenu windowMenu = addMenu("Windows", /* I18N: mnemonic: W */ trc("menu", "Windows"), KeyEvent.VK_W, 10, ht("/Menu/Windows"));
 
     /**
@@ -570,7 +594,7 @@ public class MainMenu extends JosmMenuBar {
      */
     public JMenu addMenu(String name, String translatedName, int mnemonicKey, int position, String relativeHelpTopic) {
         JosmMenu menu = new JosmMenu(name, translatedName);
-        return addMenu(menu, name, mnemonicKey, position, relativeHelpTopic);
+        return menu; //addMenu(menu, name, mnemonicKey, position, relativeHelpTopic);
     }
 
     /**
@@ -603,7 +627,7 @@ public class MainMenu extends JosmMenuBar {
      */
     public void initialize() {
         for (IMenu m : MenuSections.getMenus()) {
-            add(new JosmMenu(m), MenuInsertionFinder.DEFAULT);
+            addTopLevel(new JosmMenu(m), MenuInsertionFinder.DEFAULT);
         }
 
         // SECTION FILE.LAYER
@@ -616,8 +640,7 @@ public class MainMenu extends JosmMenuBar {
         add(save, MenuSections.FILE.SAVE.pos());
         add(saveAs, MenuSections.FILE.SAVE.pos());
         sessionSaveAs = new SessionSaveAsAction();
-        ExpertToggleAction.addVisibilitySwitcher(fileMenu.add(sessionSaveAs));
-        add(sessionSaveAs, MenuSections.FILE.SAVE.pos());
+        add(sessionSaveAs, MenuSections.FILE.SAVE.pos()).setExpertOnly(true);;
         add(gpxExport, MenuSections.FILE.SAVE.pos());
         // SECTION FILE.DOWNLOAD
         add(download, MenuSections.FILE.DOWNLOAD.pos());
@@ -666,13 +689,9 @@ public class MainMenu extends JosmMenuBar {
         add(preferences, MenuSections.EDIT.PREFERENCES.pos());
 
         // -- wireframe toggle action
-        //TODO: addCheckbox(wireFrameToggleAction, MenuSections.VIEW.STYLES.pos());
-        final JCheckBoxMenuItem wireframe = new JCheckBoxMenuItem(wireFrameToggleAction);
-        viewMenu.add(wireframe);
-        wireframe.setAccelerator(wireFrameToggleAction.getShortcut().getKeyStroke());
-        wireFrameToggleAction.addButtonModel(wireframe.getModel());
+        add(wireFrameToggleAction, MenuSections.VIEW.STYLES.pos());
 
-        viewMenu.add(new MapPaintMenu());
+        add(new MapPaintMenu(), MenuSections.VIEW.STYLES.pos());
 
         // SECTION VIEW.ZOOM
         add(new ZoomInAction(), MenuSections.VIEW.ZOOM.pos());
@@ -685,12 +704,7 @@ public class MainMenu extends JosmMenuBar {
         }
 
         // -- viewport follow toggle action
-        ViewportFollowToggleAction viewportFollowToggleAction = new ViewportFollowToggleAction();
-        final JCheckBoxMenuItem vft = new JCheckBoxMenuItem(viewportFollowToggleAction);
-        ExpertToggleAction.addVisibilitySwitcher(vft);
-        viewMenu.add(vft);
-        vft.setAccelerator(viewportFollowToggleAction.getShortcut().getKeyStroke());
-        viewportFollowToggleAction.addButtonModel(vft.getModel());
+        add(new ViewportFollowToggleAction(), MenuSections.VIEW.VIEWPORT.pos()).setExpertOnly(true);
 
         if (Main.platform.canFullscreen()) {
             // -- fullscreen toggle action
@@ -699,73 +713,62 @@ public class MainMenu extends JosmMenuBar {
         }
 
         // -- dialogs panel toggle action
-        final JCheckBoxMenuItem dialogsToggle = new JCheckBoxMenuItem(dialogsToggleAction);
-        dialogsToggle.setAccelerator(dialogsToggleAction.getShortcut().getKeyStroke());
-        dialogsToggleAction.addButtonModel(dialogsToggle.getModel());
-        viewMenu.add(dialogsToggle);
+        add(dialogsToggleAction, MenuSections.VIEW.VIEWPORT.pos());
+        add(jumpToAct, MenuSections.VIEW.VIEWPORT.pos()).setExpertOnly(true);
 
-        add(viewMenu, jumpToAct, true);
-        viewMenu.addSeparator();
-        add(viewMenu, info);
-        add(viewMenu, infoweb);
-        add(viewMenu, historyinfo);
-        add(viewMenu, historyinfoweb);
-        viewMenu.addSeparator();
-        viewMenu.add(new PreferenceToggleAction(tr("Main toolbar"),
+        add(info, MenuSections.VIEW.INFO.pos()); // TODO: Move
+        add(infoweb, MenuSections.VIEW.INFO.pos()); // TODO: Move
+        add(historyinfo, MenuSections.VIEW.INFO.pos()); // TODO: Move
+        add(historyinfoweb, MenuSections.VIEW.INFO.pos()); // TODO: Move
+
+
+        add(new PreferenceToggleAction(tr("Main toolbar"),
                 tr("Toggles the visibility of the main toolbar (i.e., the horizontal toolbar)"),
-                "toolbar.visible", true).getCheckbox());
-        viewMenu.add(new PreferenceToggleAction(tr("Edit toolbar"),
+                "toolbar.visible", true), MenuSections.VIEW.TOOLBARS.pos());
+        add(new PreferenceToggleAction(tr("Edit toolbar"),
                 tr("Toggles the visibility of the edit toolbar (i.e., the vertical tool)"),
-                "sidetoolbar.visible", true).getCheckbox());
+                "sidetoolbar.visible", true), MenuSections.VIEW.TOOLBARS.pos());
         // -- expert mode toggle action
-        final JCheckBoxMenuItem expertItem = new JCheckBoxMenuItem(ExpertToggleAction.getInstance());
-        viewMenu.add(expertItem);
-        ExpertToggleAction.getInstance().addButtonModel(expertItem.getModel());
+        add(ExpertToggleAction.getInstance(), MenuSections.VIEW.TOOLBARS.pos());
 
-        add(presetsMenu, presetSearchAction);
-        add(presetsMenu, presetSearchPrimitiveAction);
-        add(presetsMenu, PreferencesAction.forPreferenceSubTab(tr("Preset preferences"),
-                tr("Click to open the tagging presets tab in the preferences"), TaggingPresetPreference.class));
-        presetsMenu.addSeparator();
 
-        add(imageryMenu, PreferencesAction.forPreferenceTab(tr("Imagery preferences"),
-                tr("Click to open the imagery tab in the preferences"), ImageryPreference.class));
+        add(presetSearchAction, MenuSections.PRESETS.OPTIONS.pos());
+        add(presetSearchPrimitiveAction, MenuSections.PRESETS.OPTIONS.pos());
+        add(PreferencesAction.forPreferenceSubTab(tr("Preset preferences"),
+                tr("Click to open the tagging presets tab in the preferences"), TaggingPresetPreference.class),
+                MenuSections.PRESETS.OPTIONS.pos());
 
-        add(selectionMenu, selectAll);
-        add(selectionMenu, unselectAll);
-        add(selectionMenu, nonBranchingWaySequences);
+        add(PreferencesAction.forPreferenceTab(tr("Imagery preferences"),
+                tr("Click to open the imagery tab in the preferences"), ImageryPreference.class), MenuSections.IMAGERY.OPTIONS.pos());
 
-        add(toolsMenu, splitWay);
-        add(toolsMenu, combineWay);
-        toolsMenu.addSeparator();
-        add(toolsMenu, reverseWay);
-        add(toolsMenu, simplifyWay);
-        toolsMenu.addSeparator();
-        add(toolsMenu, alignInCircle);
-        add(toolsMenu, alignInLine);
-        add(toolsMenu, distribute);
-        add(toolsMenu, ortho);
-        add(toolsMenu, mirror, true);
-        toolsMenu.addSeparator();
-        add(toolsMenu, followLine, true);
-        add(toolsMenu, addNode, true);
-        add(toolsMenu, moveNode, true);
-        add(toolsMenu, createCircle);
-        toolsMenu.addSeparator();
-        add(toolsMenu, mergeNodes);
-        add(toolsMenu, joinNodeWay);
-        add(toolsMenu, moveNodeOntoWay);
-        add(toolsMenu, unJoinNodeWay);
-        add(toolsMenu, unglueNodes);
-        toolsMenu.addSeparator();
-        add(toolsMenu, joinAreas);
-        add(toolsMenu, createMultipolygon);
-        add(toolsMenu, updateMultipolygon);
+        add(selectAll, MenuSections.SELECTION.SELECT.pos());
+        add(unselectAll, MenuSections.SELECTION.SELECT.pos());
+        add(nonBranchingWaySequences, MenuSections.SELECTION.FILTER.pos());
+
+        add(splitWay, MenuSections.TOOLS.SEC_1.pos());
+        add(combineWay, MenuSections.TOOLS.SEC_1.pos());
+        add(reverseWay, MenuSections.TOOLS.SEC_2.pos());
+        add(simplifyWay, MenuSections.TOOLS.SEC_2.pos());
+        add(alignInCircle, MenuSections.TOOLS.SEC_3.pos());
+        add(alignInLine, MenuSections.TOOLS.SEC_3.pos());
+        add(distribute, MenuSections.TOOLS.SEC_3.pos());
+        add(ortho, MenuSections.TOOLS.SEC_3.pos());
+        add(mirror, MenuSections.TOOLS.SEC_3.pos()).setExpertOnly(true);
+        add(followLine, MenuSections.TOOLS.SEC_4.pos()).setExpertOnly(true);
+        add(addNode, MenuSections.TOOLS.SEC_4.pos()).setExpertOnly(true);
+        add(moveNode, MenuSections.TOOLS.SEC_4.pos()).setExpertOnly(true);
+        add(createCircle, MenuSections.TOOLS.SEC_4.pos());
+        add(mergeNodes, MenuSections.TOOLS.SEC_5.pos());
+        add(joinNodeWay, MenuSections.TOOLS.SEC_5.pos());
+        add(moveNodeOntoWay, MenuSections.TOOLS.SEC_5.pos());
+        add(unJoinNodeWay, MenuSections.TOOLS.SEC_5.pos());
+        add(unglueNodes, MenuSections.TOOLS.SEC_5.pos());
+        add(joinAreas, MenuSections.TOOLS.SEC_6.pos());
+        add(createMultipolygon, MenuSections.TOOLS.SEC_6.pos());
+        add(updateMultipolygon, MenuSections.TOOLS.SEC_6.pos());
 
         // -- changeset manager toggle action
-        final JCheckBoxMenuItem mi = MainMenu.addWithCheckbox(windowMenu, changesetManager,
-                MainMenu.WINDOW_MENU_GROUP.ALWAYS);
-        changesetManager.addButtonModel(mi.getModel());
+        add(changesetManager, MenuSections.WINDOWS.ALWAYS.pos());
 
         if (!Main.pref.getBoolean("audio.menuinvisible", false)) {
             showAudioMenu(true);
@@ -775,14 +778,13 @@ public class MainMenu extends JosmMenuBar {
                 showAudioMenu(!Boolean.parseBoolean(e.getNewValue().toString()));
         });
 
-        add(helpMenu, new MenuItemSearchDialog.Action());
-        helpMenu.addSeparator();
-        add(helpMenu, statusreport);
-        add(helpMenu, reportbug);
-        helpMenu.addSeparator();
+        add(new MenuItemSearchDialog.Action(), MenuSections.HELP.MENU.pos());
 
-        add(helpMenu, help);
-        add(helpMenu, about);
+        add(statusreport, MenuSections.HELP.BUG.pos());
+        add(reportbug, MenuSections.HELP.BUG.pos());
+
+        add(help, MenuSections.HELP.HELP.pos());
+        add(about, MenuSections.HELP.HELP.pos());
 
         SearchRegistry.add(this);
     }

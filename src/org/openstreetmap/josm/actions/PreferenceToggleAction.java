@@ -2,7 +2,9 @@
 package org.openstreetmap.josm.actions;
 
 import java.awt.event.ActionEvent;
+
 import javax.swing.JCheckBoxMenuItem;
+
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.Preferences;
 import org.openstreetmap.josm.data.Preferences.PreferenceChangedListener;
@@ -30,6 +32,7 @@ public class PreferenceToggleAction extends JosmAction implements PreferenceChan
     /**
      * Get the checkbox that can be used for this action. It can only be used at one place.
      * @return The checkbox.
+     * @see #createMenuItem()
      */
     public JCheckBoxMenuItem getCheckbox() {
         return checkbox;

@@ -31,12 +31,11 @@ import java.util.stream.DoubleStream;
 
 import javax.swing.AbstractAction;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
 import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.actions.JosmAction;
+import org.openstreetmap.josm.actions.ToggleAction;
 import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.ChangeCommand;
 import org.openstreetmap.josm.command.Command;
@@ -58,7 +57,6 @@ import org.openstreetmap.josm.data.preferences.CachingProperty;
 import org.openstreetmap.josm.data.preferences.ColorProperty;
 import org.openstreetmap.josm.data.preferences.DoubleProperty;
 import org.openstreetmap.josm.data.preferences.StrokeProperty;
-import org.openstreetmap.josm.gui.MainMenu;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.MapViewState;
@@ -70,6 +68,8 @@ import org.openstreetmap.josm.gui.draw.SymbolShape;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.gui.menu.JosmMenuReference;
+import org.openstreetmap.josm.gui.menu.MenuSections;
 import org.openstreetmap.josm.gui.util.KeyPressReleaseListener;
 import org.openstreetmap.josm.gui.util.ModifierListener;
 import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
@@ -158,7 +158,7 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
     private boolean ignoreNextKeyRelease;
 
     private final SnapChangeAction snapChangeAction;
-    private final JCheckBoxMenuItem snapCheckboxMenuItem;
+    private final JosmMenuReference snapCheckboxMenuItem;
     private static final BasicStroke BASIC_STROKE = new BasicStroke(1);
 
     private Point rightClickPressPos;
@@ -176,7 +176,7 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
                 tr("Mode: Draw Angle snapping"), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE);
         snapChangeAction = new SnapChangeAction();
         snapCheckboxMenuItem = addMenuItem();
-        snapHelper.setMenuCheckBox(snapCheckboxMenuItem);
+        snapHelper.setMenuCheckBox(snapChangeAction);
         backspaceShortcut = Shortcut.registerShortcut("mapmode:backspace",
                 tr("Backspace in Add mode"), KeyEvent.VK_BACK_SPACE, Shortcut.DIRECT);
         backspaceAction = new BackSpaceAction();
@@ -186,15 +186,8 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
         snapHelper.init();
     }
 
-    private JCheckBoxMenuItem addMenuItem() {
-        int n = Main.main.menu.editMenu.getItemCount();
-        for (int i = n-1; i > 0; i--) {
-            JMenuItem item = Main.main.menu.editMenu.getItem(i);
-            if (item != null && item.getAction() != null && item.getAction() instanceof SnapChangeAction) {
-                Main.main.menu.editMenu.remove(i);
-            }
-        }
-        return MainMenu.addWithCheckbox(Main.main.menu.editMenu, snapChangeAction, MainMenu.WINDOW_MENU_GROUP.VOLATILE);
+    private JosmMenuReference addMenuItem() {
+        return Main.main.menu.add(snapChangeAction, MenuSections.EDIT.PREFERENCES.pos());
     }
 
     /**
@@ -1310,6 +1303,7 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
     @Override
     public void destroy() {
         super.destroy();
+        snapCheckboxMenuItem.remove();
         snapChangeAction.destroy();
     }
 
@@ -1415,7 +1409,7 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
             }
         }
 
-        private boolean snapOn; // snapping is turned on
+        private SnapChangeAction snapOn; // snapping is turned on
 
         private boolean active; // snapping is active for current mouse position
         private boolean fixed; // snap angle is fixed
@@ -1438,8 +1432,6 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
 
         private final String fixFmt = "%d "+tr("FIX");
 
-        private JCheckBoxMenuItem checkBox;
-
         private final MouseListener anglePopupListener = new PopupMenuLauncher(new AnglePopupMenu()) {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -1455,8 +1447,7 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
          * Set the initial state
          */
         public void init() {
-            snapOn = false;
-            checkBox.setState(snapOn);
+            snapOn.setDoSnap(false);
             fixed = false;
             absoluteFix = false;
 
@@ -1490,8 +1481,8 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
             Main.pref.putCollection(DRAW_ANGLESNAP_ANGLES, Arrays.asList(angles));
         }
 
-        public void setMenuCheckBox(JCheckBoxMenuItem checkBox) {
-            this.checkBox = checkBox;
+        public void setMenuCheckBox(SnapChangeAction snapChangeAction) {
+            this.snapOn = snapChangeAction;
         }
 
         /**
@@ -1501,7 +1492,7 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
          * @since 10874
          */
         public void drawIfNeeded(Graphics2D g2, MapViewState mv) {
-            if (!snapOn || !active)
+            if (!snapOn.isSelected() || !active)
                 return;
             MapViewPoint p1 = mv.getPointFor(getCurrentBaseNode());
             MapViewPoint p2 = mv.getPointFor(dir2);
@@ -1567,7 +1558,7 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
 
             double activeBaseHeading = (customBaseHeading >= 0) ? customBaseHeading : baseHeading;
 
-            if (snapOn && (activeBaseHeading >= 0)) {
+            if (snapOn.isSelected() && (activeBaseHeading >= 0)) {
                 angle = curHeading - activeBaseHeading;
                 if (angle < 0) {
                     angle += 360;
@@ -1734,15 +1725,13 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
          * Enable snapping.
          */
         private void enableSnapping() {
-            snapOn = true;
-            checkBox.setState(snapOn);
+            snapOn.setDoSnap(true);
             customBaseHeading = -1;
             unsetFixedMode();
         }
 
         private void toggleSnapping() {
-            snapOn = !snapOn;
-            checkBox.setState(snapOn);
+            snapOn.setDoSnap(!snapOn.isSelected());
             customBaseHeading = -1;
             unsetFixedMode();
         }
@@ -1765,7 +1754,7 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
         }
 
         public boolean isSnapOn() {
-            return snapOn;
+            return snapOn.isSelected();
         }
 
         private double getNearestAngle(double angle) {
@@ -1794,7 +1783,7 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
         }
     }
 
-    private class SnapChangeAction extends JosmAction {
+    private class SnapChangeAction extends ToggleAction {
         /**
          * Constructs a new {@code SnapChangeAction}.
          */
@@ -1809,6 +1798,10 @@ public class DrawAction extends MapMode implements MapViewPaintable, SelectionCh
             if (snapHelper != null) {
                 snapHelper.toggleSnapping();
             }
+        }
+
+        void setDoSnap(boolean snap) {
+            setSelected(snap);
         }
 
         @Override

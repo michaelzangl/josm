@@ -86,7 +86,7 @@ public class JosmMenu extends JMenu implements Searchable {
         int nmembers = popupMenu.getComponentCount();
         for (int i = 0; i < nmembers && !visible; i++) {
             Component comp = popupMenu.getComponent(i);
-            if (!(comp instanceof JSeparator) && comp.isVisible() && comp.isEnabled()) {
+            if (!isSection(comp) && comp.isVisible() && comp.isEnabled()) {
                 visible = true;
             }
         }
@@ -103,6 +103,15 @@ public class JosmMenu extends JMenu implements Searchable {
         JosmMenuReference item = actionToBeInserted.createMenuItem();
         add(item.getMenuComponent(), insertionPosition);
         return item;
+    }
+
+    /**
+     * Add the given sub menu to the menu.
+     * @param menuToInsert The menu
+     * @param insertionPosition The position to insert it at.
+     */
+    public void add(JosmMenu menuToInsert, MenuInsertionFinder insertionPosition) {
+        add((Component) menuToInsert, insertionPosition);
     }
 
     /**
@@ -133,6 +142,7 @@ public class JosmMenu extends JMenu implements Searchable {
             index++;
         }
         add(c, index);
+        updateVisibility();
     }
 
     /**
@@ -229,10 +239,10 @@ public class JosmMenu extends JMenu implements Searchable {
                 }
             }
         }
+    }
 
-        private boolean isSection(Component comp) {
-            return comp instanceof Separator || comp instanceof JosmMenuSection;
-        }
+    private static boolean isSection(Component comp) {
+        return comp instanceof Separator || comp instanceof JosmMenuSection;
     }
 
     /**
