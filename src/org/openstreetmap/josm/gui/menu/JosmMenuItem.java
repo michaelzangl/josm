@@ -1,11 +1,12 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.gui.menu;
 
+import java.awt.Component;
+
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-import org.openstreetmap.josm.actions.ExpertToggleAction;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.gui.menu.search.SearchCategory;
 import org.openstreetmap.josm.gui.menu.search.SearchReceiver;
@@ -17,7 +18,7 @@ import org.openstreetmap.josm.gui.menu.search.Searchable;
  * @author Michael Zangl
  * @since xxx
  */
-public class JosmMenuItem extends JMenuItem implements Searchable {
+public class JosmMenuItem extends JMenuItem implements Searchable, JosmMenuReference {
 
     private boolean expertOnly;
 
@@ -35,13 +36,9 @@ public class JosmMenuItem extends JMenuItem implements Searchable {
         }
     }
 
-    public void setExpertOnly(boolean expertOnly) {
-        this.expertOnly = expertOnly;
-        if (expertOnly) {
-            ExpertToggleAction.addVisibilitySwitcher(this);
-        } else {
-            ExpertToggleAction.removeVisibilitySwitcher(this);
-        }
+    @Override
+    public Component getMenuComponent() {
+        return this;
     }
 
     @Override

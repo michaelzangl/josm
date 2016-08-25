@@ -6,7 +6,6 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import static org.openstreetmap.josm.tools.I18n.trc;
 
 import java.awt.Component;
-import java.awt.GraphicsEnvironment;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +16,7 @@ import java.util.Map;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 
 import org.openstreetmap.josm.Main;
@@ -114,9 +113,11 @@ import org.openstreetmap.josm.gui.dialogs.MenuItemSearchDialog;
 import org.openstreetmap.josm.gui.io.RecentlyOpenedFilesMenu;
 import org.openstreetmap.josm.gui.mappaint.MapPaintMenu;
 import org.openstreetmap.josm.gui.menu.JosmMenu;
+import org.openstreetmap.josm.gui.menu.JosmMenu.IMenu;
 import org.openstreetmap.josm.gui.menu.JosmMenuBar;
 import org.openstreetmap.josm.gui.menu.JosmMenuItem;
 import org.openstreetmap.josm.gui.menu.MenuInsertionFinder;
+import org.openstreetmap.josm.gui.menu.MenuSections;
 import org.openstreetmap.josm.gui.menu.search.SearchRegistry;
 import org.openstreetmap.josm.gui.preferences.imagery.ImageryPreference;
 import org.openstreetmap.josm.gui.preferences.map.TaggingPresetPreference;
@@ -320,7 +321,7 @@ public class MainMenu extends JosmMenuBar {
     /**
      * fileMenu contains I/O actions
      */
-    public final JMenu fileMenu = addMenu("File", /* I18N: mnemonic: F */ trc("menu", "File"), KeyEvent.VK_F, 0, ht("/Menu/File"));
+    public final JMenu fileMenu = new JMenu(""); // = addMenu("File", /* I18N: mnemonic: F */ trc("menu", "File"), KeyEvent.VK_F, 0, ht("/Menu/File"));
     /**
      * editMenu contains editing actions
      */
@@ -402,7 +403,9 @@ public class MainMenu extends JosmMenuBar {
     /**
      * @return the default position of new top-level menus
      * @since 6088
+     * @deprecated Use {@link MenuInsertionFinder} mechanism
      */
+    @Deprecated
     public int getDefaultMenuPos() {
          return defaultMenuPos;
     }
@@ -567,9 +570,6 @@ public class MainMenu extends JosmMenuBar {
      */
     public JMenu addMenu(String name, String translatedName, int mnemonicKey, int position, String relativeHelpTopic) {
         JosmMenu menu = new JosmMenu(name, translatedName);
-        if (!GraphicsEnvironment.isHeadless()) {
-            MenuScroller.setScrollerFor(menu);
-        }
         return addMenu(menu, name, mnemonicKey, position, relativeHelpTopic);
     }
 
@@ -588,7 +588,7 @@ public class MainMenu extends JosmMenuBar {
         Shortcut.registerShortcut("menu:" + name, tr("Menu: {0}", name), mnemonicKey,
                 Shortcut.MNEMONIC).setMnemonic(menu);
         if (menu instanceof JosmMenu) {
-            add((JosmMenu) menu, new MenuInsertionFinder().at(position));
+            add((JosmMenu) menu, MenuInsertionFinder.DEFAULT.at(position));
         } else {
             // old compatibility code
             add(menu, position);
@@ -602,80 +602,86 @@ public class MainMenu extends JosmMenuBar {
      * @since 10340
      */
     public void initialize() {
-        moreToolsMenu.setVisible(false);
-        dataMenu.setVisible(false);
-        gpsMenu.setVisible(false);
+        for (IMenu m : MenuSections.getMenus()) {
+            add(new JosmMenu(m), MenuInsertionFinder.DEFAULT);
+        }
 
-        add(fileMenu, newAction);
-        add(fileMenu, openFile);
-        fileMenu.add(recentlyOpened);
-        add(fileMenu, openLocation);
-        add(fileMenu, deleteLayerAction);
-        fileMenu.addSeparator();
-        add(fileMenu, save);
-        add(fileMenu, saveAs);
+        // SECTION FILE.LAYER
+        add(newAction, MenuSections.FILE.LAYER.pos());
+        add(openFile, MenuSections.FILE.LAYER.pos());
+        // TODO: fileMenu.add(recentlyOpened);
+        add(openLocation, MenuSections.FILE.LAYER.pos());
+        add(deleteLayerAction, MenuSections.FILE.LAYER.pos());
+        // SECTION FILE.SAVE
+        add(save, MenuSections.FILE.SAVE.pos());
+        add(saveAs, MenuSections.FILE.SAVE.pos());
         sessionSaveAs = new SessionSaveAsAction();
         ExpertToggleAction.addVisibilitySwitcher(fileMenu.add(sessionSaveAs));
-        add(fileMenu, gpxExport, true);
+        add(sessionSaveAs, MenuSections.FILE.SAVE.pos());
+        add(gpxExport, MenuSections.FILE.SAVE.pos());
+        // SECTION FILE.DOWNLOAD
+        add(download, MenuSections.FILE.DOWNLOAD.pos());
+        add(downloadInView, MenuSections.FILE.DOWNLOAD.pos()).setExpertOnly(true);
+        add(overpassDownload, MenuSections.FILE.DOWNLOAD.pos()).setExpertOnly(true);
+        add(downloadPrimitive, MenuSections.FILE.DOWNLOAD.pos());
+        add(searchNotes, MenuSections.FILE.DOWNLOAD.pos());
+        add(downloadNotesInView, MenuSections.FILE.DOWNLOAD.pos());
+        add(downloadReferrers, MenuSections.FILE.DOWNLOAD.pos());
+        add(update, MenuSections.FILE.DOWNLOAD.pos());
+        add(updateSelection, MenuSections.FILE.DOWNLOAD.pos());
+        add(updateModified, MenuSections.FILE.DOWNLOAD.pos());
+        // SECTION FILE.UPLOAD
+        add(upload, MenuSections.FILE.UPLOAD.pos());
+        add(uploadSelection, MenuSections.FILE.UPLOAD.pos());
+        add(new JSeparator(), MenuSections.FILE.UPLOAD.pos()); // TODO: Method
         fileMenu.addSeparator();
-        add(fileMenu, download);
-        add(fileMenu, downloadInView, true);
-        add(fileMenu, overpassDownload, true);
-        add(fileMenu, downloadPrimitive);
-        add(fileMenu, searchNotes);
-        add(fileMenu, downloadNotesInView);
-        add(fileMenu, downloadReferrers);
-        add(fileMenu, update);
-        add(fileMenu, updateSelection);
-        add(fileMenu, updateModified);
-        fileMenu.addSeparator();
-        add(fileMenu, upload);
-        add(fileMenu, uploadSelection);
-        Component sep = new JPopupMenu.Separator();
-        fileMenu.add(sep);
-        ExpertToggleAction.addVisibilitySwitcher(sep);
-        add(fileMenu, closeChangesetAction, true);
-        fileMenu.addSeparator();
-        add(fileMenu, restart);
-        add(fileMenu, exit);
+        add(closeChangesetAction, MenuSections.FILE.UPLOAD.pos()).setExpertOnly(true);
 
-        add(editMenu, undo);
+        // SECTION FILE.SYSTEM
+        add(restart, MenuSections.FILE.SYSTEM.pos());
+        add(exit, MenuSections.FILE.SYSTEM.pos());
+
+        // SECTION EDIT.UNDO_REDO
+        add(undo, MenuSections.EDIT.UNDO_REDO.pos());
         Main.main.undoRedo.addCommandQueueListener(undo);
-        add(editMenu, redo);
+        add(redo, MenuSections.EDIT.UNDO_REDO.pos());
         Main.main.undoRedo.addCommandQueueListener(redo);
-        editMenu.addSeparator();
-        add(editMenu, copy);
-        add(editMenu, copyCoordinates, true);
-        add(editMenu, paste);
-        add(editMenu, pasteAtSource, true);
-        add(editMenu, pasteTags);
-        add(editMenu, duplicate);
-        add(editMenu, delete);
-        add(editMenu, purge, true);
-        editMenu.addSeparator();
-        add(editMenu, merge);
-        add(editMenu, mergeSelected);
-        editMenu.addSeparator();
-        add(editMenu, search);
-        add(editMenu, presetSearchPrimitiveAction);
-        editMenu.addSeparator();
-        add(editMenu, preferences);
+
+        // SECTION EDIT.CLIPBOARD
+        add(copy, MenuSections.EDIT.CLIPBOARD.pos());
+        add(copyCoordinates, MenuSections.EDIT.CLIPBOARD.pos()).setExpertOnly(true);
+        add(paste, MenuSections.EDIT.CLIPBOARD.pos());
+        add(pasteAtSource, MenuSections.EDIT.CLIPBOARD.pos()).setExpertOnly(true);
+        add(pasteTags, MenuSections.EDIT.CLIPBOARD.pos());
+        add(duplicate, MenuSections.EDIT.CLIPBOARD.pos()).setExpertOnly(true);
+        add(delete, MenuSections.EDIT.CLIPBOARD.pos());//TODO: Tools?
+        add(purge, MenuSections.EDIT.CLIPBOARD.pos()).setExpertOnly(true);//TODO: Tools?
+
+        add(merge, MenuSections.FILE.LAYER.pos());// XXX: Moved
+        add(mergeSelected, MenuSections.EDIT.CLIPBOARD.pos());//TODO: Selection?
+
+        add(search, MenuSections.EDIT.SEARCH.pos()); // TODO: Selection menu?
+        add(presetSearchPrimitiveAction, MenuSections.EDIT.SEARCH.pos()); // TODO: Selection menu?
+
+        add(preferences, MenuSections.EDIT.PREFERENCES.pos());
 
         // -- wireframe toggle action
+        //TODO: addCheckbox(wireFrameToggleAction, MenuSections.VIEW.STYLES.pos());
         final JCheckBoxMenuItem wireframe = new JCheckBoxMenuItem(wireFrameToggleAction);
         viewMenu.add(wireframe);
         wireframe.setAccelerator(wireFrameToggleAction.getShortcut().getKeyStroke());
         wireFrameToggleAction.addButtonModel(wireframe.getModel());
 
         viewMenu.add(new MapPaintMenu());
-        viewMenu.addSeparator();
-        add(viewMenu, new ZoomInAction());
-        add(viewMenu, new ZoomOutAction());
-        viewMenu.addSeparator();
+
+        // SECTION VIEW.ZOOM
+        add(new ZoomInAction(), MenuSections.VIEW.ZOOM.pos());
+        add(new ZoomOutAction(), MenuSections.VIEW.ZOOM.pos());
+        // SECTION VIEW.ZOOM_TO
         for (String mode : AutoScaleAction.MODES) {
             AutoScaleAction autoScaleAction = new AutoScaleAction(mode);
             autoScaleActions.put(mode, autoScaleAction);
-            add(viewMenu, autoScaleAction);
+            add(autoScaleAction, MenuSections.VIEW.ZOOM_TO.pos());
         }
 
         // -- viewport follow toggle action
@@ -689,11 +695,7 @@ public class MainMenu extends JosmMenuBar {
         if (Main.platform.canFullscreen()) {
             // -- fullscreen toggle action
             fullscreenToggleAction = new FullscreenToggleAction();
-            final JCheckBoxMenuItem fullscreen = new JCheckBoxMenuItem(fullscreenToggleAction);
-            viewMenu.addSeparator();
-            viewMenu.add(fullscreen);
-            fullscreen.setAccelerator(fullscreenToggleAction.getShortcut().getKeyStroke());
-            fullscreenToggleAction.addButtonModel(fullscreen.getModel());
+            add(fullscreenToggleAction, MenuSections.VIEW.VIEWPORT.pos()); // TODO: Window
         }
 
         // -- dialogs panel toggle action

@@ -13,6 +13,8 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JToggleButton;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.gui.menu.JosmCheckboxMenuItem;
+import org.openstreetmap.josm.gui.menu.JosmMenuReference;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 
@@ -132,5 +134,10 @@ public abstract class ToggleAction extends JosmAction {
                            )) {
             setSelected(!isSelected());
         }
+    }
+
+    @Override
+    public JosmMenuReference createMenuItem() {
+        return new JosmCheckboxMenuItem(this);
     }
 }

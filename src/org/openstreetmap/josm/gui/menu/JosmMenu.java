@@ -1,21 +1,29 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.gui.menu;
 
+import static org.openstreetmap.josm.tools.I18n.tr;
+
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridBagLayout;
 import java.awt.event.ContainerEvent;
 import java.awt.event.ContainerListener;
 import java.awt.event.HierarchyEvent;
-import java.awt.event.HierarchyListener;
 import java.beans.PropertyChangeListener;
+import java.io.Serializable;
+import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
+import javax.swing.JPopupMenu.Separator;
 import javax.swing.JSeparator;
 
 import org.openstreetmap.josm.actions.JosmAction;
+import org.openstreetmap.josm.gui.MenuScroller;
+import org.openstreetmap.josm.gui.menu.MenuInsertionFinder.MenuInsertionPoint;
 import org.openstreetmap.josm.gui.menu.search.SearchReceiver;
 import org.openstreetmap.josm.gui.menu.search.Searchable;
 import org.openstreetmap.josm.tools.GBC;
@@ -28,28 +36,21 @@ import org.openstreetmap.josm.tools.GBC;
 public class JosmMenu extends JMenu implements Searchable {
 
     private final String menuId;
-    private final PropertyChangeListener enabledChangeListener = e -> updateVisibility();
+    private final PropertyChangeListener enabledChangeListener = (PropertyChangeListener & Serializable) e -> updateVisibility();
 
-    private final ContainerListener containerListener = new ContainerListener() {
+    private final ContainerListener containerListener = new MenuContainerListener();
 
-        @Override
-        public void componentAdded(ContainerEvent e) {
-            e.getChild().addPropertyChangeListener("enabled", enabledChangeListener);
+    /**
+     * Create a new JosmMenu
+     * @param blueprint The structure to populate the menu with.
+     */
+    public JosmMenu(IMenu blueprint) {
+        this(blueprint.getSectionId(), blueprint.getSectionName());
 
-            if (e.getChild() instanceof Container) {
-                ((Container) e.getChild()).addContainerListener(containerListener);
-            }
+        for (IMenuSection s : blueprint.getSections()) {
+            addSection(s, MenuInsertionFinder.DEFAULT);
         }
-
-        @Override
-        public void componentRemoved(ContainerEvent e) {
-            e.getChild().removePropertyChangeListener("enabled", enabledChangeListener);
-
-            if (e.getChild() instanceof Container) {
-                ((Container) e.getChild()).removeContainerListener(containerListener);
-            }
-        }
-    };
+    }
 
     /**
      * Create a new {@link JosmMenu}
@@ -60,15 +61,17 @@ public class JosmMenu extends JMenu implements Searchable {
         super(translatedName);
         this.menuId = menuId;
         getPopupMenu().setLayout(new MenuLayout());
-        getPopupMenu().addHierarchyListener(new HierarchyListener() {
-            @Override
-            public void hierarchyChanged(HierarchyEvent e) {
-                if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
-                    updateVisibility();
-                }
+        getPopupMenu().addHierarchyListener(e -> {
+            if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
+                updateVisibility();
             }
         });
         getPopupMenu().addContainerListener(containerListener);
+        setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        if (!GraphicsEnvironment.isHeadless()) {
+            MenuScroller.setScrollerFor(this);
+        }
+        //TODO: getPopupMenu().setMinimumSize(new Dimension(200, 10));
     }
 
     @Override
@@ -94,14 +97,75 @@ public class JosmMenu extends JMenu implements Searchable {
      * Add the given action to the menu.
      * @param actionToBeInserted The action
      * @param insertionPosition The position to insert it at.
+     * @return The new menu item.
      */
-    public void add(JosmAction actionToBeInserted, MenuInsertionFinder insertionPosition) {
+    public JosmMenuReference add(JosmAction actionToBeInserted, MenuInsertionFinder insertionPosition) {
+        JosmMenuReference item = actionToBeInserted.createMenuItem();
+        add(item.getMenuComponent(), insertionPosition);
+        return item;
+    }
 
+    /**
+     * Add a new named menu separator.
+     * @param sectionData The id and name of the section
+     * @param insertionPosition The position to insert the section at.
+     */
+    public void addSection(IMenuSection sectionData, MenuInsertionFinder insertionPosition) {
+        add(new JosmMenuSection(sectionData.getSectionId(), sectionData.getSectionName()), insertionPosition);
+    }
+
+    /**
+     * Add a new named menu separator.
+     * @param sectionId The universal id
+     * @param sectionName The name of the section
+     * @param insertionPosition The position to insert the section at.
+     */
+    public void addSection(String sectionId, String sectionName, MenuInsertionFinder insertionPosition) {
+        add(new JosmMenuSection(sectionId, sectionName), insertionPosition);
+    }
+
+    protected void add(Component c, MenuInsertionFinder position) {
+        MenuInsertionPoint pos = position.findInsertionPoint(getPopupMenu());
+        int index = pos.getInsertPosition();
+        if (pos.isAddSeparatorBefore()) {
+            JSeparator sep = new JSeparator();
+            add(sep, index);
+            index++;
+        }
+        add(c, index);
+    }
+
+    /**
+     * Get the id of this menu.
+     * @return The id of the menu.
+     */
+    public String getMenuId() {
+        return menuId;
     }
 
     @Override
     public void search(SearchReceiver sr) {
         sr.autoRecurse(getPopupMenu().getComponents());
+    }
+
+    private final class MenuContainerListener implements ContainerListener, Serializable {
+        @Override
+        public void componentAdded(ContainerEvent e) {
+            e.getChild().addPropertyChangeListener("enabled", enabledChangeListener);
+
+            if (e.getChild() instanceof Container) {
+                ((Container) e.getChild()).addContainerListener(containerListener);
+            }
+        }
+
+        @Override
+        public void componentRemoved(ContainerEvent e) {
+            e.getChild().removePropertyChangeListener("enabled", enabledChangeListener);
+
+            if (e.getChild() instanceof Container) {
+                ((Container) e.getChild()).removeContainerListener(containerListener);
+            }
+        }
     }
 
     /**
@@ -139,22 +203,25 @@ public class JosmMenu extends JMenu implements Searchable {
 
         private void updateVisibleState(Container target) {
             int nmembers = target.getComponentCount();
-            boolean wasSeparator = true; // <- hides separators in front
+            Component prev = null;
             for (int i = 0; i < nmembers; i++) {
                 Component comp = target.getComponent(i);
-                if (comp instanceof JSeparator) {
-                    comp.setVisible(!wasSeparator);
-                    wasSeparator = true;
+                boolean isSeparator = isSection(comp);
+                if (prev != null) {
+                    prev.setVisible(!isSeparator);
+                }
+                if (isSeparator) {
+                    prev = comp;
                 } else if (comp.isVisible()) {
-                    wasSeparator = false;
+                    prev = null;
                 }
             }
 
-            if (wasSeparator) {
+            if (prev != null) {
                 // separators at end of menu
                 for (int i = nmembers - 1; i >= 0; i--) {
                     Component comp = target.getComponent(i);
-                    if (comp instanceof JSeparator) {
+                    if (isSection(comp)) {
                         comp.setVisible(false);
                     } else if (comp.isVisible()) {
                         break;
@@ -162,5 +229,48 @@ public class JosmMenu extends JMenu implements Searchable {
                 }
             }
         }
+
+        private boolean isSection(Component comp) {
+            return comp instanceof Separator || comp instanceof JosmMenuSection;
+        }
+    }
+
+    /**
+     * A helper interface for menu sections. May be implemented by e.g. enums.
+     * @author Michael Zangl
+     * @since xxx
+     */
+    @FunctionalInterface
+    public interface IMenuSection {
+        /**
+         * Gets the id of the section. This should be the english name.
+         * @return the id
+         */
+        String getSectionId();
+
+        /**
+         * Gets the localized name of the section
+         * @return the label
+         */
+        default String getSectionName() {
+            return tr(getSectionId());
+        }
+
+        default MenuInsertionFinder pos() {
+            return MenuInsertionFinder.DEFAULT.in(this);
+        }
+    }
+
+    /**
+     * The definition of a menu and it's sub menu.
+     * @author Michael Zangl
+     * @since xxx
+     */
+    public interface IMenu extends IMenuSection {
+        /**
+         * Get all sub sections of this item.
+         * @return The sub sections.
+         */
+        List<IMenuSection> getSections();
     }
 }

@@ -23,6 +23,8 @@ import org.openstreetmap.josm.gui.layer.MainLayerManager;
 import org.openstreetmap.josm.gui.layer.MainLayerManager.ActiveLayerChangeEvent;
 import org.openstreetmap.josm.gui.layer.MainLayerManager.ActiveLayerChangeListener;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.gui.menu.JosmMenuItem;
+import org.openstreetmap.josm.gui.menu.JosmMenuReference;
 import org.openstreetmap.josm.gui.progress.PleaseWaitProgressMonitor;
 import org.openstreetmap.josm.tools.Destroyable;
 import org.openstreetmap.josm.tools.ImageProvider;
@@ -342,6 +344,14 @@ public abstract class JosmAction extends AbstractAction implements Destroyable {
      * @see #listenToSelectionChange()
      */
     protected void updateEnabledState(Collection<? extends OsmPrimitive> selection) {
+    }
+
+    /**
+     * Create a new menu item for this action.
+     * @return The menu item.
+     */
+    public JosmMenuReference createMenuItem() {
+        return new JosmMenuItem(this);
     }
 
     /**
