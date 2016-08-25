@@ -63,6 +63,7 @@ public class JosmMenu extends JMenu implements Searchable {
         getPopupMenu().setLayout(new MenuLayout());
         getPopupMenu().addHierarchyListener(e -> {
             if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
+                //TODO: This does not detect visibility events if the menu is hidden :-(.
                 updateVisibility();
             }
         });
@@ -166,6 +167,7 @@ public class JosmMenu extends JMenu implements Searchable {
             if (e.getChild() instanceof Container) {
                 ((Container) e.getChild()).addContainerListener(containerListener);
             }
+            updateVisibility();
         }
 
         @Override
@@ -175,6 +177,7 @@ public class JosmMenu extends JMenu implements Searchable {
             if (e.getChild() instanceof Container) {
                 ((Container) e.getChild()).removeContainerListener(containerListener);
             }
+            updateVisibility();
         }
     }
 

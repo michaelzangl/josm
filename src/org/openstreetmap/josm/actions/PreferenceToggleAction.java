@@ -5,28 +5,32 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.JCheckBoxMenuItem;
 
-import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.data.Preferences;
-import org.openstreetmap.josm.data.Preferences.PreferenceChangedListener;
+import org.openstreetmap.josm.data.preferences.AbstractProperty.ValueChangeEvent;
+import org.openstreetmap.josm.data.preferences.AbstractProperty.ValueChangeListener;
 import org.openstreetmap.josm.data.preferences.BooleanProperty;
+import org.openstreetmap.josm.gui.menu.JosmCheckboxMenuItem;
 
-public class PreferenceToggleAction extends JosmAction implements PreferenceChangedListener {
+public class PreferenceToggleAction extends ToggleAction implements ValueChangeListener<Boolean> {
 
     private final JCheckBoxMenuItem checkbox;
     private final BooleanProperty pref;
 
     public PreferenceToggleAction(String name, String tooltip, String prefKey, boolean prefDefault) {
+        this(name, tooltip, new BooleanProperty(prefKey, prefDefault));
+    }
+
+    public PreferenceToggleAction(String name, String tooltip, BooleanProperty pref) {
         super(name, null, tooltip, null, false);
-        putValue("toolbar", "toggle-" + prefKey);
-        this.pref = new BooleanProperty(prefKey, prefDefault);
-        checkbox = new JCheckBoxMenuItem(this);
-        checkbox.setSelected(pref.get());
-        Main.pref.addWeakKeyPreferenceChangeListener(prefKey, this);
+        this.pref = pref;
+        putValue("toolbar", "toggle-" + pref.getKey());
+        pref.addWeakListener(this);
+
+        checkbox = new JosmCheckboxMenuItem(this);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        pref.put(checkbox.isSelected());
+        pref.put(!pref.get());
     }
 
     /**
@@ -39,7 +43,7 @@ public class PreferenceToggleAction extends JosmAction implements PreferenceChan
     }
 
     @Override
-    public void preferenceChanged(Preferences.PreferenceChangeEvent e) {
-        checkbox.setSelected(pref.get());
+    public void valueChanged(ValueChangeEvent<? extends Boolean> e) {
+        setSelected(pref.get());
     }
 }
