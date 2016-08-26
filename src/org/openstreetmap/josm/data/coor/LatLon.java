@@ -107,7 +107,7 @@ public class LatLon extends Coordinate {
      * @return lon plus/minus multiples of <code>360</code>, as needed to get
      * in <code>[-180, 180]</code> range
      */
-    public static double normalizeLon(double lon) {
+    public static strictfp double normalizeLon(double lon) {
         if (lon >= -180 && lon <= 180)
             return lon;
         else {

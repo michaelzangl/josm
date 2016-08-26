@@ -22,7 +22,7 @@ import org.openstreetmap.josm.data.projection.ProjectionConfigurationException;
  * unless you multiply by 'a' somehow implicitly or explicitly.)
  *
  */
-public interface Proj {
+public strictfp interface Proj {
 
     /**
      * Replies a human readable name of this projection.

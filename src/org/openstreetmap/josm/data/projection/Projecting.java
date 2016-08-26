@@ -14,7 +14,7 @@ import org.openstreetmap.josm.data.coor.LatLon;
  * @author Michael Zangl
  * @since 10805
  */
-public interface Projecting {
+public strictfp interface Projecting {
 
     /**
      * Convert from lat/lon to easting/northing.
