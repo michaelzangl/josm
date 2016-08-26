@@ -447,10 +447,10 @@ public class MapFrame extends JPanel implements Destroyable, ActiveLayerChangeLi
         if (newMapMode == oldMapMode)
             return true;
         if (oldMapMode != null) {
-            oldMapMode.exitMode();
+            oldMapMode.exitModeCallCheck();
         }
         this.mapMode = newMapMode;
-        newMapMode.enterMode();
+        newMapMode.enterModeCallCheck();
         lastMapMode.put(newLayer, newMapMode);
         fireMapModeChanged(oldMapMode, newMapMode);
         return true;
@@ -774,7 +774,7 @@ public class MapFrame extends JPanel implements Destroyable, ActiveLayerChangeLi
                 // but it don't work well with for example editgpx layer
                 selectMapMode(newMapMode, newLayer);
             } else if (mapMode != null) {
-                mapMode.exitMode(); // if new mode is null - simply exit from previous mode
+                mapMode.exitModeCallCheck(); // if new mode is null - simply exit from previous mode
                 mapMode = null;
             }
         }
@@ -782,8 +782,8 @@ public class MapFrame extends JPanel implements Destroyable, ActiveLayerChangeLi
         if (e.getPreviousActiveLayer() != null) {
             if (!modeChanged && mapMode != null) {
                 // Let mapmodes know about new active layer
-                mapMode.exitMode();
-                mapMode.enterMode();
+                mapMode.exitModeCallCheck();
+                mapMode.enterModeCallCheck();
             }
             // invalidate repaint cache
             mapView.preferenceChanged(null);

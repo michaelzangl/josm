@@ -62,6 +62,8 @@ public abstract class MapMode extends JosmAction implements MouseListener, Mouse
 
     /**
      * Makes this map mode active. This may never fail. Super needs to be called if implementations override this method.
+     * <p>
+     * Use {@link #layerIsSupported(Layer)} to prevent the mode from being activated.
      */
     public void enterMode() {
         putValue("active", Boolean.TRUE);
@@ -100,7 +102,7 @@ public abstract class MapMode extends JosmAction implements MouseListener, Mouse
         if (getValue("active") != Boolean.TRUE) {
             throw new IllegalStateException("exitMode() called twice");
         }
-        enterMode();
+        exitMode();
         if (getValue("active") != Boolean.FALSE) {
             throw new IllegalStateException("exitMode() did not call super.");
         }
