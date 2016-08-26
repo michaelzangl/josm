@@ -75,6 +75,7 @@ public abstract class MapMode extends JosmAction implements MouseListener, Mouse
 
     /**
      * Calls {@link #enterMode()}. Checks the state.
+     * @since xxx
      */
     public final void enterModeCallCheck() {
         if (getValue("active") != Boolean.FALSE) {
@@ -97,6 +98,7 @@ public abstract class MapMode extends JosmAction implements MouseListener, Mouse
 
     /**
      * Calls {@link #exitMode()}. Checks the state.
+     * @since xxx
      */
     public final void exitModeCallCheck() {
         if (getValue("active") != Boolean.TRUE) {
