@@ -185,12 +185,6 @@ public class ProjectionRegressionTest {
             }
             EastNorth en = proj.latlon2eastNorth(data.ll);
             LatLon ll2 = proj.eastNorth2latlon(data.en);
-//            if (TestUtils.getJavaVersion() >= 9) {
-//                en = getRoundedToOsmPrecision(en.east(), en.north());
-//                ll2 = ll2.getRoundedToOsmPrecision();
-//                data.en = getRoundedToOsmPrecision(data.en.east(), data.en.north());
-//                data.ll2 = data.ll2.getRoundedToOsmPrecision();
-//            }
             if (!en.equals(data.en)) {
                 String error = String.format("%s (%s): Projecting latlon(%s,%s):%n" +
                         "        expected: eastnorth(%s,%s),%n" +
