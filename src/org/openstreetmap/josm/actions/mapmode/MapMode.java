@@ -10,12 +10,12 @@ import java.awt.event.MouseMotionListener;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.JosmAction;
+import org.openstreetmap.josm.data.Preferences.PreferenceChangeEvent;
+import org.openstreetmap.josm.data.Preferences.PreferenceChangedListener;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
-import org.openstreetmap.josm.data.Preferences.PreferenceChangeEvent;
-import org.openstreetmap.josm.data.Preferences.PreferenceChangedListener;
 
 /**
  * A class implementing MapMode is able to be selected as an mode for map editing.
@@ -56,11 +56,12 @@ public abstract class MapMode extends JosmAction implements MouseListener, Mouse
         putValue(NAME, name);
         putValue(SMALL_ICON, ImageProvider.get("mapmode", iconName));
         putValue(SHORT_DESCRIPTION, tooltip);
+        putValue("active", Boolean.FALSE);
         this.cursor = cursor;
     }
 
     /**
-     * Makes this map mode active.
+     * Makes this map mode active. This may never fail. Super needs to be called if implementations override this method.
      */
     public void enterMode() {
         putValue("active", Boolean.TRUE);
@@ -71,12 +72,38 @@ public abstract class MapMode extends JosmAction implements MouseListener, Mouse
     }
 
     /**
-     * Makes this map mode inactive.
+     * Calls {@link #enterMode()}. Checks the state.
+     */
+    public final void enterModeCallCheck() {
+        if (getValue("active") != Boolean.FALSE) {
+            throw new IllegalStateException("enterMode() called twice");
+        }
+        enterMode();
+        if (getValue("active") != Boolean.TRUE) {
+            throw new IllegalStateException("enterMode() did not call super.");
+        }
+    }
+
+    /**
+     * Makes this map mode inactive. This may never fail. Super needs to be called if implementations override this method.
      */
     public void exitMode() {
         putValue("active", Boolean.FALSE);
         Main.pref.removePreferenceChangeListener(this);
         Main.map.mapView.resetCursor(this);
+    }
+
+    /**
+     * Calls {@link #exitMode()}. Checks the state.
+     */
+    public final void exitModeCallCheck() {
+        if (getValue("active") != Boolean.TRUE) {
+            throw new IllegalStateException("exitMode() called twice");
+        }
+        enterMode();
+        if (getValue("active") != Boolean.FALSE) {
+            throw new IllegalStateException("exitMode() did not call super.");
+        }
     }
 
     protected void updateStatusLine() {
