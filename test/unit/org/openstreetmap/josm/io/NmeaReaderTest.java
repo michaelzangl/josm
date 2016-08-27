@@ -50,7 +50,7 @@ public class NmeaReaderTest {
         assertEquals(30, in.getNumberOfCoordinates());
         assertEquals(0, in.getParserMalformed());
 
-        final List<WayPoint> wayPoints = new ArrayList<>(in.data.tracks.iterator().next().getSegments().iterator().next().getWayPoints());
+        final List<WayPoint> wayPoints = new ArrayList<>(in.data.getTracks().iterator().next().getSegments().iterator().next().getWayPoints());
         assertEquals("2016-01-25T05:05:09.200Z", wayPoints.get(0).get(GpxConstants.PT_TIME));
         assertEquals("2016-01-25T05:05:09.400Z", wayPoints.get(1).get(GpxConstants.PT_TIME));
         assertEquals("2016-01-25T05:05:09.600Z", wayPoints.get(2).get(GpxConstants.PT_TIME));
