@@ -114,13 +114,13 @@ public abstract class AbstractProjection implements Projection {
 
     @Override
     public EastNorth latlon2eastNorth(LatLon ll) {
-        Projections.LOGGING.accept(getEpsgCode() + ": Step 1: ll = " + ll.lat() + ", " + ll.lon());
+        Projections.LOGGING.accept(toCode() + ": Step 1: ll = " + ll.lat() + ", " + ll.lon());
         ll = datum.fromWGS84(ll);
-        Projections.LOGGING.accept(getEpsgCode() + ": Step 2: ll = " + ll.lat() + ", " + ll.lon() + ", use " + proj.getClass().getSimpleName());
+        Projections.LOGGING.accept(toCode() + ": Step 2: ll = " + ll.lat() + ", " + ll.lon() + ", use " + proj.getClass().getSimpleName());
         double[] en = proj.project(toRadians(ll.lat()), toRadians(LatLon.normalizeLon(ll.lon() - lon0 - pm)));
-        Projections.LOGGING.accept(getEpsgCode() + ": Step 3: en = " + en[0] + ", " + en[1]);
+        Projections.LOGGING.accept(toCode() + ": Step 3: en = " + en[0] + ", " + en[1]);
         EastNorth eastNorth = new EastNorth((ellps.a * k0 * en[0] + x0) / toMeter, (ellps.a * k0 * en[1] + y0) / toMeter);
-        Projections.LOGGING.accept(getEpsgCode() + ": Step 4: en = " + eastNorth.east() + ", " + eastNorth.north());
+        Projections.LOGGING.accept(toCode() + ": Step 4: en = " + eastNorth.east() + ", " + eastNorth.north());
         return eastNorth;
     }
 

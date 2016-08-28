@@ -5,6 +5,7 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.projection.ProjectionConfigurationException;
+import org.openstreetmap.josm.data.projection.Projections;
 import org.openstreetmap.josm.tools.CheckParameterUtil;
 
 /**
@@ -130,6 +131,7 @@ public class TransverseMercator extends AbstractProj {
     public double[] project(double y, double x) {
         double sinphi = Math.sin(y);
         double cosphi = Math.cos(y);
+        Projections.LOGGING.accept("sin/cos: " + sinphi + ", " + cosphi);
 
         double t = (Math.abs(cosphi) > EPSILON) ? sinphi/cosphi : 0;
         t *= t;
@@ -137,6 +139,7 @@ public class TransverseMercator extends AbstractProj {
         double als = al*al;
         al /= Math.sqrt(1.0 - e2 * sinphi*sinphi);
         double n = eb2 * cosphi*cosphi;
+        Projections.LOGGING.accept("t/al/n: " + t + ", " + al + ", " + n);
 
         /* NOTE: meridinal distance at latitudeOfOrigin is always 0 */
         y = mlfn(y, sinphi, cosphi) - ml0 +

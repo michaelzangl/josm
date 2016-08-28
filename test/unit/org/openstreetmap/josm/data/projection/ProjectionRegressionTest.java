@@ -194,6 +194,7 @@ public class ProjectionRegressionTest {
                         "        but got:  eastnorth(%s,%s)!%n",
                         proj.toString(), data.code, data.ll.lat(), data.ll.lon(), data.en.east(), data.en.north(), en.east(), en.north());
                 fail.append(error);
+                System.out.println(error);
             }
             if (!ll2.equals(data.ll2)) {
                 String error = String.format("%s (%s): Inverse projecting eastnorth(%s,%s):%n" +
@@ -201,6 +202,7 @@ public class ProjectionRegressionTest {
                         "        but got:  latlon(%s,%s)!%n",
                         proj.toString(), data.code, data.en.east(), data.en.north(), data.ll2.lat(), data.ll2.lon(), ll2.lat(), ll2.lon());
                 fail.append(error);
+                System.out.println(error);
             }
         }
         Projections.LOGGING = old;

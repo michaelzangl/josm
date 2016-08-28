@@ -56,7 +56,7 @@ import org.openstreetmap.josm.tools.Utils;
  * from a plugin.
  */
 public final class Projections {
-    static Consumer<String> LOGGING = s -> {};
+    public static Consumer<String> LOGGING = s -> {};
 
     /**
      * Class to hold information about one projection.
