@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -177,6 +178,8 @@ public class ProjectionRegressionTest {
              }
         }
 
+        Consumer<String> old = Projections.LOGGING;
+        Projections.LOGGING = System.out::println;
         for (TestData data : allData) {
             Projection proj = Projections.getProjectionByCode(data.code);
             if (proj == null) {
@@ -200,6 +203,7 @@ public class ProjectionRegressionTest {
                 fail.append(error);
             }
         }
+        Projections.LOGGING = old;
 
         if (fail.length() > 0) {
             System.err.println(fail.toString());

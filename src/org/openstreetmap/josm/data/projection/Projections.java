@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,6 +56,7 @@ import org.openstreetmap.josm.tools.Utils;
  * from a plugin.
  */
 public final class Projections {
+    static Consumer<String> LOGGING = s -> {};
 
     /**
      * Class to hold information about one projection.
