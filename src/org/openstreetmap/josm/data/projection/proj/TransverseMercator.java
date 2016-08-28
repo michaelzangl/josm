@@ -129,6 +129,7 @@ public class TransverseMercator extends AbstractProj {
 
     @Override
     public double[] project(double y, double x) {
+        Projections.LOGGING.accept("x/y: " + x + ", " + y);
         double sinphi = Math.sin(y);
         double cosphi = Math.cos(y);
         Projections.LOGGING.accept("sin/cos: " + sinphi + ", " + cosphi);
